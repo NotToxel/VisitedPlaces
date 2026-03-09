@@ -53,3 +53,21 @@ export const UK_TERRITORIES: MapMarker[] = [
   { id: 'PCN', name: 'Pitcairn Islands', coordinates: [-128.3242, -24.3768], flagCode: 'pn' },
   { id: 'SGS', name: 'South Georgia', coordinates: [-36.5879, -54.4296], flagCode: 'gs' }
 ];
+
+// Replaced by 2023 Unitary Authorities in TopoJSON but still provided in map bundle overlaps
+export const OBSOLETE_UK_REGIONS = new Set([
+  'E10000002', // Buckinghamshire County (former)
+  'E10000006', // Cumbria County (former) [FIXED TYPO OVERRIDING DEVON]
+  'E10000009', // Dorset County (former)
+  'E10000021', // Northamptonshire County (former)
+  'E10000023', // North Yorkshire County (former)
+  'E10000027', // Somerset County (former)
+  'S12000015', // Fife (former)
+  'S12000024', // Perth and Kinross (former)
+  'S12000044', // North Lanarkshire (former)
+  'S12000046', // Glasgow City (former)
+  'E08000016', // Barnsley (former)
+  'E08000019', // Sheffield (former)
+  'E06000028', // Bournemouth (former)
+  'E06000029', // Poole (former)
+]);

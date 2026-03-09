@@ -4,7 +4,7 @@ import { useStore } from '../../store/useStore';
 import type { PlaceStatus } from '../../store/useStore';
 import { ArrowLeft, Check, Heart, Ban, X as XIcon, List } from 'lucide-react';
 import { getSubRegionUrl } from '../../utils/topojsonCache';
-import { MICROSTATES, UK_TERRITORIES } from '../../data/mapData';
+import { MICROSTATES, UK_TERRITORIES, OBSOLETE_UK_REGIONS } from '../../data/mapData';
 
 
 
@@ -60,6 +60,10 @@ const StandardMapBase: React.FC<StandardMapProps> = ({ setTooltipContent, select
        .then(res => res.json())
        .then(data => {
            if (activeCountry === 'GBR' && data.objects && data.objects.utla) {
+               data.objects.utla.geometries = data.objects.utla.geometries.filter((g: any) => {
+                  const id = g.properties?.AREACD || g.properties?.areacd || g.id;
+                  return !OBSOLETE_UK_REGIONS.has(id);
+               });
                data.objects = { default: data.objects.utla };
            } else if (activeCountry === 'USA' && data.objects && data.objects.states) {
                data.objects = { default: data.objects.states };

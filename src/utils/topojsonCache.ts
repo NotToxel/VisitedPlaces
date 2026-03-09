@@ -1,5 +1,6 @@
-// Centralized caching logic for sub-region TopoJSON data.
 // Supported: USA, GBR (United Kingdom)
+
+import { OBSOLETE_UK_REGIONS } from '../data/mapData';
 
 export interface TopoRegion {
   id: string; // The canonical ID (e.g. E06000001 or 01)
@@ -41,10 +42,15 @@ export const fetchSubRegions = async (countryA3: string): Promise<TopoRegion[]> 
       } 
       // Handle UK (utla layer)
       else if (countryA3 === 'GBR' && data.objects.utla) {
-        regions = data.objects.utla.geometries.map((g: any) => ({
-          id: g.properties.AREACD || g.properties.areacd || g.id,
-          name: g.properties.AREANM || g.properties.areanm || g.properties.name
-        }));
+        regions = data.objects.utla.geometries
+          .filter((g: any) => {
+             const id = g.properties.AREACD || g.properties.areacd || g.id;
+             return !OBSOLETE_UK_REGIONS.has(id);
+          })
+          .map((g: any) => ({
+            id: g.properties.AREACD || g.properties.areacd || g.id,
+            name: g.properties.AREANM || g.properties.areanm || g.properties.name
+          }));
       }
 
       regions.sort((a, b) => a.name.localeCompare(b.name));
