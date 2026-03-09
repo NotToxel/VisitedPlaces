@@ -20,7 +20,7 @@ export const fetchSubRegions = async (countryA3: string): Promise<TopoRegion[]> 
   if (!url) return [];
 
   if (subRegionCache[countryA3]) return subRegionCache[countryA3];
-  if (pendingRequests[countryA3]) return pendingRequests[countryA3];
+  if (pendingRequests[countryA3] !== undefined) return await pendingRequests[countryA3];
 
   const fetchPromise = fetch(url)
     .then(res => {
@@ -60,5 +60,5 @@ export const fetchSubRegions = async (countryA3: string): Promise<TopoRegion[]> 
     });
 
   pendingRequests[countryA3] = fetchPromise;
-  return fetchPromise;
+  return await fetchPromise;
 };

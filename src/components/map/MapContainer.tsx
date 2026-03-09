@@ -48,8 +48,8 @@ export const MapContainer: React.FC = () => {
     <div className="map-container" style={{ display: 'flex', flexDirection: 'column', height: '100%', width: '100%', position: 'relative' }}>
       {/* Map Header / Controls */}
       <div style={{ display: 'flex', flexWrap: 'wrap', gap: '1rem', justifyContent: 'space-between', alignItems: 'center', marginBottom: '1rem', zIndex: 10 }}>
-        <div style={{ display: 'flex', flexDirection: 'column', gap: '0.5rem' }}>
-          <div style={{ display: 'flex', flexWrap: 'wrap', gap: '0.5rem', background: 'var(--map-fill-unselected)', padding: '0.25rem', borderRadius: '8px', border: '1px solid var(--glass-border)' }}>
+        <div style={{ display: 'flex', flexDirection: 'column', gap: '0.5rem', overflowX: 'auto', maxWidth: '100%' }}>
+          <div style={{ display: 'flex', flexWrap: 'nowrap', gap: '0.5rem', background: 'var(--map-fill-unselected)', padding: '0.25rem', borderRadius: '8px', border: '1px solid var(--glass-border)', width: 'max-content' }}>
           <button 
             className={`glass-button ${activeMode === 'VISITED' ? 'glass-button--primary' : ''}`}
             onClick={() => setActiveMode('VISITED')}
@@ -83,7 +83,7 @@ export const MapContainer: React.FC = () => {
         </div>
         </div>
         
-        <div style={{ display: 'flex', gap: '0.5rem', background: 'var(--map-fill-unselected)', padding: '0.25rem', borderRadius: '8px', border: '1px solid var(--glass-border)', alignItems: 'center' }}>
+        <div style={{ display: 'flex', flexWrap: 'nowrap', gap: '0.5rem', background: 'var(--map-fill-unselected)', padding: '0.25rem', borderRadius: '8px', border: '1px solid var(--glass-border)', alignItems: 'center', overflowX: 'auto' }}>
           <input 
              type="text"
              className="glass-input" 
@@ -91,7 +91,7 @@ export const MapContainer: React.FC = () => {
              value={searchVal} 
              onChange={handleSearchChange}
              list="country-search-list"
-             style={{ padding: '0.5rem', borderRadius: '4px', width: '200px' }}
+             style={{ padding: '0.5rem', borderRadius: '4px', width: '200px', flexShrink: 0 }}
           />
           <datalist id="country-search-list">
              {countries.map(c => (
@@ -100,7 +100,7 @@ export const MapContainer: React.FC = () => {
           </datalist>
 
           {mapStyle === 'HEXAGON' && (
-            <label style={{ display: 'flex', alignItems: 'center', gap: '0.25rem', color: 'var(--text-secondary)', fontSize: '0.85rem', cursor: 'pointer', marginRight: '0.5rem' }}>
+            <label style={{ display: 'flex', alignItems: 'center', gap: '0.25rem', color: 'var(--text-secondary)', fontSize: '0.85rem', cursor: 'pointer', marginRight: '0.5rem', whiteSpace: 'nowrap' }}>
               <input type="checkbox" checked={showHexLabels} onChange={e => setShowHexLabels(e.target.checked)} />
               Labels
             </label>
@@ -109,12 +109,14 @@ export const MapContainer: React.FC = () => {
           <button 
             className={`glass-button ${mapStyle === 'STANDARD' ? 'glass-button--primary' : ''}`}
             onClick={() => setMapStyle('STANDARD')}
+            style={{ whiteSpace: 'nowrap' }}
           >
             Standard Map
           </button>
           <button 
             className={`glass-button ${mapStyle === 'HEXAGON' ? 'glass-button--primary' : ''}`}
             onClick={() => setMapStyle('HEXAGON')}
+            style={{ whiteSpace: 'nowrap' }}
           >
             Hexagon Map
           </button>

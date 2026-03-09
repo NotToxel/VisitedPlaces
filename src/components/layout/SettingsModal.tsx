@@ -56,22 +56,28 @@ export const SettingsModal: React.FC<SettingsModalProps> = ({ onClose }) => {
         onClick={onClose}
         style={{
           position: 'fixed', inset: 0, zIndex: 9998,
-          background: 'rgba(0,0,0,0.25)',
+          background: 'rgba(0,0,0,0.5)',
+          backdropFilter: 'blur(4px)',
         }}
       />
 
-      {/* Side Drawer */}
+      {/* Centered Modal */}
       <div
         style={{
           position: 'fixed',
-          top: 0, right: 0, bottom: 0,
-          width: '380px',
+          top: '50%', left: '50%',
+          transform: 'translate(-50%, -50%)',
+          width: '90vw',
+          maxWidth: '480px',
+          maxHeight: '90vh',
           zIndex: 9999,
           background: 'var(--glass-bg)',
-          borderLeft: '1px solid var(--glass-border)',
-          boxShadow: '-16px 0 48px rgba(0,0,0,0.35)',
+          border: '1px solid var(--glass-border)',
+          borderRadius: '16px',
+          boxShadow: '0 24px 64px rgba(0,0,0,0.5)',
           display: 'flex',
           flexDirection: 'column',
+          overflow: 'hidden',
         }}
       >
         {/* Header */}

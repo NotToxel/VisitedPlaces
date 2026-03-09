@@ -49,6 +49,7 @@ const getCompareColor = (result: MapCompareResult | undefined) => {
     case 'THEY_VISITED': return 'var(--color-they-only)';
     case 'EVERYONE_WISHLIST': return 'var(--color-wishlist-both)';
     case 'MIXED_WISHLIST': return 'var(--accent-wishlist)';
+    case 'EVERYONE_AVOID': return 'var(--color-avoid)';
     default: return 'var(--map-fill-unselected)';
   }
 };

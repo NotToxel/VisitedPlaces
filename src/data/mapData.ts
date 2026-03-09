@@ -1,0 +1,55 @@
+export interface MapMarker {
+  id: string;
+  name: string;
+  coordinates: [number, number];
+  flagCode?: string; // ISO-A2 code for flags
+}
+
+// Microstates and small entities for the global World Map
+export const MICROSTATES: MapMarker[] = [
+  { id: 'VAT', name: 'Vatican City', coordinates: [12.4534, 41.9029], flagCode: 'va' },
+  { id: 'MCO', name: 'Monaco', coordinates: [7.4202, 43.7384], flagCode: 'mc' },
+  { id: 'SMR', name: 'San Marino', coordinates: [12.4578, 43.9424], flagCode: 'sm' },
+  { id: 'LIE', name: 'Liechtenstein', coordinates: [9.5209, 47.1660], flagCode: 'li' },
+  { id: 'AND', name: 'Andorra', coordinates: [1.5218, 42.5063], flagCode: 'ad' },
+  { id: 'NRU', name: 'Nauru', coordinates: [166.9315, -0.5228], flagCode: 'nr' },
+  { id: 'TUV', name: 'Tuvalu', coordinates: [179.1940, -8.5137], flagCode: 'tv' },
+  { id: 'SYC', name: 'Seychelles', coordinates: [55.4920, -4.6796], flagCode: 'sc' },
+  { id: 'MUS', name: 'Mauritius', coordinates: [57.5522, -20.3484], flagCode: 'mu' },
+  { id: 'MDV', name: 'Maldives', coordinates: [73.2207, 3.2028], flagCode: 'mv' },
+  { id: 'SGP', name: 'Singapore', coordinates: [103.8198, 1.3521], flagCode: 'sg' },
+  { id: 'BHR', name: 'Bahrain', coordinates: [50.5577, 26.0667], flagCode: 'bh' },
+  { id: 'MLT', name: 'Malta', coordinates: [14.4326, 35.9375], flagCode: 'mt' },
+  { id: 'BRB', name: 'Barbados', coordinates: [-59.5432, 13.1939], flagCode: 'bb' },
+  { id: 'ATG', name: 'Antigua and Barbuda', coordinates: [-61.7964, 17.0608], flagCode: 'ag' },
+  { id: 'KNA', name: 'Saint Kitts and Nevis', coordinates: [-62.7829, 17.3578], flagCode: 'kn' },
+  { id: 'GRD', name: 'Grenada', coordinates: [-61.6067, 12.1165], flagCode: 'gd' },
+  { id: 'VCT', name: 'Saint Vincent and the Grenadines', coordinates: [-61.2225, 13.2528], flagCode: 'vc' },
+  { id: 'LCA', name: 'Saint Lucia', coordinates: [-60.9789, 13.9094], flagCode: 'lc' },
+  { id: 'FSM', name: 'Federated States of Micronesia', coordinates: [158.1499, 6.9147], flagCode: 'fm' },
+  { id: 'MHL', name: 'Marshall Islands', coordinates: [171.1845, 7.1315], flagCode: 'mh' },
+  { id: 'PLW', name: 'Palau', coordinates: [134.5825, 7.5149], flagCode: 'pw' },
+  { id: 'BMU', name: 'Bermuda', coordinates: [-64.7505, 32.3078], flagCode: 'bm' },
+  { id: 'FLK', name: 'Falkland Islands', coordinates: [-59.5236, -51.7963], flagCode: 'fk' },
+  { id: 'GIB', name: 'Gibraltar', coordinates: [-5.3536, 36.1408], flagCode: 'gi' },
+  { id: 'SHN', name: 'Saint Helena', coordinates: [-5.7089, -15.9650], flagCode: 'sh' }
+];
+
+// UK Crown Dependencies and Overseas Territories (Checklist)
+export const UK_TERRITORIES: MapMarker[] = [
+  { id: 'JEY', name: 'Jersey', coordinates: [-2.1358, 49.2144], flagCode: 'je' },
+  { id: 'GGY', name: 'Guernsey', coordinates: [-2.5853, 49.4657], flagCode: 'gg' },
+  { id: 'IMN', name: 'Isle of Man', coordinates: [-4.5481, 54.2361], flagCode: 'im' },
+  { id: 'GIB', name: 'Gibraltar', coordinates: [-5.3536, 36.1408], flagCode: 'gi' },
+  { id: 'BMU', name: 'Bermuda', coordinates: [-64.7505, 32.3078], flagCode: 'bm' },
+  { id: 'FLK', name: 'Falkland Islands', coordinates: [-59.5236, -51.7963], flagCode: 'fk' },
+  { id: 'SHN', name: 'Saint Helena', coordinates: [-5.7089, -15.9650], flagCode: 'sh' },
+  { id: 'CYM', name: 'Cayman Islands', coordinates: [-81.2546, 19.3133], flagCode: 'ky' },
+  { id: 'TCA', name: 'Turks and Caicos', coordinates: [-71.7979, 21.6820], flagCode: 'tc' },
+  { id: 'VGB', name: 'British Virgin Islands', coordinates: [-64.6395, 18.4207], flagCode: 'vg' },
+  { id: 'AIA', name: 'Anguilla', coordinates: [-63.0501, 18.2206], flagCode: 'ai' },
+  { id: 'MSR', name: 'Montserrat', coordinates: [-62.1875, 16.7425], flagCode: 'ms' },
+  { id: 'IOT', name: 'British Indian Ocean Territory', coordinates: [72.3735, -7.3696], flagCode: 'io' },
+  { id: 'PCN', name: 'Pitcairn Islands', coordinates: [-128.3242, -24.3768], flagCode: 'pn' },
+  { id: 'SGS', name: 'South Georgia', coordinates: [-36.5879, -54.4296], flagCode: 'gs' }
+];

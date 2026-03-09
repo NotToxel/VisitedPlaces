@@ -55,7 +55,7 @@ const HexGrid = ({ setTooltipContent, selectionMode, places, setCountryStatus, h
   };
 
   return (
-    <g transform="translate(120, 20)">
+    <g transform="translate(40, 30)">
       {Object.entries(hexGridData).map(([countryId, dot]) => {
         const placeIdForStore = countryId;
         const status = places[placeIdForStore]?.status || 'NONE';
@@ -117,8 +117,8 @@ const HexagonMapBase: React.FC<HexagonMapProps> = ({ setTooltipContent, selectio
     <ComposableMap
       projection="geoMercator"
       projectionConfig={{ scale: 147 }}
-      width={800}
-      height={400}
+      width={900}
+      height={550}
       style={{ width: '100%', height: '100%', outline: 'none' }}
     >
       <ZoomableGroup center={[0, 0]} zoom={0.8} minZoom={0.5} maxZoom={8}>

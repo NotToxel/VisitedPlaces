@@ -1,7 +1,7 @@
 import React, { useState, useEffect, useMemo, useDeferredValue } from 'react';
 import { useStore } from '../store/useStore';
 import type { PlaceStatus } from '../store/useStore';
-import { Search, Filter, MapPin, Heart, ChevronDown, ChevronRight, Map as MapIcon, Ban, Loader2 } from 'lucide-react';
+import { Search, Filter, Check, Heart, ChevronDown, ChevronRight, Map as MapIcon, Ban, Loader2 } from 'lucide-react';
 import { fetchSubRegions, getSubRegionUrl } from '../utils/topojsonCache';
 import type { TopoRegion } from '../utils/topojsonCache';
 
@@ -149,7 +149,7 @@ const List: React.FC = () => {
             Include Sub-regions in Search
           </label>
           
-          <div style={{ display: 'flex', gap: '0.5rem', padding: '0.25rem', overflowX: 'auto', flex: 1, minWidth: 'min-content', justifyContent: 'flex-end' }}>
+          <div style={{ display: 'flex', gap: '0.5rem', padding: '0.25rem', overflowX: 'auto', flex: '1 1 auto', flexWrap: 'wrap', justifyContent: 'flex-start' }}>
             {['ALL', 'VISITED', 'WISHLIST', 'AVOID', 'UNSELECTED'].map((mode) => (
               <button
                 key={mode}
@@ -236,8 +236,9 @@ const List: React.FC = () => {
                             alignItems: 'center',
                             borderStyle: 'solid',
                             borderWidth: '1px',
-                            transition: 'transform 0.2s, border-color 0.2s',
-                            borderColor: status === 'VISITED' ? 'var(--accent-visited)' : status === 'WISHLIST' ? 'var(--accent-wishlist)' : 'var(--glass-border)'
+                            transition: 'transform 0.2s, border-color 0.2s, background-color 0.2s',
+                            borderColor: status === 'VISITED' ? 'var(--accent-visited)' : status === 'WISHLIST' ? 'var(--accent-wishlist)' : status === 'AVOID' ? '#ef4444' : 'var(--glass-border)',
+                            background: status !== 'NONE' ? (status === 'VISITED' ? 'rgba(34,197,94,0.05)' : status === 'WISHLIST' ? 'rgba(187,154,247,0.05)' : 'rgba(239,68,68,0.05)') : 'transparent'
                           }}
                         >
                           <div style={{ fontWeight: 500, display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
@@ -287,7 +288,7 @@ const List: React.FC = () => {
                                 justifyContent: 'center'
                               }}
                             >
-                              <MapPin size={16} />
+                              <Check size={16} />
                             </button>
                             <button 
                               onClick={() => handleStatusChange(country.id, 'WISHLIST')}
@@ -334,7 +335,7 @@ const List: React.FC = () => {
                               const stateStatus = places[stateId]?.status || 'NONE';
                               
                               return (
-                                <div key={stateId} style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', padding: '0.5rem', background: 'var(--map-fill-unselected)', borderRadius: '4px', borderLeft: `2px solid ${stateStatus === 'VISITED' ? 'var(--accent-visited)' : stateStatus === 'WISHLIST' ? 'var(--accent-wishlist)' : 'transparent'}` }}>
+                                <div key={stateId} style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', padding: '0.5rem', background: 'var(--map-fill-unselected)', borderRadius: '4px', borderLeft: `2px solid ${stateStatus === 'VISITED' ? 'var(--accent-visited)' : stateStatus === 'WISHLIST' ? 'var(--accent-wishlist)' : stateStatus === 'AVOID' ? '#ef4444' : 'transparent'}` }}>
                                   <span style={{ fontSize: '0.9rem' }}>{state.name}</span>
                                   <div style={{ display: 'flex', gap: '0.25rem' }}>
                                     <button 
@@ -342,7 +343,7 @@ const List: React.FC = () => {
                                       style={{ padding: '0.25rem 0.5rem', minWidth: 'unset', fontSize: '0.75rem' }}
                                       onClick={() => setCountryStatus(stateId, stateStatus === 'VISITED' ? 'NONE' : 'VISITED')}
                                     >
-                                      <MapPin size={12} />
+                                      <Check size={12} />
                                     </button>
                                     <button 
                                       className={`glass-button ${stateStatus === 'WISHLIST' ? 'glass-button--primary' : ''}`}

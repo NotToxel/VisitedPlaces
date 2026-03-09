@@ -18,6 +18,7 @@
   --color-me-only: #2ac3de; /* Me only visited */
   --color-they-only: #e0af68; /* They only visited */
   --color-wishlist-both: #f7768e; /* Both wishlisted */
+  --color-avoid: #ef4444; /* Everyone avoids */
   
   --font-main: 'Inter', system-ui, -apple-system, sans-serif;
   
@@ -47,6 +48,7 @@
   --color-me-only: #06b6d4; 
   --color-they-only: #d97706; 
   --color-wishlist-both: #e11d48;
+  --color-avoid: #dc2626;
   
   /* Map Specific Overrides (Light) */
   --map-stroke: rgba(30, 50, 120, 0.55);
