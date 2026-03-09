@@ -20,6 +20,38 @@
   --color-wishlist-both: #f7768e; /* Both wishlisted */
   
   --font-main: 'Inter', system-ui, -apple-system, sans-serif;
+  
+  /* Map Specific Defaults (Dark) */
+  --map-stroke: rgba(255, 255, 255, 0.35);
+  --map-fill-unselected: rgba(255, 255, 255, 0.08);
+  --map-fill-hover: rgba(255, 255, 255, 0.22);
+}
+
+:root.light-mode {
+  --bg-dark: #f0f4f8;
+  --bg-gradient: linear-gradient(135deg, #f0f4f8 0%, #e1e8f0 100%);
+  --glass-bg: rgba(255, 255, 255, 0.7);
+  --glass-border: rgba(0, 0, 0, 0.1);
+  --glass-blur: 16px;
+  
+  --text-primary: #1e293b;
+  --text-secondary: #475569;
+  --text-muted: #64748b;
+  
+  --accent-primary: #3b82f6;
+  --accent-visited: #22c55e;
+  --accent-wishlist: #a855f7;
+  
+  /* Shared state colors (Slightly darker for light backgrounds) */
+  --color-both: #0ea5e9; 
+  --color-me-only: #06b6d4; 
+  --color-they-only: #d97706; 
+  --color-wishlist-both: #e11d48;
+  
+  /* Map Specific Overrides (Light) */
+  --map-stroke: rgba(30, 50, 120, 0.55);
+  --map-fill-unselected: rgba(60, 100, 180, 0.06);
+  --map-fill-hover: rgba(60, 100, 180, 0.18);
 }
 
 * {
@@ -54,7 +86,7 @@ body {
 }
 
 .glass-button {
-  background: rgba(255, 255, 255, 0.05);
+  background: var(--glass-bg);
   border: 1px solid var(--glass-border);
   color: var(--text-primary);
   padding: 0.5rem 1rem;
@@ -66,10 +98,11 @@ body {
   display: flex;
   align-items: center;
   gap: 0.5rem;
+  backdrop-filter: blur(8px);
 }
 
 .glass-button:hover {
-  background: rgba(255, 255, 255, 0.1);
+  background: var(--map-fill-hover);
   transform: translateY(-1px);
 }
 
@@ -88,7 +121,7 @@ body {
 }
 
 .glass-input {
-  background: rgba(0, 0, 0, 0.2);
+  background: var(--map-fill-unselected);
   border: 1px solid var(--glass-border);
   color: var(--text-primary);
   padding: 0.75rem 1rem;
@@ -168,7 +201,7 @@ body {
 
 .navbar__link:hover {
   color: var(--text-primary);
-  background: rgba(255, 255, 255, 0.05);
+  background: var(--map-fill-unselected);
 }
 
 .navbar__link--active {

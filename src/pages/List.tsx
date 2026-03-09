@@ -2,7 +2,7 @@ import React, { useState, useEffect, useMemo, useDeferredValue } from 'react';
 import { useStore } from '../store/useStore';
 import type { PlaceStatus } from '../store/useStore';
 import { Search, Filter, MapPin, Heart, ChevronDown, ChevronRight, Map as MapIcon, Ban, Loader2 } from 'lucide-react';
-import { fetchSubRegions } from '../utils/topojsonCache';
+import { fetchSubRegions, getSubRegionUrl } from '../utils/topojsonCache';
 import type { TopoRegion } from '../utils/topojsonCache';
 
 interface CountryMeta {
@@ -244,7 +244,7 @@ const List: React.FC = () => {
                             {country.flag ? (
                               <img src={country.flag} alt={`${country.name} flag`} style={{ width: '1.5rem', height: '1.2rem', objectFit: 'cover', borderRadius: '2px' }} />
                             ) : (
-                              <div style={{ width: '1.5rem', height: '1.2rem', background: '#333', borderRadius: '2px' }} />
+                              <div style={{ width: '1.5rem', height: '1.2rem', background: 'var(--map-fill-hover)', borderRadius: '2px' }} />
                             )}
                             <div>
                               {country.name}
@@ -253,20 +253,22 @@ const List: React.FC = () => {
                               </div>
                             </div>
                             
-                            {/* Expand button for regions */}
-                            <button
-                               className="glass-button"
-                               style={{ padding: '0.4rem', border: 'none', background: 'transparent' }}
-                               onClick={(e) => {
-                                 e.stopPropagation();
-                                 const isNowExpanded = !expandedCountries[country.id];
-                                 setExpandedCountries(prev => ({ ...prev, [country.id]: isNowExpanded }));
-                                 if (isNowExpanded) loadSubRegions(country.id);
-                               }}
-                               title="View Regions"
-                            >
-                               {loadingSubRegions[country.id] ? <Loader2 size={18} className="animate-spin" /> : (isExpanded ? <ChevronDown size={18} /> : <MapIcon size={18} />)}
-                            </button>
+                            {/* Expand button — only shown if sub-regions are available for this country */}
+                            {getSubRegionUrl(country.id) !== null && (
+                              <button
+                                 className="glass-button"
+                                 style={{ padding: '0.4rem', border: 'none', background: 'transparent' }}
+                                 onClick={(e) => {
+                                   e.stopPropagation();
+                                   const isNowExpanded = !expandedCountries[country.id];
+                                   setExpandedCountries(prev => ({ ...prev, [country.id]: isNowExpanded }));
+                                   if (isNowExpanded) loadSubRegions(country.id);
+                                 }}
+                                 title="View Regions"
+                              >
+                                 {loadingSubRegions[country.id] ? <Loader2 size={18} className="animate-spin" /> : (isExpanded ? <ChevronDown size={18} /> : <MapIcon size={18} />)}
+                              </button>
+                            )}
                           </div>
                           
                           <div style={{ display: 'flex', gap: '0.5rem' }}>
@@ -274,7 +276,7 @@ const List: React.FC = () => {
                               onClick={() => handleStatusChange(country.id, 'VISITED')}
                               title="Mark as Visited"
                               style={{
-                                background: status === 'VISITED' ? 'var(--accent-visited)' : 'rgba(255,255,255,0.1)',
+                                background: status === 'VISITED' ? 'var(--accent-visited)' : 'var(--map-fill-unselected)',
                                 color: status === 'VISITED' ? '#000' : 'var(--text-primary)',
                                 border: 'none',
                                 borderRadius: '6px',
@@ -291,7 +293,7 @@ const List: React.FC = () => {
                               onClick={() => handleStatusChange(country.id, 'WISHLIST')}
                               title="Add to Wishlist"
                               style={{
-                                background: status === 'WISHLIST' ? 'var(--accent-wishlist)' : 'rgba(255,255,255,0.1)',
+                                background: status === 'WISHLIST' ? 'var(--accent-wishlist)' : 'var(--map-fill-unselected)',
                                 color: status === 'WISHLIST' ? '#000' : 'var(--text-primary)',
                                 border: 'none',
                                 borderRadius: '6px',
@@ -308,7 +310,7 @@ const List: React.FC = () => {
                               onClick={() => handleStatusChange(country.id, 'AVOID')}
                               title="Don't want to go"
                               style={{
-                                background: status === 'AVOID' ? '#ef4444' : 'rgba(255,255,255,0.1)',
+                                background: status === 'AVOID' ? '#ef4444' : 'var(--map-fill-unselected)',
                                 color: status === 'AVOID' ? '#fff' : 'var(--text-primary)',
                                 border: 'none',
                                 borderRadius: '6px',
@@ -332,7 +334,7 @@ const List: React.FC = () => {
                               const stateStatus = places[stateId]?.status || 'NONE';
                               
                               return (
-                                <div key={stateId} style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', padding: '0.5rem', background: 'rgba(255,255,255,0.02)', borderRadius: '4px', borderLeft: `2px solid ${stateStatus === 'VISITED' ? 'var(--accent-visited)' : stateStatus === 'WISHLIST' ? 'var(--accent-wishlist)' : 'transparent'}` }}>
+                                <div key={stateId} style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', padding: '0.5rem', background: 'var(--map-fill-unselected)', borderRadius: '4px', borderLeft: `2px solid ${stateStatus === 'VISITED' ? 'var(--accent-visited)' : stateStatus === 'WISHLIST' ? 'var(--accent-wishlist)' : 'transparent'}` }}>
                                   <span style={{ fontSize: '0.9rem' }}>{state.name}</span>
                                   <div style={{ display: 'flex', gap: '0.25rem' }}>
                                     <button 

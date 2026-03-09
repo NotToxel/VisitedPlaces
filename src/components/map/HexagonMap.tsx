@@ -32,7 +32,7 @@ const getFillColor = (status: PlaceStatus, isHovered: boolean, isHighlighted: bo
   if (status === 'VISITED') return 'var(--accent-visited)';
   if (status === 'WISHLIST') return 'var(--accent-wishlist)';
   if (status === 'AVOID') return '#ef4444';
-  return isHovered ? 'rgba(255, 255, 255, 0.4)' : 'rgba(255, 255, 255, 0.15)';
+  return isHovered ? 'var(--map-fill-hover)' : 'var(--map-fill-unselected)';
 };
 
 const HexGrid = ({ setTooltipContent, selectionMode, places, setCountryStatus, highlightedCountry, showLabels }: any) => {
@@ -73,8 +73,8 @@ const HexGrid = ({ setTooltipContent, selectionMode, places, setCountryStatus, h
               d={HEX_PATH}
               transform={`translate(${cx}, ${cy}) ${isSelected || isHighlighted ? 'scale(1.15)' : 'scale(1)'}`}
               fill={getFillColor(status, isHovered, isHighlighted)}
-              stroke="#1a1a1a"
-              strokeWidth={1}
+              stroke="var(--map-stroke)"
+              strokeWidth={0.8}
               style={{
                 cursor: 'pointer',
                 outline: 'none',
@@ -97,8 +97,8 @@ const HexGrid = ({ setTooltipContent, selectionMode, places, setCountryStatus, h
                 textAnchor="middle" 
                 dy=".35em" 
                 fontSize="4.5" 
-                fill="rgba(0,0,0,0.6)" 
-                style={{ pointerEvents: 'none', fontWeight: 600 }}
+                fill="var(--text-primary)" 
+                style={{ pointerEvents: 'none', fontWeight: 600, opacity: 0.8 }}
               >
                 {countryId}
               </text>

@@ -1,5 +1,6 @@
-import React from 'react';
+import React, { useEffect } from 'react';
 import { BrowserRouter, Routes, Route } from 'react-router-dom';
+import { useStore } from './store/useStore';
 import { AppLayout } from './components/layout/AppLayout';
 import Home from './pages/Home';
 import List from './pages/List';
@@ -7,6 +8,16 @@ import Analytics from './pages/Analytics';
 import Compare from './pages/Compare';
 
 const App: React.FC = () => {
+  const { theme } = useStore();
+
+  useEffect(() => {
+    if (theme === 'light') {
+      document.documentElement.classList.add('light-mode');
+    } else {
+      document.documentElement.classList.remove('light-mode');
+    }
+  }, [theme]);
+
   return (
     <BrowserRouter>
       <Routes>

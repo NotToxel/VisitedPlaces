@@ -1,5 +1,5 @@
-// Centralized caching logic for sub-region TopoJSON data to ensure 
-// the List View and Map render identical lists of regions without duplicate fetches.
+// Centralized caching logic for sub-region TopoJSON data.
+// Supported: USA, GBR (United Kingdom)
 
 export interface TopoRegion {
   id: string; // The canonical ID (e.g. E06000001 or 01)
@@ -11,7 +11,7 @@ const pendingRequests: Record<string, Promise<TopoRegion[]>> = {};
 
 export const getSubRegionUrl = (countryA3: string): string | null => {
   if (countryA3 === 'USA') return 'https://cdn.jsdelivr.net/npm/us-atlas@3/states-10m.json';
-  if (countryA3 === 'GBR') return 'https://cdn.jsdelivr.net/gh/ONSdigital/uk-topojson@master/output/topo.json'; // Upper tier for GB
+  if (countryA3 === 'GBR') return 'https://cdn.jsdelivr.net/gh/ONSdigital/uk-topojson@master/output/topo.json';
   return null; 
 };
 
@@ -19,15 +19,8 @@ export const fetchSubRegions = async (countryA3: string): Promise<TopoRegion[]> 
   const url = getSubRegionUrl(countryA3);
   if (!url) return [];
 
-  // Return from cache immediately if available
-  if (subRegionCache[countryA3]) {
-    return subRegionCache[countryA3];
-  }
-
-  // If a request is already in-flight, await that instead of firing another one
-  if (countryA3 in pendingRequests) {
-    return pendingRequests[countryA3];
-  }
+  if (subRegionCache[countryA3]) return subRegionCache[countryA3];
+  if (pendingRequests[countryA3]) return pendingRequests[countryA3];
 
   const fetchPromise = fetch(url)
     .then(res => {
@@ -54,9 +47,7 @@ export const fetchSubRegions = async (countryA3: string): Promise<TopoRegion[]> 
         }));
       }
 
-      // Sort alphabetically by name
       regions.sort((a, b) => a.name.localeCompare(b.name));
-
       subRegionCache[countryA3] = regions;
       return regions;
     })

@@ -112,17 +112,24 @@ const Compare: React.FC = () => {
   }, [myPlaces, friends]);
 
   const [countryData, setCountryData] = useState<Record<string, {name: string, flag: string}>>({});
+  const [numericToA3, setNumericToA3] = useState<Record<string, string>>({});
+
   useEffect(() => {
-    fetch('https://restcountries.com/v3.1/all?fields=name,cca3,flags,independent')
+    fetch('https://restcountries.com/v3.1/all?fields=name,cca3,ccn3,flags,independent')
       .then(res => res.json())
       .then((data: any[]) => {
         const map: Record<string, {name: string, flag: string}> = {};
+        const numMap: Record<string, string> = {};
         data.forEach(c => {
-          if (c.independent === true) {
+          if (c.ccn3) {
+            numMap[c.ccn3] = c.cca3;
+          }
+          if (c.independent === true || c.cca3) {
             map[c.cca3] = { name: c.name.common, flag: c.flags?.svg || '' };
           }
         });
         setCountryData(map);
+        setNumericToA3(numMap);
       })
       .catch(err => console.error("Could not load country list", err));
   }, []);
@@ -176,11 +183,11 @@ const Compare: React.FC = () => {
   }, [mergedData, myPlaces, friends]);
 
   const renderCountryItem = (code: string, data: { name: string, flag: string } | undefined) => (
-    <li key={code} style={{ background: 'rgba(255,255,255,0.05)', padding: '0.5rem 1rem', borderRadius: '4px', display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
+    <li key={code} style={{ background: 'var(--map-fill-unselected)', padding: '0.5rem 1rem', borderRadius: '4px', display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
       {data?.flag ? (
          <img src={data?.flag} alt={`${data?.name} flag`} style={{ width: '1.5rem', height: '1.2rem', objectFit: 'cover', borderRadius: '2px' }} />
       ) : (
-         <div style={{ width: '1.5rem', height: '1.2rem', background: '#333', borderRadius: '2px' }} />
+         <div style={{ width: '1.5rem', height: '1.2rem', background: 'var(--map-fill-hover)', borderRadius: '2px' }} />
       )}
       <span>{data?.name || code}</span>
     </li>
@@ -198,7 +205,7 @@ const Compare: React.FC = () => {
           <p style={{ color: 'var(--text-secondary)' }}>Share your code and merge maps to find common destinations!</p>
         </div>
         
-        <div style={{ display: 'flex', gap: '0.5rem', alignItems: 'center', background: 'rgba(0,0,0,0.2)', padding: '0.5rem', borderRadius: '8px' }}>
+        <div style={{ display: 'flex', gap: '0.5rem', alignItems: 'center', background: 'var(--map-fill-unselected)', padding: '0.5rem', borderRadius: '8px' }}>
           <div style={{ fontSize: '0.875rem', color: 'var(--text-muted)' }}>Your Share Code :</div>
           <input 
             readOnly 
@@ -233,11 +240,11 @@ const Compare: React.FC = () => {
           </div>
 
           <div style={{ marginTop: '1rem', display: 'flex', flexDirection: 'column', gap: '0.5rem' }}>
-            <div style={{ padding: '0.75rem', background: 'rgba(255,255,255,0.05)', borderRadius: '8px', border: '1px solid var(--accent-primary)' }}>
+            <div style={{ padding: '0.75rem', background: 'var(--map-fill-unselected)', borderRadius: '8px', border: '1px solid var(--accent-primary)' }}>
               Me (Base)
             </div>
             {friends.map(f => (
-              <div key={f.id} style={{ padding: '0.75rem', background: 'rgba(255,255,255,0.02)', borderRadius: '8px', border: '1px solid var(--glass-border)', display: 'flex', justifyContent: 'space-between' }}>
+              <div key={f.id} style={{ padding: '0.75rem', background: 'var(--map-fill-unselected)', borderRadius: '8px', border: '1px solid var(--glass-border)', display: 'flex', justifyContent: 'space-between' }}>
                 {f.name}
                 <button onClick={() => removeFriend(f.id)} style={{ background: 'transparent', border: 'none', color: 'var(--text-muted)', cursor: 'pointer' }}>
                   <Trash2 size={16} />
@@ -264,9 +271,9 @@ const Compare: React.FC = () => {
 
       {/* Compare Map */}
       <div className="glass-panel" style={{ padding: '1.5rem', height: '500px', position: 'relative', overflow: 'hidden' }}>
-        <CompareMap mergedData={mergedData} setTooltipContent={setTooltipContent} />
+        <CompareMap mergedData={mergedData} setTooltipContent={setTooltipContent} numericToA3={numericToA3} />
         {tooltipContent && (
-          <div style={{ position: 'absolute', bottom: '2rem', left: '50%', transform: 'translateX(-50%)', background: 'rgba(0,0,0,0.8)', color: 'white', padding: '0.5rem 1rem', borderRadius: '8px', zIndex: 100, backdropFilter: 'blur(4px)' }}>
+          <div style={{ position: 'absolute', bottom: '2rem', left: '50%', transform: 'translateX(-50%)', background: 'var(--glass-bg)', color: 'var(--text-primary)', border: '1px solid var(--glass-border)', padding: '0.5rem 1rem', borderRadius: '8px', zIndex: 100,  }}>
             {tooltipContent}
           </div>
         )}
@@ -307,12 +314,12 @@ const Compare: React.FC = () => {
           <p style={{ fontSize: '0.8rem', color: 'var(--text-muted)', marginBottom: '1rem' }}>Top destinations no one in the group has visited yet, but multiple people want to go to.</p>
           <ul style={{ listStyle: 'none', padding: 0, margin: 0, display: 'flex', flexDirection: 'column', gap: '0.5rem' }}>
             {topWantedUnvisited.map(({code, wishlist}) => (
-              <li key={code} style={{ background: 'rgba(255,255,255,0.05)', padding: '0.5rem 1rem', borderRadius: '4px', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+              <li key={code} style={{ background: 'var(--map-fill-unselected)', padding: '0.5rem 1rem', borderRadius: '4px', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
                 <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
                   {countryData[code]?.flag ? (
                      <img src={countryData[code]?.flag} alt={`${countryData[code]?.name} flag`} style={{ width: '1.5rem', height: '1.2rem', objectFit: 'cover', borderRadius: '2px' }} />
                   ) : (
-                     <div style={{ width: '1.5rem', height: '1.2rem', background: '#333', borderRadius: '2px' }} />
+                     <div style={{ width: '1.5rem', height: '1.2rem', background: 'var(--map-fill-hover)', borderRadius: '2px' }} />
                   )}
                   <span>{countryData[code]?.name || code}</span>
                 </div>
@@ -330,12 +337,12 @@ const Compare: React.FC = () => {
           <p style={{ fontSize: '0.8rem', color: 'var(--text-muted)', marginBottom: '1rem' }}>Destinations someone wants to visit, but someone else has already been to.</p>
           <ul style={{ listStyle: 'none', padding: 0, margin: 0, display: 'flex', flexDirection: 'column', gap: '0.5rem' }}>
             {wantedButVisited.map(({code, whoVisited, whoWants}) => (
-              <li key={code} style={{ background: 'rgba(255,255,255,0.05)', padding: '0.5rem 1rem', borderRadius: '4px', display: 'flex', flexDirection: 'column', gap: '0.25rem' }}>
+              <li key={code} style={{ background: 'var(--map-fill-unselected)', padding: '0.5rem 1rem', borderRadius: '4px', display: 'flex', flexDirection: 'column', gap: '0.25rem' }}>
                 <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
                   {countryData[code]?.flag ? (
                      <img src={countryData[code]?.flag} alt={`${countryData[code]?.name} flag`} style={{ width: '1.5rem', height: '1.2rem', objectFit: 'cover', borderRadius: '2px' }} />
                   ) : (
-                     <div style={{ width: '1.5rem', height: '1.2rem', background: '#333', borderRadius: '2px' }} />
+                     <div style={{ width: '1.5rem', height: '1.2rem', background: 'var(--map-fill-hover)', borderRadius: '2px' }} />
                   )}
                   <span style={{ fontWeight: 600 }}>{countryData[code]?.name || code}</span>
                 </div>

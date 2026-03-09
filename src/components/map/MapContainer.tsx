@@ -49,7 +49,7 @@ export const MapContainer: React.FC = () => {
       {/* Map Header / Controls */}
       <div style={{ display: 'flex', flexWrap: 'wrap', gap: '1rem', justifyContent: 'space-between', alignItems: 'center', marginBottom: '1rem', zIndex: 10 }}>
         <div style={{ display: 'flex', flexDirection: 'column', gap: '0.5rem' }}>
-          <div style={{ display: 'flex', gap: '0.5rem', background: 'rgba(0,0,0,0.2)', padding: '0.25rem', borderRadius: '8px' }}>
+          <div style={{ display: 'flex', flexWrap: 'wrap', gap: '0.5rem', background: 'var(--map-fill-unselected)', padding: '0.25rem', borderRadius: '8px', border: '1px solid var(--glass-border)' }}>
           <button 
             className={`glass-button ${activeMode === 'VISITED' ? 'glass-button--primary' : ''}`}
             onClick={() => setActiveMode('VISITED')}
@@ -83,7 +83,7 @@ export const MapContainer: React.FC = () => {
         </div>
         </div>
         
-        <div style={{ display: 'flex', gap: '0.5rem', background: 'rgba(0,0,0,0.2)', padding: '0.25rem', borderRadius: '8px', alignItems: 'center' }}>
+        <div style={{ display: 'flex', gap: '0.5rem', background: 'var(--map-fill-unselected)', padding: '0.25rem', borderRadius: '8px', border: '1px solid var(--glass-border)', alignItems: 'center' }}>
           <input 
              type="text"
              className="glass-input" 
@@ -148,14 +148,15 @@ export const MapContainer: React.FC = () => {
             bottom: '2rem',
             left: '50%',
             transform: 'translateX(-50%)',
-            background: 'rgba(0,0,0,0.8)',
-            color: 'white',
+            background: 'var(--glass-bg)',
+            color: 'var(--text-primary)',
+            border: '1px solid var(--glass-border)',
             padding: '0.5rem 1rem',
             borderRadius: '8px',
             fontSize: '1rem',
             pointerEvents: 'none',
             zIndex: 100,
-            backdropFilter: 'blur(4px)'
+            fontWeight: 500,
           }}>
             {tooltipContent}
           </div>
