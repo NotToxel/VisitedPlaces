@@ -3,8 +3,7 @@ import { ComposableMap, Geographies, Geography, ZoomableGroup, Marker } from 're
 import { useStore } from '../../store/useStore';
 import type { PlaceStatus } from '../../store/useStore';
 import { ArrowLeft } from 'lucide-react';
-
-const worldGeoUrl = 'https://unpkg.com/world-atlas@2.0.2/countries-50m.json';
+import { getSubRegionUrl } from '../../utils/topojsonCache';
 
 // explicitly rendered dots for entities smaller than SVG precision at 800px width
 const MICROSTATES = [
@@ -39,23 +38,21 @@ const MICROSTATES = [
 
 // UK Crown Dependencies and Overseas Territories — shown as markers in the UK drill-down view
 const UK_TERRITORIES = [
-  { id: 'GBR-JEY', name: 'Jersey', coordinates: [-2.1358, 49.2144] },
-  { id: 'GBR-GGY', name: 'Guernsey', coordinates: [-2.5853, 49.4657] },
-  { id: 'GBR-IMN', name: 'Isle of Man', coordinates: [-4.5481, 54.2361] },
-  { id: 'GBR-GIB', name: 'Gibraltar', coordinates: [-5.3536, 36.1408] },
-  { id: 'GBR-BMU', name: 'Bermuda', coordinates: [-64.7505, 32.3078] },
-  { id: 'GBR-FLK', name: 'Falkland Islands', coordinates: [-59.5236, -51.7963] },
-  { id: 'GBR-SHN', name: 'Saint Helena', coordinates: [-5.7089, -15.9650] },
-  { id: 'GBR-CYM', name: 'Cayman Islands', coordinates: [-81.2546, 19.3133] },
-  { id: 'GBR-TCA', name: 'Turks and Caicos', coordinates: [-71.7979, 21.6820] },
-  { id: 'GBR-VGB', name: 'British Virgin Islands', coordinates: [-64.6395, 18.4207] },
-  { id: 'GBR-AIA', name: 'Anguilla', coordinates: [-63.0501, 18.2206] },
-  { id: 'GBR-MSR', name: 'Montserrat', coordinates: [-62.1875, 16.7425] },
-  { id: 'GBR-IOT', name: 'British Indian Ocean Territory', coordinates: [72.3735, -7.3696] },
-  { id: 'GBR-PCN', name: 'Pitcairn Islands', coordinates: [-128.3242, -24.3768] },
-  { id: 'GBR-SGS', name: 'South Georgia', coordinates: [-36.5879, -54.4296] },
-  { id: 'GBR-SHE', name: 'Shetland Islands', coordinates: [-1.5261, 60.5310] },
-  { id: 'GBR-ORK', name: 'Orkney Islands', coordinates: [-3.0050, 58.9810] },
+  { id: 'JEY', name: 'Jersey', coordinates: [-2.1358, 49.2144] },
+  { id: 'GGY', name: 'Guernsey', coordinates: [-2.5853, 49.4657] },
+  { id: 'IMN', name: 'Isle of Man', coordinates: [-4.5481, 54.2361] },
+  { id: 'GIB', name: 'Gibraltar', coordinates: [-5.3536, 36.1408] },
+  { id: 'BMU', name: 'Bermuda', coordinates: [-64.7505, 32.3078] },
+  { id: 'FLK', name: 'Falkland Islands', coordinates: [-59.5236, -51.7963] },
+  { id: 'SHN', name: 'Saint Helena', coordinates: [-5.7089, -15.9650] },
+  { id: 'CYM', name: 'Cayman Islands', coordinates: [-81.2546, 19.3133] },
+  { id: 'TCA', name: 'Turks and Caicos', coordinates: [-71.7979, 21.6820] },
+  { id: 'VGB', name: 'British Virgin Islands', coordinates: [-64.6395, 18.4207] },
+  { id: 'AIA', name: 'Anguilla', coordinates: [-63.0501, 18.2206] },
+  { id: 'MSR', name: 'Montserrat', coordinates: [-62.1875, 16.7425] },
+  { id: 'IOT', name: 'British Indian Ocean Territory', coordinates: [72.3735, -7.3696] },
+  { id: 'PCN', name: 'Pitcairn Islands', coordinates: [-128.3242, -24.3768] },
+  { id: 'SGS', name: 'South Georgia', coordinates: [-36.5879, -54.4296] }
 ];
 
 interface StandardMapProps {
@@ -77,13 +74,18 @@ const getFillColor = (status: PlaceStatus, isHighlighted: boolean, isSubRegion =
 };
 
 const isUSA = (id?: string | null) => id === 'USA' || id === '840' || id === 'United States of America';
-const isGBR = (id?: string | null) => id === 'GBR' || id === '826' || id === 'United Kingdom';
+const getRegionId = (geo: any, numericToA3: Record<string, string>, activeCountry: string | null) => {
+  if (activeCountry === 'GBR') {
+     return geo.properties?.AREACD || geo.properties?.areacd || geo.id;
+  }
+  if (activeCountry === 'USA') {
+     return geo.id;
+  }
+  const rawId = geo.properties?.ISO_A3 || geo.id;
+  return numericToA3[rawId] || rawId;
+};
 
-const getSubRegionUrl = (id: string) => {
-    if (isUSA(id)) return 'https://cdn.jsdelivr.net/npm/us-atlas@3/states-10m.json';
-    if (isGBR(id)) return 'https://raw.githubusercontent.com/ONSdigital/uk-topojson/master/output/topo.json'; // Upper tier for GB
-    return null; 
-}
+const worldGeoUrl = 'https://unpkg.com/world-atlas@2.0.2/countries-50m.json';
 
 const StandardMapBase: React.FC<StandardMapProps> = ({ setTooltipContent, selectionMode, activeCountry, setActiveCountry, highlightedCountry, numericToA3 }) => {
   const { places, setCountryStatus } = useStore();
@@ -103,28 +105,38 @@ const StandardMapBase: React.FC<StandardMapProps> = ({ setTooltipContent, select
        return;
     }
 
+    const controller = new AbortController();
     setIsLoading(true);
-    fetch(subRegionUrl)
-       .then(res => res.json())
+    fetch(subRegionUrl, { signal: controller.signal })
+       .then(res => {
+           if (!res.ok) throw new Error(`HTTP error! status: ${res.status}`);
+           return res.json();
+       })
        .then(data => {
+           if (!data.objects) throw new Error("Invalid TopoJSON: missing objects property");
            // If UK, we need to force react-simple-maps to use 'utla' (Upper Tier Local Authorities) 
            // by removing all the other geometry collections from the topoJSON root so it defaults correctly.
-           if (isGBR(activeCountry) && data.objects && data.objects.utla) {
+           if (activeCountry === 'GBR' && data.objects && data.objects.utla) {
                data.objects = { default: data.objects.utla };
            }
            setGeoData(data);
            setIsLoading(false);
        })
        .catch(err => {
+           if (err.name === 'AbortError') return;
            console.error("Failed to load subregion TopoJSON", err);
            setIsLoading(false);
            setActiveCountry(null); // Back out on fail
+           setGeoData(worldGeoUrl); // Ensure world map is restored
        });
+       
+    return () => {
+      controller.abort();
+    };
   }, [activeCountry, setActiveCountry]);
 
   const handleCountryClick = (geo: any) => {
-    const rawId = geo.properties?.ISO_A3 || geo.id || geo.properties?.name;
-    const countryId = numericToA3[rawId] || rawId;
+    const countryId = getRegionId(geo, numericToA3, activeCountry);
     if (!countryId) return;
 
     const placeIdForStore = activeCountry ? `${activeCountry}-${countryId}` : countryId;
@@ -139,8 +151,7 @@ const StandardMapBase: React.FC<StandardMapProps> = ({ setTooltipContent, select
 
   const handleRightClick = (e: React.MouseEvent, geo: any) => {
     e.preventDefault();
-    const rawId = geo.properties?.ISO_A3 || geo.id || geo.properties?.name;
-    const countryId = numericToA3[rawId] || rawId;
+    const countryId = getRegionId(geo, numericToA3, activeCountry);
     if (!countryId || activeCountry) return;
 
     if (getSubRegionUrl(countryId)) {
@@ -172,8 +183,8 @@ const StandardMapBase: React.FC<StandardMapProps> = ({ setTooltipContent, select
       <ComposableMap
         projection={isUSA(activeCountry) ? "geoAlbersUsa" : "geoMercator"}
         projectionConfig={{ 
-          scale: isUSA(activeCountry) ? 800 : (isGBR(activeCountry) ? 3200 : 147),
-          center: isGBR(activeCountry) ? [-2, 54.5] : [0, 0]
+          scale: activeCountry === 'USA' ? 800 : (activeCountry === 'GBR' ? 3200 : 147),
+          center: activeCountry === 'GBR' ? [-2, 54.5] : [0, 0]
         }}
         width={800}
         height={500}
@@ -182,29 +193,30 @@ const StandardMapBase: React.FC<StandardMapProps> = ({ setTooltipContent, select
         <ZoomableGroup 
           center={[0, 0]} 
           zoom={1} 
-          minZoom={1} 
+          minZoom={0.5} 
           maxZoom={24}
         >
           <Geographies geography={geoData}>
             {({ geographies }) =>
               geographies.map((geo) => {
                 // In world-atlas 50m, the geo.id is the numeric ISO code (ccn3)
-                // We fallback to name and ISO_A3 for backwards compatibility and other sources
-                // For ONS uk topojson, the ID is areacd and name is areanm
-                const rawId = geo.properties?.ISO_A3 || geo.id || geo.properties?.LAD13CD || geo.properties?.areacd || geo.properties?.name || geo.properties?.ctyua19cd;
-                const countryId = numericToA3[rawId] || rawId;
-                const placeIdForStore = activeCountry ? `${activeCountry}-${countryId}` : countryId;
-                
-                const status = places[placeIdForStore]?.status || 'NONE';
+                  // We fallback to name and ISO_A3 for backwards compatibility and other sources
+                  // For ONS uk topojson, the ID is areacd and name is areanm
+                  const countryId = getRegionId(geo, numericToA3, activeCountry);
+                  const placeIdForStore = activeCountry ? `${activeCountry}-${countryId}` : countryId;
+                  
+                  const status = places[placeIdForStore]?.status || 'NONE';
                 const isSelected = status !== 'NONE';
-                const countryName = geo.properties?.name || geo.properties?.LAD13NM || geo.properties?.areanm || geo.properties?.ctyua19nm || 'Unknown Region';
+                const countryName = geo.properties?.AREANM || geo.properties?.areanm || geo.properties?.name || 'Unknown Region';
                 // For standard map the ID will usually be ISO_A3 but we only have alpha-2 for highlighting
                 // Since our places list uses ISO_A3 or name, let's keep it simple and match standard ISO_A2/A3 if possible, 
                 // We'll use the find function to identify highlighted match since highlightedCountry is an alpha-2 code
-                const isHighlighted = highlightedCountry === (geo.properties?.ISO_A2 || geo.properties?.wb_a2 || geo.properties?.iso_a2 || geo.properties?.areacd) 
+                const isHighlighted = !!highlightedCountry && (
+                  highlightedCountry === (geo.properties?.ISO_A2 || geo.properties?.wb_a2 || geo.properties?.iso_a2 || geo.properties?.areacd) 
                   || highlightedCountry === countryId
                   // Also match numeric IDs against alpha-2 codes for world-atlas 50m
-                  || (geo.id && numericToA3[geo.id] && highlightedCountry === geo.properties?.ISO_A2);
+                  || (geo.id && numericToA3[geo.id] && highlightedCountry === geo.properties?.ISO_A2)
+                );
 
                 return (
                   <Geography
@@ -223,13 +235,16 @@ const StandardMapBase: React.FC<StandardMapProps> = ({ setTooltipContent, select
                      strokeWidth={isHighlighted ? 1.5 : (activeCountry ? 0.5 : 0.5)}
                      style={{
                        default: {
+                         fill: getFillColor(status, isHighlighted, !!activeCountry),
+                         opacity: 1,
                          outline: 'none',
-                         transition: 'fill 0.2s ease',
+                         transition: 'all 0.2s ease',
                        },
                        hover: {
-                         fill: isSelected ? getFillColor(status, isHighlighted, !!activeCountry) : 'rgba(255, 255, 255, 0.35)',
+                         fill: getFillColor(status, isHighlighted, !!activeCountry),
+                         opacity: 0.75,
                          outline: 'none',
-                         transition: 'fill 0.2s ease',
+                         transition: 'opacity 0.2s ease',
                          cursor: 'pointer'
                        },
                        pressed: {
@@ -279,47 +294,68 @@ const StandardMapBase: React.FC<StandardMapProps> = ({ setTooltipContent, select
               </Marker>
             );
           })}
-          {/* Render UK overseas territories in drill-down mode */}
-          {isGBR(activeCountry) && UK_TERRITORIES.map((territory) => {
-            const status = places[territory.id]?.status || 'NONE';
-            const isSelected = status !== 'NONE';
-            return (
-              <Marker
-                key={territory.id}
-                coordinates={territory.coordinates as [number, number]}
-                onClick={() => {
-                  if (status === selectionMode) {
-                    setCountryStatus(territory.id, 'NONE');
-                  } else {
-                    setCountryStatus(territory.id, selectionMode);
-                  }
-                }}
-                onMouseEnter={() => {
-                  setTooltipContent(`${territory.name}${isSelected ? ` - ${status}` : ''} (UK Territory)`);
-                }}
-                onMouseLeave={() => setTooltipContent('')}
-              >
-                <circle
-                  cx={0}
-                  cy={0}
-                  r={2}
-                  fill={getFillColor(status, false, true)}
-                  stroke='rgba(255,255,255,0.8)'
-                  strokeWidth={0.5}
-                  style={{ cursor: 'pointer', transition: 'all 0.2s ease' }}
-                />
-                <text
-                  textAnchor="middle"
-                  y={-4}
-                  style={{ fill: 'rgba(255,255,255,0.75)', fontSize: '2.5px', cursor: 'pointer', pointerEvents: 'none', fontWeight: '500' }}
-                >
-                  {territory.name}
-                </text>
-              </Marker>
-            );
-          })}
+          {/* Map markers for territories shouldn't be rendered if we have an inset */}
+          {activeCountry === 'GBR' && null}
         </ZoomableGroup>
       </ComposableMap>
+
+      {/* Inline UK Territories Side Panel */}
+      {activeCountry === 'GBR' && (
+        <div style={{
+          position: 'absolute',
+          top: '1rem',
+          right: '1rem',
+          width: '280px',
+          maxHeight: 'calc(100% - 2rem)',
+          overflowY: 'auto',
+          zIndex: 40,
+          display: 'flex',
+          flexDirection: 'column',
+          gap: '0.5rem',
+          paddingRight: '0.5rem', // For scrollbar
+          pointerEvents: 'none' // Let clicks pass through empty space
+        }}>
+          <div style={{ background: 'rgba(0,0,0,0.7)', backdropFilter: 'blur(8px)', padding: '0.75rem', borderRadius: '8px', pointerEvents: 'auto', border: '1px solid var(--glass-border)' }}>
+            <h3 style={{ fontSize: '0.9rem', marginBottom: '0.25rem', color: 'var(--text-secondary)', textTransform: 'uppercase', letterSpacing: '0.05em' }}>Crown Dependencies</h3>
+            <div style={{ display: 'flex', flexDirection: 'column', gap: '0.25rem' }}>
+              {UK_TERRITORIES.slice(0, 3).map(territory => {
+                const status = places[territory.id]?.status || 'NONE';
+                return (
+                  <div key={territory.id} style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '0.4rem', background: 'rgba(255,255,255,0.05)', borderRadius: '4px', borderLeft: `3px solid ${status === 'VISITED' ? 'var(--accent-visited)' : status === 'WISHLIST' ? 'var(--accent-wishlist)' : status === 'AVOID' ? '#ef4444' : 'transparent'}` }}>
+                    <span style={{ fontSize: '0.85rem' }}>{territory.name}</span>
+                    <button 
+                      onClick={() => setCountryStatus(territory.id, status === selectionMode ? 'NONE' : selectionMode)}
+                      title={`Toggle ${selectionMode}`}
+                      style={{ background: 'transparent', border: 'none', cursor: 'pointer', color: status === 'NONE' ? 'rgba(255,255,255,0.3)' : (status === 'VISITED' ? 'var(--accent-visited)' : status === 'WISHLIST' ? 'var(--accent-wishlist)' : '#ef4444'), padding: 0 }}
+                    >
+                      <div style={{ width: '12px', height: '12px', borderRadius: '50%', background: 'currentColor' }} />
+                    </button>
+                  </div>
+                );
+              })}
+            </div>
+            
+            <h3 style={{ fontSize: '0.9rem', marginTop: '1rem', marginBottom: '0.25rem', color: 'var(--text-secondary)', textTransform: 'uppercase', letterSpacing: '0.05em' }}>Overseas Territories</h3>
+            <div style={{ display: 'flex', flexDirection: 'column', gap: '0.25rem' }}>
+              {UK_TERRITORIES.slice(3).map(territory => {
+                const status = places[territory.id]?.status || 'NONE';
+                return (
+                  <div key={territory.id} style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '0.4rem', background: 'rgba(255,255,255,0.05)', borderRadius: '4px', borderLeft: `3px solid ${status === 'VISITED' ? 'var(--accent-visited)' : status === 'WISHLIST' ? 'var(--accent-wishlist)' : status === 'AVOID' ? '#ef4444' : 'transparent'}` }}>
+                     <span style={{ fontSize: '0.85rem' }}>{territory.name === 'British Indian Ocean Territory' ? 'Brit. Indian Ocean Terr.' : territory.name === 'South Georgia' ? 'South Georgia & S.S' : territory.name}</span>
+                     <button 
+                      onClick={() => setCountryStatus(territory.id, status === selectionMode ? 'NONE' : selectionMode)}
+                      title={`Toggle ${selectionMode}`}
+                      style={{ background: 'transparent', border: 'none', cursor: 'pointer', color: status === 'NONE' ? 'rgba(255,255,255,0.3)' : (status === 'VISITED' ? 'var(--accent-visited)' : status === 'WISHLIST' ? 'var(--accent-wishlist)' : '#ef4444'), padding: 0 }}
+                    >
+                      <div style={{ width: '12px', height: '12px', borderRadius: '50%', background: 'currentColor' }} />
+                    </button>
+                  </div>
+                );
+              })}
+            </div>
+          </div>
+        </div>
+      )}
     </>
   );
 };

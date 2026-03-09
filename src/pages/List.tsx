@@ -1,8 +1,9 @@
 import React, { useState, useEffect, useMemo, useDeferredValue } from 'react';
 import { useStore } from '../store/useStore';
 import type { PlaceStatus } from '../store/useStore';
-import { Search, Filter, MapPin, Heart, ChevronDown, ChevronRight, Map as MapIcon, Ban } from 'lucide-react';
-import { State } from 'country-state-city';
+import { Search, Filter, MapPin, Heart, ChevronDown, ChevronRight, Map as MapIcon, Ban, Loader2 } from 'lucide-react';
+import { fetchSubRegions } from '../utils/topojsonCache';
+import type { TopoRegion } from '../utils/topojsonCache';
 
 interface CountryMeta {
   id: string; // ISO-A3
@@ -46,16 +47,24 @@ const List: React.FC = () => {
   }, []);
 
   const [expandedCountries, setExpandedCountries] = useState<Record<string, boolean>>({});
+  const [subRegionsByCountry, setSubRegionsByCountry] = useState<Record<string, TopoRegion[]>>({});
+  const [loadingSubRegions, setLoadingSubRegions] = useState<Record<string, boolean>>({});
 
-  // Pre-compute all states grouped by country code for extremely fast sub-region search lookup
-  const allStatesByCountry = useMemo(() => {
-    const map = new Map<string, import('country-state-city').IState[]>();
-    State.getAllStates().forEach(s => {
-      if (!map.has(s.countryCode)) map.set(s.countryCode, []);
-      map.get(s.countryCode)!.push(s);
-    });
-    return map;
-  }, []);
+  const loadSubRegions = async (id: string) => {
+    if (subRegionsByCountry[id] || loadingSubRegions[id]) return;
+    setLoadingSubRegions(prev => ({ ...prev, [id]: true }));
+    const regions = await fetchSubRegions(id);
+    setSubRegionsByCountry(prev => ({ ...prev, [id]: regions }));
+    setLoadingSubRegions(prev => ({ ...prev, [id]: false }));
+  };
+
+  // Pre-load supporting sub-regions if the user wants to search by them
+  useEffect(() => {
+    if (searchSubRegions) {
+      loadSubRegions('USA');
+      loadSubRegions('GBR');
+    }
+  }, [searchSubRegions]);
 
   const filteredCountries = useMemo(() => {
       return countries.filter(c => {
@@ -64,7 +73,7 @@ const List: React.FC = () => {
         let matchesSearch = c.name.toLowerCase().includes(searchVal);
         
         if (!matchesSearch && searchVal.length > 0 && searchSubRegions) {
-            const states = allStatesByCountry.get(c.cca2) || [];
+            const states = subRegionsByCountry[c.id] || [];
             if (states.some(s => s.name.toLowerCase().includes(searchVal))) {
                 matchesSearch = true;
             }
@@ -77,7 +86,7 @@ const List: React.FC = () => {
           
         return matchesSearch && matchesFilter;
       });
-  }, [countries, places, deferredSearch, filterMode, searchSubRegions]);
+  }, [countries, places, deferredSearch, filterMode, searchSubRegions, subRegionsByCountry]);
 
   // Group by continent
   const groupedPlaces = useMemo(() => {
@@ -195,11 +204,11 @@ const List: React.FC = () => {
                     {placesInContinent.map(country => {
                       const status = places[country.id]?.status || 'NONE';
                       let isExpanded = expandedCountries[country.id];
-                      let countryStates: import('country-state-city').IState[] = [];
+                      let countryStates: TopoRegion[] = [];
                       const searchVal = deferredSearch.trim().toLowerCase();
                       
                       if (isExpanded || (searchVal.length > 0 && searchSubRegions)) {
-                          countryStates = allStatesByCountry.get(country.cca2) || [];
+                          countryStates = subRegionsByCountry[country.id] || [];
                           
                           if (searchVal.length > 0 && searchSubRegions) {
                               const matchingStates = countryStates.filter(s => s.name.toLowerCase().includes(searchVal));
@@ -250,11 +259,13 @@ const List: React.FC = () => {
                                style={{ padding: '0.4rem', border: 'none', background: 'transparent' }}
                                onClick={(e) => {
                                  e.stopPropagation();
-                                 setExpandedCountries(prev => ({ ...prev, [country.id]: !prev[country.id] }));
+                                 const isNowExpanded = !expandedCountries[country.id];
+                                 setExpandedCountries(prev => ({ ...prev, [country.id]: isNowExpanded }));
+                                 if (isNowExpanded) loadSubRegions(country.id);
                                }}
                                title="View Regions"
                             >
-                               {isExpanded ? <ChevronDown size={18} /> : <MapIcon size={18} />}
+                               {loadingSubRegions[country.id] ? <Loader2 size={18} className="animate-spin" /> : (isExpanded ? <ChevronDown size={18} /> : <MapIcon size={18} />)}
                             </button>
                           </div>
                           
@@ -317,7 +328,7 @@ const List: React.FC = () => {
                         {isExpanded && countryStates.length > 0 && (
                           <div style={{ paddingLeft: '2rem', display: 'flex', flexDirection: 'column', gap: '0.5rem' }}>
                             {countryStates.map(state => {
-                              const stateId = `${country.id}-${state.isoCode}`;
+                              const stateId = `${country.id}-${state.id}`;
                               const stateStatus = places[stateId]?.status || 'NONE';
                               
                               return (
@@ -352,9 +363,9 @@ const List: React.FC = () => {
                             })}
                           </div>
                         )}
-                        {isExpanded && countryStates.length === 0 && (
+                        {isExpanded && countryStates.length === 0 && !loadingSubRegions[country.id] && (
                           <div style={{ paddingLeft: '2rem', fontSize: '0.8rem', color: 'var(--text-muted)' }}>
-                            No specific sub-regions available.
+                            No specific sub-regions available for map drill-down.
                           </div>
                         )}
                         </div>

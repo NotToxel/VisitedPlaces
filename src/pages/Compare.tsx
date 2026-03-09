@@ -52,42 +52,6 @@ const Compare: React.FC = () => {
     setFriends(friends.filter(f => f.id !== id));
   };
 
-  // Merge logic for N-way compare
-  const getMergedLists = () => {
-    const allUsers = [{ name: 'Me', places: myPlaces }, ...friends];
-    const totalUsers = allUsers.length;
-    if (!allUsers || allUsers.length === 0) return { allVisited: [], allWishlisted: [], allAvoid: [], anyVisited: [], conflict: [], countryCounts: {} };
-    
-    const countryCounts: Record<string, { visited: number; wishlist: number; avoid: number }> = {};
-    
-    allUsers.forEach(user => {
-      Object.entries(user.places || {}).forEach(([code, data]) => {
-        if (code.includes('-')) return; // skip sub-regions
-        if (!countryCounts[code]) countryCounts[code] = { visited: 0, wishlist: 0, avoid: 0 };
-        if (data.status === 'VISITED') countryCounts[code].visited++;
-        if (data.status === 'WISHLIST') countryCounts[code].wishlist++;
-        if (data.status === 'AVOID') countryCounts[code].avoid++;
-      });
-    });
-
-    const allVisited: string[] = [];
-    const allWishlisted: string[] = [];
-    const allAvoid: string[] = [];
-    const anyVisited: string[] = [];
-    const conflict: string[] = [];
-    
-    Object.entries(countryCounts).forEach(([code, counts]) => {
-      if (counts.visited === totalUsers) allVisited.push(code);
-      else if (counts.wishlist === totalUsers) allWishlisted.push(code);
-      else if (counts.avoid === totalUsers) allAvoid.push(code);
-      else if (counts.visited > 0 && counts.wishlist > 0) conflict.push(code);
-      
-      if (counts.visited > 0 && counts.visited < totalUsers) anyVisited.push(code);
-    });
-    
-    return { allVisited, allWishlisted, allAvoid, anyVisited, conflict, countryCounts };
-  };
-
   const mergedData = useMemo(() => {
     const allUsers = [{ name: 'Me', places: myPlaces }, ...friends];
     const totalUsers = allUsers.length;
@@ -149,13 +113,13 @@ const Compare: React.FC = () => {
 
   const [countryData, setCountryData] = useState<Record<string, {name: string, flag: string}>>({});
   useEffect(() => {
-    fetch('https://restcountries.com/v3.1/all?fields=name,cca2,flags,independent')
+    fetch('https://restcountries.com/v3.1/all?fields=name,cca3,flags,independent')
       .then(res => res.json())
       .then((data: any[]) => {
         const map: Record<string, {name: string, flag: string}> = {};
         data.forEach(c => {
           if (c.independent === true) {
-            map[c.cca2] = { name: c.name.common, flag: c.flags?.svg || '' };
+            map[c.cca3] = { name: c.name.common, flag: c.flags?.svg || '' };
           }
         });
         setCountryData(map);

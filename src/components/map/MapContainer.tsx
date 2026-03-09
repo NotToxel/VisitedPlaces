@@ -10,17 +10,18 @@ export const MapContainer: React.FC = () => {
   const [activeCountry, setActiveCountry] = useState<string | null>(null);
 
   // Search/Highlight feature
-  const [countries, setCountries] = useState<{cca2: string, name: string}[]>([]);
+  const [countries, setCountries] = useState<{cca2: string, cca3: string, name: string}[]>([]);
   const [numericToA3, setNumericToA3] = useState<Record<string, string>>({});
   const [searchVal, setSearchVal] = useState('');
   const [highlightedCountry, setHighlightedCountry] = useState<string | null>(null);
+  const [highlightedCountryA3, setHighlightedCountryA3] = useState<string | null>(null);
 
   useEffect(() => {
     fetch('https://restcountries.com/v3.1/all?fields=name,cca2,cca3,ccn3,independent')
       .then(res => res.json())
       .then((data: any[]) => {
         const filtered = data.filter(c => c.independent === true)
-          .map(c => ({ cca2: c.cca2, name: c.name.common }))
+          .map(c => ({ cca2: c.cca2, cca3: c.cca3, name: c.name.common }))
           .sort((a, b) => a.name.localeCompare(b.name));
         setCountries(filtered);
         
@@ -40,6 +41,7 @@ export const MapContainer: React.FC = () => {
     setSearchVal(val);
     const found = countries.find(c => c.name.toLowerCase() === val.toLowerCase());
     setHighlightedCountry(found ? found.cca2 : null);
+    setHighlightedCountryA3(found ? found.cca3 : null);
   };
 
   return (
@@ -127,7 +129,7 @@ export const MapContainer: React.FC = () => {
             setTooltipContent={setTooltipContent} 
             activeCountry={activeCountry}
             setActiveCountry={setActiveCountry}
-            highlightedCountry={highlightedCountry}
+            highlightedCountry={highlightedCountryA3}
             numericToA3={numericToA3}
           />
         ) : (
