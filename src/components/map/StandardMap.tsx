@@ -1,10 +1,12 @@
-import React, { memo, useState, useEffect } from 'react';
+import React, { memo, useState, useEffect, useRef } from 'react';
 import { ComposableMap, Geographies, Geography, ZoomableGroup, Marker } from 'react-simple-maps';
 import { useStore } from '../../store/useStore';
 import type { PlaceStatus } from '../../store/useStore';
 import { ArrowLeft, Check, Heart, Ban, X as XIcon, List } from 'lucide-react';
 import { getSubRegionUrl } from '../../utils/topojsonCache';
 import { MICROSTATES, UK_TERRITORIES, OBSOLETE_UK_REGIONS } from '../../data/mapData';
+import * as topojson from 'topojson-client';
+import { geoCentroid } from 'd3-geo';
 
 
 
@@ -43,6 +45,95 @@ const StandardMapBase: React.FC<StandardMapProps> = ({ setTooltipContent, select
   const [geoData, setGeoData] = useState<string | object>(worldGeoUrl);
   const [isLoading, setIsLoading] = useState(false);
   const [showTerritories, setShowTerritories] = useState(false);
+  const [mapCenter, setMapCenter] = useState<[number, number]>([0, 0]);
+  const [mapZoom, setMapZoom] = useState(1);
+  const worldTopoRef = useRef<any>(null);
+  const animFrameRef = useRef<number | null>(null);
+  // Tracks live values during animation
+  const liveRef = useRef({ cx: 0, cy: 0, zoom: 1 });
+
+  const animateTo = (targetCx: number, targetCy: number, targetZoom: number) => {
+    if (animFrameRef.current) cancelAnimationFrame(animFrameRef.current);
+    const step = () => {
+      const live = liveRef.current;
+      const factor = 0.1; // ease-out speed (0 = instant freeze, 1 = instant jump)
+      live.cx += (targetCx - live.cx) * factor;
+      live.cy += (targetCy - live.cy) * factor;
+      live.zoom += (targetZoom - live.zoom) * factor;
+      setMapCenter([live.cx, live.cy]);
+      setMapZoom(live.zoom);
+      const dx = Math.abs(targetCx - live.cx);
+      const dy = Math.abs(targetCy - live.cy);
+      const dz = Math.abs(targetZoom - live.zoom);
+      if (dx > 0.01 || dy > 0.01 || dz > 0.005) {
+        animFrameRef.current = requestAnimationFrame(step);
+      } else {
+        // Snap to final values
+        live.cx = targetCx; live.cy = targetCy; live.zoom = targetZoom;
+        setMapCenter([targetCx, targetCy]);
+        setMapZoom(targetZoom);
+      }
+    };
+    animFrameRef.current = requestAnimationFrame(step);
+  };
+
+  // Cleanup animation on unmount
+  useEffect(() => () => { if (animFrameRef.current) cancelAnimationFrame(animFrameRef.current); }, []);
+
+  // Pre-fetch and cache the world topology so we can compute centroids for search pan
+  useEffect(() => {
+    if (worldTopoRef.current) return;
+    fetch(worldGeoUrl)
+      .then(r => r.json())
+      .then(topo => { worldTopoRef.current = topo; })
+      .catch(() => {});
+  }, []);
+
+  // Pan to searched country when highlightedCountry changes
+  useEffect(() => {
+    if (!highlightedCountry || activeCountry) return;
+
+    // Try MICROSTATES first (they have known coordinates)
+    const ms = MICROSTATES.find(m => m.id === highlightedCountry);
+    if (ms) {
+      animateTo(ms.coordinates[0], ms.coordinates[1], 6);
+      return;
+    }
+
+    if (!worldTopoRef.current) {
+      // Topology not yet loaded — wait 300ms and retry
+      const t = setTimeout(() => {
+        if (!worldTopoRef.current) return;
+        const topo = worldTopoRef.current;
+        tryPanToCountry(topo, highlightedCountry);
+      }, 300);
+      return () => clearTimeout(t);
+    }
+    tryPanToCountry(worldTopoRef.current, highlightedCountry);
+  }, [highlightedCountry, activeCountry, numericToA3]);
+
+  const tryPanToCountry = (topo: any, cca3: string) => {
+    try {
+      const features = (topojson.feature(topo, topo.objects.countries) as any).features;
+      const found = features.find((f: any) => {
+        const a3 = numericToA3[f.id] || f.id;
+        return a3 === cca3;
+      });
+      if (found) {
+        const center = geoCentroid(found);
+        if (center && isFinite(center[0]) && isFinite(center[1])) {
+          animateTo(center[0], center[1], 4);
+        }
+      }
+    } catch {}
+  };
+
+  // Reset pan/zoom when search is cleared
+  useEffect(() => {
+    if (!highlightedCountry) {
+      animateTo(0, 0, 1);
+    }
+  }, [highlightedCountry]);
 
   useEffect(() => {
     if (!activeCountry) {
@@ -136,7 +227,7 @@ const StandardMapBase: React.FC<StandardMapProps> = ({ setTooltipContent, select
         height={500}
         style={{ width: '100%', height: '100%', outline: 'none', opacity: isLoading ? 0.5 : 1, transition: 'opacity 0.3s' }}
       >
-        <ZoomableGroup key={activeCountry || 'world'} center={[0, 0]} zoom={1} minZoom={0.5} maxZoom={24}>
+        <ZoomableGroup key={activeCountry || 'world'} center={mapCenter} zoom={mapZoom} minZoom={0.5} maxZoom={24} onMoveEnd={({ coordinates, zoom }) => { setMapCenter(coordinates); setMapZoom(zoom); }}>
           <Geographies geography={geoData}>
             {({ geographies }) =>
               geographies.map((geo) => {

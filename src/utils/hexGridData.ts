@@ -1,975 +1,975 @@
 export const hexGridData: Record<string, {name: string, x: number, y: number}> = {
-  "AF": {
+  "AFG": {
     "name": "Afghanistan",
     "x": 22,
     "y": 8
   },
-  "AL": {
+  "ALB": {
     "name": "Albania",
     "x": 15,
     "y": 9
   },
-  "DZ": {
+  "DZA": {
     "name": "Algeria",
     "x": 13,
     "y": 11
   },
-  "AO": {
+  "AGO": {
     "name": "Angola",
     "x": 13,
     "y": 17
   },
-  "AQ": {
+  "ATA": {
     "name": "Antarctica",
     "x": 15,
     "y": 23
   },
-  "AG": {
+  "ATG": {
     "name": "Antigua & Barbuda",
     "x": 7,
     "y": 4
   },
-  "AR": {
+  "ARG": {
     "name": "Argentina",
     "x": 6,
     "y": 14
   },
-  "AM": {
+  "ARM": {
     "name": "Armenia",
     "x": 20,
     "y": 6
   },
-  "AU": {
+  "AUS": {
     "name": "Australia",
     "x": 24,
     "y": 19
   },
-  "AT": {
+  "AUT": {
     "name": "Austria",
     "x": 15,
     "y": 6
   },
-  "AZ": {
+  "AZE": {
     "name": "Azerbaijan",
     "x": 21,
     "y": 7
   },
-  "BS": {
+  "BHS": {
     "name": "Bahamas",
     "x": 4,
     "y": 2
   },
-  "BH": {
+  "BHR": {
     "name": "Bahrain",
     "x": 20,
     "y": 9
   },
-  "BD": {
+  "BGD": {
     "name": "Bangladesh",
     "x": 23,
     "y": 8
   },
-  "BB": {
+  "BRB": {
     "name": "Barbados",
     "x": 8,
     "y": 6
   },
-  "BY": {
+  "BLR": {
     "name": "Belarus",
     "x": 17,
     "y": 4
   },
-  "BE": {
+  "BEL": {
     "name": "Belgium",
     "x": 13,
     "y": 5
   },
-  "BZ": {
+  "BLZ": {
     "name": "Belize",
     "x": 2,
     "y": 3
   },
-  "BJ": {
+  "BEN": {
     "name": "Benin",
     "x": 15,
     "y": 14
   },
-  "BT": {
+  "BTN": {
     "name": "Bhutan",
     "x": 24,
     "y": 7
   },
-  "BO": {
+  "BOL": {
     "name": "Bolivia",
     "x": 6,
     "y": 11
   },
-  "BA": {
+  "BIH": {
     "name": "Bosnia & Herzegovina",
     "x": 15,
     "y": 7
   },
-  "BW": {
+  "BWA": {
     "name": "Botswana",
     "x": 15,
     "y": 18
   },
-  "BR": {
+  "BRA": {
     "name": "Brazil",
     "x": 8,
     "y": 11
   },
-  "BN": {
+  "BRN": {
     "name": "Brunei Darussalam",
     "x": 25,
     "y": 12
   },
-  "BG": {
+  "BGR": {
     "name": "Bulgaria",
     "x": 17,
     "y": 7
   },
-  "BF": {
+  "BFA": {
     "name": "Burkina Faso",
     "x": 13,
     "y": 13
   },
-  "BI": {
+  "BDI": {
     "name": "Burundi",
     "x": 15,
     "y": 16
   },
-  "KH": {
+  "KHM": {
     "name": "Cambodia",
     "x": 25,
     "y": 10
   },
-  "CM": {
+  "CMR": {
     "name": "Cameroon",
     "x": 14,
     "y": 15
   },
-  "CA": {
+  "CAN": {
     "name": "Canada",
     "x": 1,
     "y": 1
   },
-  "CV": {
+  "CPV": {
     "name": "Cabo Verde",
     "x": 10,
     "y": 15
   },
-  "CF": {
+  "CAF": {
     "name": "Central African Republic",
     "x": 16,
     "y": 14
   },
-  "TD": {
+  "TCD": {
     "name": "Chad",
     "x": 14,
     "y": 13
   },
-  "CL": {
+  "CHL": {
     "name": "Chile",
     "x": 6,
     "y": 13
   },
-  "CN": {
+  "CHN": {
     "name": "China",
     "x": 24,
     "y": 6
   },
-  "CO": {
+  "COL": {
     "name": "Colombia",
     "x": 5,
     "y": 9
   },
-  "KM": {
+  "COM": {
     "name": "Comoros",
     "x": 18,
     "y": 18
   },
-  "CG": {
+  "COG": {
     "name": "Congo",
     "x": 14,
     "y": 16
   },
-  "CD": {
+  "COD": {
     "name": "Congo (Democratic Republic of the)",
     "x": 15,
     "y": 15
   },
-  "CR": {
+  "CRI": {
     "name": "Costa Rica",
     "x": 3,
     "y": 7
   },
-  "CI": {
+  "CIV": {
     "name": "Côte d'Ivoire",
     "x": 12,
     "y": 15
   },
-  "HR": {
+  "HRV": {
     "name": "Croatia",
     "x": 14,
     "y": 7
   },
-  "CU": {
+  "CUB": {
     "name": "Cuba",
     "x": 4,
     "y": 3
   },
-  "CY": {
+  "CYP": {
     "name": "Cyprus",
     "x": 17,
     "y": 10
   },
-  "CZ": {
+  "CZE": {
     "name": "Czech Republic",
     "x": 15,
     "y": 5
   },
-  "DK": {
+  "DNK": {
     "name": "Denmark",
     "x": 14,
     "y": 3
   },
-  "DJ": {
+  "DJI": {
     "name": "Djibouti",
     "x": 17,
     "y": 13
   },
-  "DM": {
+  "DMA": {
     "name": "Dominica",
     "x": 7,
     "y": 7
   },
-  "DO": {
+  "DOM": {
     "name": "Dominican Republic",
     "x": 6,
     "y": 4
   },
-  "EC": {
+  "ECU": {
     "name": "Ecuador",
     "x": 5,
     "y": 10
   },
-  "EG": {
+  "EGY": {
     "name": "Egypt",
     "x": 16,
     "y": 11
   },
-  "SV": {
+  "SLV": {
     "name": "El Salvador",
     "x": 1,
     "y": 5
   },
-  "GQ": {
+  "GNQ": {
     "name": "Equatorial Guinea",
     "x": 13,
     "y": 16
   },
-  "ER": {
+  "ERI": {
     "name": "Eritrea",
     "x": 16,
     "y": 13
   },
-  "EE": {
+  "EST": {
     "name": "Estonia",
     "x": 17,
     "y": 2
   },
-  "ET": {
+  "ETH": {
     "name": "Ethiopia",
     "x": 17,
     "y": 14
   },
-  "FJ": {
+  "FJI": {
     "name": "Fiji",
     "x": 27,
     "y": 19
   },
-  "FI": {
+  "FIN": {
     "name": "Finland",
     "x": 17,
     "y": 1
   },
-  "FR": {
+  "FRA": {
     "name": "France",
     "x": 12,
     "y": 5
   },
-  "GA": {
+  "GAB": {
     "name": "Gabon",
     "x": 14,
     "y": 17
   },
-  "GM": {
+  "GMB": {
     "name": "Gambia",
     "x": 12,
     "y": 12
   },
-  "GE": {
+  "GEO": {
     "name": "Georgia",
     "x": 21,
     "y": 6
   },
-  "DE": {
+  "DEU": {
     "name": "Germany",
     "x": 14,
     "y": 4
   },
-  "GH": {
+  "GHA": {
     "name": "Ghana",
     "x": 13,
     "y": 14
   },
-  "GR": {
+  "GRC": {
     "name": "Greece",
     "x": 16,
     "y": 9
   },
-  "GL": {
+  "GRL": {
     "name": "Greenland",
     "x": 8,
     "y": 1
   },
-  "GD": {
+  "GRD": {
     "name": "Grenada",
     "x": 7,
     "y": 8
   },
-  "GT": {
+  "GTM": {
     "name": "Guatemala",
     "x": 1,
     "y": 4
   },
-  "GN": {
+  "GIN": {
     "name": "Guinea",
     "x": 11,
     "y": 14
   },
-  "GW": {
+  "GNB": {
     "name": "Guinea-Bissau",
     "x": 11,
     "y": 13
   },
-  "GY": {
+  "GUY": {
     "name": "Guyana",
     "x": 6,
     "y": 10
   },
-  "HT": {
+  "HTI": {
     "name": "Haiti",
     "x": 5,
     "y": 4
   },
-  "HN": {
+  "HND": {
     "name": "Honduras",
     "x": 2,
     "y": 5
   },
-  "HU": {
+  "HUN": {
     "name": "Hungary",
     "x": 16,
     "y": 6
   },
-  "IS": {
+  "ISL": {
     "name": "Iceland",
     "x": 10,
     "y": 1
   },
-  "IN": {
+  "IND": {
     "name": "India",
     "x": 22,
     "y": 9
   },
-  "ID": {
+  "IDN": {
     "name": "Indonesia",
     "x": 25,
     "y": 13
   },
-  "IR": {
+  "IRN": {
     "name": "Iran (Islamic Republic of)",
     "x": 20,
     "y": 8
   },
-  "IQ": {
+  "IRQ": {
     "name": "Iraq",
     "x": 20,
     "y": 7
   },
-  "IE": {
+  "IRL": {
     "name": "Ireland",
     "x": 10,
     "y": 4
   },
-  "IL": {
+  "ISR": {
     "name": "Israel",
     "x": 18,
     "y": 10
   },
-  "IT": {
+  "ITA": {
     "name": "Italy",
     "x": 13,
     "y": 7
   },
-  "JM": {
+  "JAM": {
     "name": "Jamaica",
     "x": 4,
     "y": 4
   },
-  "JP": {
+  "JPN": {
     "name": "Japan",
     "x": 27,
     "y": 6
   },
-  "JO": {
+  "JOR": {
     "name": "Jordan",
     "x": 18,
     "y": 8
   },
-  "KZ": {
+  "KAZ": {
     "name": "Kazakhstan",
     "x": 24,
     "y": 5
   },
-  "KE": {
+  "KEN": {
     "name": "Kenya",
     "x": 17,
     "y": 15
   },
-  "KI": {
+  "KIR": {
     "name": "Kiribati",
     "x": 27,
     "y": 17
   },
-  "KP": {
+  "PRK": {
     "name": "North Korea",
     "x": 25,
     "y": 6
   },
-  "KR": {
+  "KOR": {
     "name": "South Korea",
     "x": 25,
     "y": 7
   },
-  "XK": {
+  "UNK": {
     "name": "Kosovo",
     "x": 16,
     "y": 8
   },
-  "KW": {
+  "KWT": {
     "name": "Kuwait",
     "x": 19,
     "y": 8
   },
-  "KG": {
+  "KGZ": {
     "name": "Kyrgyzstan",
     "x": 23,
     "y": 6
   },
-  "LA": {
+  "LAO": {
     "name": "Lao People's Democratic Republic",
     "x": 25,
     "y": 9
   },
-  "LV": {
+  "LVA": {
     "name": "Latvia",
     "x": 17,
     "y": 3
   },
-  "LB": {
+  "LBN": {
     "name": "Lebanon",
     "x": 18,
     "y": 9
   },
-  "LS": {
+  "LSO": {
     "name": "Lesotho",
     "x": 17,
     "y": 19
   },
-  "LR": {
+  "LBR": {
     "name": "Liberia",
     "x": 12,
     "y": 14
   },
-  "LY": {
+  "LBY": {
     "name": "Libya",
     "x": 15,
     "y": 11
   },
-  "LT": {
+  "LTU": {
     "name": "Lithuania",
     "x": 16,
     "y": 4
   },
-  "LU": {
+  "LUX": {
     "name": "Luxembourg",
     "x": 13,
     "y": 6
   },
-  "MK": {
+  "MKD": {
     "name": "Macedonia",
     "x": 17,
     "y": 8
   },
-  "MG": {
+  "MDG": {
     "name": "Madagascar",
     "x": 19,
     "y": 19
   },
-  "MW": {
+  "MWI": {
     "name": "Malawi",
     "x": 15,
     "y": 17
   },
-  "MY": {
+  "MYS": {
     "name": "Malaysia",
     "x": 24,
     "y": 11
   },
-  "MV": {
+  "MDV": {
     "name": "Maldives",
     "x": 21,
     "y": 12
   },
-  "ML": {
+  "MLI": {
     "name": "Mali",
     "x": 14,
     "y": 12
   },
-  "MT": {
+  "MLT": {
     "name": "Malta",
     "x": 11,
     "y": 8
   },
-  "MH": {
+  "MHL": {
     "name": "Marshall Islands",
     "x": 26,
     "y": 15
   },
-  "MR": {
+  "MRT": {
     "name": "Mauritania",
     "x": 11,
     "y": 12
   },
-  "MU": {
+  "MUS": {
     "name": "Mauritius",
     "x": 19,
     "y": 20
   },
-  "MX": {
+  "MEX": {
     "name": "Mexico",
     "x": 1,
     "y": 3
   },
-  "FM": {
+  "FSM": {
     "name": "Micronesia (Federated States of)",
     "x": 26,
     "y": 16
   },
-  "MD": {
+  "MDA": {
     "name": "Moldova (Republic of)",
     "x": 18,
     "y": 5
   },
-  "MN": {
+  "MNG": {
     "name": "Mongolia",
     "x": 25,
     "y": 5
   },
-  "ME": {
+  "MNE": {
     "name": "Montenegro",
     "x": 15,
     "y": 8
   },
-  "MA": {
+  "MAR": {
     "name": "Morocco",
     "x": 12,
     "y": 11
   },
-  "MZ": {
+  "MOZ": {
     "name": "Mozambique",
     "x": 16,
     "y": 17
   },
-  "MM": {
+  "MMR": {
     "name": "Myanmar",
     "x": 24,
     "y": 8
   },
-  "NA": {
+  "NAM": {
     "name": "Namibia",
     "x": 15,
     "y": 19
   },
-  "NR": {
+  "NRU": {
     "name": "Nauru",
     "x": 26,
     "y": 17
   },
-  "NP": {
+  "NPL": {
     "name": "Nepal",
     "x": 23,
     "y": 9
   },
-  "NL": {
+  "NLD": {
     "name": "Netherlands",
     "x": 13,
     "y": 4
   },
-  "NZ": {
+  "NZL": {
     "name": "New Zealand",
     "x": 26,
     "y": 21
   },
-  "NI": {
+  "NIC": {
     "name": "Nicaragua",
     "x": 2,
     "y": 6
   },
-  "NE": {
+  "NER": {
     "name": "Niger",
     "x": 15,
     "y": 12
   },
-  "NG": {
+  "NGA": {
     "name": "Nigeria",
     "x": 13,
     "y": 15
   },
-  "NO": {
+  "NOR": {
     "name": "Norway",
     "x": 15,
     "y": 1
   },
-  "OM": {
+  "OMN": {
     "name": "Oman",
     "x": 19,
     "y": 11
   },
-  "PK": {
+  "PAK": {
     "name": "Pakistan",
     "x": 21,
     "y": 8
   },
-  "PW": {
+  "PLW": {
     "name": "Palau",
     "x": 25,
     "y": 16
   },
-  "PA": {
+  "PAN": {
     "name": "Panama",
     "x": 4,
     "y": 8
   },
-  "PG": {
+  "PNG": {
     "name": "Papua New Guinea",
     "x": 25,
     "y": 17
   },
-  "PY": {
+  "PRY": {
     "name": "Paraguay",
     "x": 6,
     "y": 12
   },
-  "PE": {
+  "PER": {
     "name": "Peru",
     "x": 5,
     "y": 11
   },
-  "PH": {
+  "PHL": {
     "name": "Philippines",
     "x": 26,
     "y": 11
   },
-  "PL": {
+  "POL": {
     "name": "Poland",
     "x": 15,
     "y": 4
   },
-  "PT": {
+  "PRT": {
     "name": "Portugal",
     "x": 11,
     "y": 6
   },
-  "QA": {
+  "QAT": {
     "name": "Qatar",
     "x": 19,
     "y": 10
   },
-  "RO": {
+  "ROU": {
     "name": "Romania",
     "x": 17,
     "y": 6
   },
-  "RU": {
+  "RUS": {
     "name": "Russian Federation",
     "x": 25,
     "y": 4
   },
-  "RW": {
+  "RWA": {
     "name": "Rwanda",
     "x": 16,
     "y": 16
   },
-  "KN": {
+  "KNA": {
     "name": "St. Kitts & Nevis",
     "x": 6,
     "y": 5
   },
-  "LC": {
+  "LCA": {
     "name": "St. Lucia",
     "x": 7,
     "y": 5
   },
-  "VC": {
+  "VCT": {
     "name": "St. Vincent & the Grenadines",
     "x": 7,
     "y": 6
   },
-  "WS": {
+  "WSM": {
     "name": "Samoa",
     "x": 28,
     "y": 18
   },
-  "ST": {
+  "STP": {
     "name": "Sao Tome and Principe",
     "x": 11,
     "y": 16
   },
-  "SA": {
+  "SAU": {
     "name": "Saudi Arabia",
     "x": 19,
     "y": 9
   },
-  "SN": {
+  "SEN": {
     "name": "Senegal",
     "x": 13,
     "y": 12
   },
-  "RS": {
+  "SRB": {
     "name": "Serbia",
     "x": 16,
     "y": 7
   },
-  "SC": {
+  "SYC": {
     "name": "Seychelles",
     "x": 18,
     "y": 17
   },
-  "SL": {
+  "SLE": {
     "name": "Sierra Leone",
     "x": 12,
     "y": 13
   },
-  "SG": {
+  "SGP": {
     "name": "Singapore",
     "x": 24,
     "y": 13
   },
-  "SK": {
+  "SVK": {
     "name": "Slovakia",
     "x": 16,
     "y": 5
   },
-  "SI": {
+  "SVN": {
     "name": "Slovenia",
     "x": 14,
     "y": 6
   },
-  "SB": {
+  "SLB": {
     "name": "Solomon Islands",
     "x": 26,
     "y": 18
   },
-  "SO": {
+  "SOM": {
     "name": "Somalia",
     "x": 18,
     "y": 14
   },
-  "ZA": {
+  "ZAF": {
     "name": "South Africa",
     "x": 16,
     "y": 20
   },
-  "SS": {
+  "SSD": {
     "name": "South Sudan",
     "x": 15,
     "y": 13
   },
-  "ES": {
+  "ESP": {
     "name": "Spain",
     "x": 12,
     "y": 6
   },
-  "LK": {
+  "LKA": {
     "name": "Sri Lanka",
     "x": 22,
     "y": 11
   },
-  "SD": {
+  "SDN": {
     "name": "Sudan",
     "x": 16,
     "y": 12
   },
-  "SR": {
+  "SUR": {
     "name": "Suriname",
     "x": 7,
     "y": 11
   },
-  "SZ": {
+  "SWZ": {
     "name": "Swaziland",
     "x": 16,
     "y": 19
   },
-  "SE": {
+  "SWE": {
     "name": "Sweden",
     "x": 16,
     "y": 1
   },
-  "CH": {
+  "CHE": {
     "name": "Switzerland",
     "x": 14,
     "y": 5
   },
-  "SY": {
+  "SYR": {
     "name": "Syria",
     "x": 19,
     "y": 7
   },
-  "TJ": {
+  "TJK": {
     "name": "Tajikistan",
     "x": 23,
     "y": 7
   },
-  "TZ": {
+  "TZA": {
     "name": "Tanzania",
     "x": 17,
     "y": 16
   },
-  "TH": {
+  "THA": {
     "name": "Thailand",
     "x": 24,
     "y": 10
   },
-  "TL": {
+  "TLS": {
     "name": "Timor-Leste",
     "x": 25,
     "y": 14
   },
-  "TG": {
+  "TGO": {
     "name": "Togo",
     "x": 14,
     "y": 14
   },
-  "TO": {
+  "TON": {
     "name": "Tonga",
     "x": 28,
     "y": 19
   },
-  "TT": {
+  "TTO": {
     "name": "Trinidad & Tobago",
     "x": 7,
     "y": 9
   },
-  "TN": {
+  "TUN": {
     "name": "Tunisia",
     "x": 14,
     "y": 11
   },
-  "TR": {
+  "TUR": {
     "name": "Turkey",
     "x": 18,
     "y": 7
   },
-  "TM": {
+  "TKM": {
     "name": "Turkmenistan",
     "x": 22,
     "y": 7
   },
-  "TV": {
+  "TUV": {
     "name": "Tuvalu",
     "x": 27,
     "y": 18
   },
-  "UG": {
+  "UGA": {
     "name": "Uganda",
     "x": 16,
     "y": 15
   },
-  "UA": {
+  "UKR": {
     "name": "Ukraine",
     "x": 17,
     "y": 5
   },
-  "AE": {
+  "ARE": {
     "name": "United Arab Emirates",
     "x": 20,
     "y": 10
   },
-  "GB": {
+  "GBR": {
     "name": "Great Britain and Northern Ireland",
     "x": 11,
     "y": 4
   },
-  "US": {
+  "USA": {
     "name": "United States of America",
     "x": 1,
     "y": 2
   },
-  "UY": {
+  "URY": {
     "name": "Uruguay",
     "x": 7,
     "y": 12
   },
-  "UZ": {
+  "UZB": {
     "name": "Uzbekistan",
     "x": 22,
     "y": 6
   },
-  "VU": {
+  "VUT": {
     "name": "Vanuatu",
     "x": 26,
     "y": 19
   },
-  "VE": {
+  "VEN": {
     "name": "Venezuela",
     "x": 6,
     "y": 9
   },
-  "VN": {
+  "VNM": {
     "name": "Viet Nam",
     "x": 26,
     "y": 9
   },
-  "YE": {
+  "YEM": {
     "name": "Yemen",
     "x": 18,
     "y": 11
   },
-  "ZM": {
+  "ZMB": {
     "name": "Zambia",
     "x": 14,
     "y": 18
   },
-  "ZW": {
+  "ZWE": {
     "name": "Zimbabwe",
     "x": 16,
     "y": 18
   },
-  "TW": {
+  "TWN": {
     "name": "Taiwan",
     "x": 26,
     "y": 8
   },
-  "HK": {
+  "HKG": {
     "name": "Hong Kong",
     "x": 25,
     "y": 8
   },
-  "MO": {
+  "MAC": {
     "name": "Macau",
     "x": 26,
     "y": 9
