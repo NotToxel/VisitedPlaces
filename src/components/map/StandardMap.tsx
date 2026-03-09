@@ -17,13 +17,16 @@ interface StandardMapProps {
   setActiveCountry: (id: string | null) => void;
   highlightedCountry?: string | null;
   numericToA3: Record<string, string>;
+  showVisited: boolean;
+  showWishlist: boolean;
+  showAvoid: boolean;
 }
 
-const getFillColor = (status: PlaceStatus, isHighlighted: boolean, isSubRegion = false) => {
+const getFillColor = (status: PlaceStatus, isHighlighted: boolean, isSubRegion = false, showVisited = true, showWishlist = true, showAvoid = true) => {
   if (isHighlighted) return '#fbbf24';
-  if (status === 'VISITED') return 'var(--accent-visited)';
-  if (status === 'WISHLIST') return 'var(--accent-wishlist)';
-  if (status === 'AVOID') return '#ef4444';
+  if (status === 'VISITED' && showVisited) return 'var(--accent-visited)';
+  if (status === 'WISHLIST' && showWishlist) return 'var(--accent-wishlist)';
+  if (status === 'AVOID' && showAvoid) return '#ef4444';
   return isSubRegion ? 'var(--map-fill-hover)' : 'var(--map-fill-unselected)';
 };
 
@@ -40,7 +43,7 @@ const getRegionId = (geo: any, numericToA3: Record<string, string>, activeCountr
 
 const worldGeoUrl = 'https://unpkg.com/world-atlas@2.0.2/countries-50m.json';
 
-const StandardMapBase: React.FC<StandardMapProps> = ({ setTooltipContent, selectionMode, activeCountry, setActiveCountry, highlightedCountry, numericToA3 }) => {
+const StandardMapBase: React.FC<StandardMapProps> = ({ setTooltipContent, selectionMode, activeCountry, setActiveCountry, highlightedCountry, numericToA3, showVisited, showWishlist, showAvoid }) => {
   const { places, setCountryStatus } = useStore();
   const [geoData, setGeoData] = useState<string | object>(worldGeoUrl);
   const [isLoading, setIsLoading] = useState(false);
@@ -243,6 +246,7 @@ const StandardMapBase: React.FC<StandardMapProps> = ({ setTooltipContent, select
                   || (geo.id && numericToA3[geo.id] && highlightedCountry === numericToA3[geo.id])
                 );
 
+                const fill = getFillColor(status, isHighlighted, !!activeCountry, showVisited, showWishlist, showAvoid);
                 return (
                   <Geography
                     key={geo.rsmKey}
@@ -251,12 +255,12 @@ const StandardMapBase: React.FC<StandardMapProps> = ({ setTooltipContent, select
                     onMouseLeave={() => setTooltipContent('')}
                     onClick={() => handleCountryClick(geo)}
                     onContextMenu={(e) => handleRightClick(e, geo)}
-                    fill={getFillColor(status, isHighlighted, !!activeCountry)}
+                    fill={fill}
                     stroke={isHighlighted ? "#fbbf24" : 'var(--map-stroke)'}
                     strokeWidth={isHighlighted ? 1.5 : (activeCountry ? 0.7 : 0.5)}
                     style={{
-                      default: { fill: getFillColor(status, isHighlighted, !!activeCountry), outline: 'none' },
-                      hover: { fill: getFillColor(status, isHighlighted, !!activeCountry), opacity: 0.75, outline: 'none', cursor: 'pointer' },
+                      default: { fill, outline: 'none' },
+                      hover: { fill, opacity: 0.75, outline: 'none', cursor: 'pointer' },
                       pressed: { fill: 'var(--accent-primary)', outline: 'none' }
                     }}
                   />
@@ -276,7 +280,7 @@ const StandardMapBase: React.FC<StandardMapProps> = ({ setTooltipContent, select
                 onMouseEnter={() => setTooltipContent(`${marker.name}${status !== 'NONE' ? ` - ${status}` : ''}`)}
                 onMouseLeave={() => setTooltipContent('')}
               >
-                <circle cx={0} cy={0} r={isHighlighted ? 4 : 2.5} fill={getFillColor(status, isHighlighted)} stroke={isHighlighted ? "#fff" : "var(--map-stroke)"} strokeWidth={0.5} style={{ cursor: 'pointer' }} />
+                <circle cx={0} cy={0} r={isHighlighted ? 4 : 2.5} fill={getFillColor(status, isHighlighted, false, showVisited, showWishlist, showAvoid)} stroke={isHighlighted ? "#fff" : "var(--map-stroke)"} strokeWidth={0.5} style={{ cursor: 'pointer' }} />
               </Marker>
             );
           })}

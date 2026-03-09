@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { StandardMap } from './StandardMap';
 import { HexagonMap } from './HexagonMap';
+import { Eye, EyeOff } from 'lucide-react';
 
 export const MapContainer: React.FC = () => {
   const [activeMode, setActiveMode] = useState<'VISITED' | 'WISHLIST' | 'AVOID'>('VISITED');
@@ -13,8 +14,12 @@ export const MapContainer: React.FC = () => {
   const [countries, setCountries] = useState<{cca2: string, cca3: string, name: string}[]>([]);
   const [numericToA3, setNumericToA3] = useState<Record<string, string>>({});
   const [searchVal, setSearchVal] = useState('');
-  const [highlightedCountry, setHighlightedCountry] = useState<string | null>(null);
   const [highlightedCountryA3, setHighlightedCountryA3] = useState<string | null>(null);
+
+  // Visibility toggles for each status
+  const [showVisited, setShowVisited] = useState(true);
+  const [showWishlist, setShowWishlist] = useState(true);
+  const [showAvoid, setShowAvoid] = useState(true);
 
   useEffect(() => {
     fetch('https://restcountries.com/v3.1/all?fields=name,cca2,cca3,ccn3,independent')
@@ -40,7 +45,6 @@ export const MapContainer: React.FC = () => {
     const val = e.target.value;
     setSearchVal(val);
     const found = countries.find(c => c.name.toLowerCase() === val.toLowerCase());
-    setHighlightedCountry(found ? found.cca2 : null);
     setHighlightedCountryA3(found ? found.cca3 : null);
   };
 
@@ -80,10 +84,26 @@ export const MapContainer: React.FC = () => {
           >
             Mark Avoid
           </button>
-        </div>
+          </div>
         </div>
         
         <div style={{ display: 'flex', flexWrap: 'nowrap', gap: '0.5rem', background: 'var(--map-fill-unselected)', padding: '0.25rem', borderRadius: '8px', border: '1px solid var(--glass-border)', alignItems: 'center', overflowX: 'auto' }}>
+          {(
+            [['VISITED', showVisited, setShowVisited, 'var(--accent-visited)'],
+             ['WISHLIST', showWishlist, setShowWishlist, 'var(--accent-wishlist)'],
+             ['AVOID', showAvoid, setShowAvoid, '#ef4444']] as const
+          ).map(([label, shown, setter, color]) => (
+            <button
+              key={label}
+              className="glass-button"
+              onClick={() => setter(!shown)}
+              title={`${shown ? 'Hide' : 'Show'} ${label}`}
+              style={{ display: 'flex', alignItems: 'center', gap: '0.35rem', opacity: shown ? 1 : 0.45, borderColor: shown ? color : 'transparent', color: shown ? color : 'var(--text-muted)', whiteSpace: 'nowrap' }}
+            >
+              {shown ? <Eye size={14} /> : <EyeOff size={14} />}
+              {label.charAt(0) + label.slice(1).toLowerCase()}
+            </button>
+          ))}
           <input 
              type="text"
              className="glass-input" 
@@ -133,13 +153,19 @@ export const MapContainer: React.FC = () => {
             setActiveCountry={setActiveCountry}
             highlightedCountry={highlightedCountryA3}
             numericToA3={numericToA3}
+            showVisited={showVisited}
+            showWishlist={showWishlist}
+            showAvoid={showAvoid}
           />
         ) : (
           <HexagonMap 
             selectionMode={activeMode} 
             setTooltipContent={setTooltipContent} 
-            highlightedCountry={highlightedCountry}
+            highlightedCountry={highlightedCountryA3}
             showLabels={showHexLabels}
+            showVisited={showVisited}
+            showWishlist={showWishlist}
+            showAvoid={showAvoid}
           />
         )}
         

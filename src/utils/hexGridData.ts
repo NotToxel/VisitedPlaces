@@ -971,7 +971,7 @@ export const hexGridData: Record<string, {name: string, x: number, y: number}> =
   },
   "MAC": {
     "name": "Macau",
-    "x": 26,
-    "y": 9
+    "x": 27,
+    "y": 10
   }
 };
