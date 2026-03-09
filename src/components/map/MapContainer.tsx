@@ -20,7 +20,7 @@ export const MapContainer: React.FC = () => {
     fetch('https://restcountries.com/v3.1/all?fields=name,cca2,cca3,ccn3,independent')
       .then(res => res.json())
       .then((data: any[]) => {
-        const filtered = data.filter(c => c.independent === true)
+        const filtered = data.filter(c => c.independent === true || c.cca3 === 'TWN' || c.cca3 === 'HKG' || c.cca3 === 'MAC')
           .map(c => ({ cca2: c.cca2, cca3: c.cca3, name: c.name.common }))
           .sort((a, b) => a.name.localeCompare(b.name));
         setCountries(filtered);

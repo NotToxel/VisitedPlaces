@@ -32,7 +32,9 @@ export const MICROSTATES: MapMarker[] = [
   { id: 'BMU', name: 'Bermuda', coordinates: [-64.7505, 32.3078], flagCode: 'bm' },
   { id: 'FLK', name: 'Falkland Islands', coordinates: [-59.5236, -51.7963], flagCode: 'fk' },
   { id: 'GIB', name: 'Gibraltar', coordinates: [-5.3536, 36.1408], flagCode: 'gi' },
-  { id: 'SHN', name: 'Saint Helena', coordinates: [-5.7089, -15.9650], flagCode: 'sh' }
+  { id: 'SHN', name: 'Saint Helena', coordinates: [-5.7089, -15.9650], flagCode: 'sh' },
+  { id: 'HKG', name: 'Hong Kong', coordinates: [114.1694, 22.3193], flagCode: 'hk' },
+  { id: 'MAC', name: 'Macau', coordinates: [113.5439, 22.1987], flagCode: 'mo' },
 ];
 
 // UK Crown Dependencies and Overseas Territories (Checklist)

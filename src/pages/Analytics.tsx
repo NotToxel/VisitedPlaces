@@ -12,7 +12,7 @@ const Analytics: React.FC = () => {
     fetch('https://restcountries.com/v3.1/all?fields=cca3,continents,independent')
       .then(res => res.json())
       .then((data: any[]) => {
-        const independent = data.filter(c => c.independent === true);
+        const independent = data.filter(c => c.independent === true || c.cca3 === 'TWN' || c.cca3 === 'HKG' || c.cca3 === 'MAC');
         setTotalCountries(independent.length);
         
         const map: Record<string, string> = {};

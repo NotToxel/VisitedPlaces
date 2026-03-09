@@ -958,5 +958,20 @@ export const hexGridData: Record<string, {name: string, x: number, y: number}> =
     "name": "Zimbabwe",
     "x": 16,
     "y": 18
+  },
+  "TW": {
+    "name": "Taiwan",
+    "x": 26,
+    "y": 8
+  },
+  "HK": {
+    "name": "Hong Kong",
+    "x": 25,
+    "y": 8
+  },
+  "MO": {
+    "name": "Macau",
+    "x": 26,
+    "y": 9
   }
 };

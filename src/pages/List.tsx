@@ -28,7 +28,7 @@ const List: React.FC = () => {
       .then(res => res.json())
       .then((data: any[]) => {
         const extracted: CountryMeta[] = data
-          .filter(c => c.independent === true)
+          .filter(c => c.independent === true || c.cca3 === 'TWN' || c.cca3 === 'HKG' || c.cca3 === 'MAC')
           .map(c => ({
             id: c.cca3,
             cca2: c.cca2,
