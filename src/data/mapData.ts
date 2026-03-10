@@ -35,6 +35,12 @@ export const MICROSTATES: MapMarker[] = [
   { id: 'SHN', name: 'Saint Helena', coordinates: [-5.7089, -15.9650], flagCode: 'sh' },
   { id: 'HKG', name: 'Hong Kong', coordinates: [114.1694, 22.3193], flagCode: 'hk' },
   { id: 'MAC', name: 'Macau', coordinates: [113.5439, 22.1987], flagCode: 'mo' },
+  // US Territories for global map (markers)
+  { id: 'PRI', name: 'Puerto Rico', coordinates: [-66.5901, 18.2208], flagCode: 'pr' },
+  { id: 'VIR', name: 'US Virgin Islands', coordinates: [-64.8963, 18.3358], flagCode: 'vi' },
+  { id: 'GUM', name: 'Guam', coordinates: [144.7448, 13.4443], flagCode: 'gu' },
+  { id: 'MNP', name: 'Northern Mariana Islands', coordinates: [145.6739, 15.0979], flagCode: 'mp' },
+  { id: 'ASM', name: 'American Samoa', coordinates: [-170.7020, -14.2710], flagCode: 'as' },
 ];
 
 // UK Crown Dependencies and Overseas Territories (Checklist)
@@ -54,6 +60,15 @@ export const UK_TERRITORIES: MapMarker[] = [
   { id: 'IOT', name: 'British Indian Ocean Territory', coordinates: [72.3735, -7.3696], flagCode: 'io' },
   { id: 'PCN', name: 'Pitcairn Islands', coordinates: [-128.3242, -24.3768], flagCode: 'pn' },
   { id: 'SGS', name: 'South Georgia', coordinates: [-36.5879, -54.4296], flagCode: 'gs' }
+];
+
+// USA Territories (Checklist)
+export const USA_TERRITORIES: MapMarker[] = [
+  { id: 'PRI', name: 'Puerto Rico', coordinates: [-66.5901, 18.2208], flagCode: 'pr' },
+  { id: 'VIR', name: 'US Virgin Islands', coordinates: [-64.8963, 18.3358], flagCode: 'vi' },
+  { id: 'GUM', name: 'Guam', coordinates: [144.7448, 13.4443], flagCode: 'gu' },
+  { id: 'MNP', name: 'Northern Mariana Islands', coordinates: [145.6739, 15.0979], flagCode: 'mp' },
+  { id: 'ASM', name: 'American Samoa', coordinates: [-170.7020, -14.2710], flagCode: 'as' }
 ];
 
 // Replaced by 2023 Unitary Authorities in TopoJSON but still provided in map bundle overlaps

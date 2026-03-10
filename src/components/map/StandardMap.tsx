@@ -2,9 +2,10 @@ import React, { memo, useState, useEffect, useRef } from 'react';
 import { ComposableMap, Geographies, Geography, ZoomableGroup, Marker } from 'react-simple-maps';
 import { useStore } from '../../store/useStore';
 import type { PlaceStatus } from '../../store/useStore';
-import { ArrowLeft, Check, Heart, Ban, X as XIcon, List } from 'lucide-react';
+import { ArrowLeft, List } from 'lucide-react';
 import { getSubRegionUrl } from '../../utils/topojsonCache';
-import { MICROSTATES, UK_TERRITORIES, OBSOLETE_UK_REGIONS } from '../../data/mapData';
+import { MICROSTATES, UK_TERRITORIES, USA_TERRITORIES, OBSOLETE_UK_REGIONS } from '../../data/mapData';
+import { TerritoryListPanel } from './TerritoryListPanel';
 import * as topojson from 'topojson-client';
 import { geoCentroid } from 'd3-geo';
 
@@ -287,107 +288,36 @@ const StandardMapBase: React.FC<StandardMapProps> = ({ setTooltipContent, select
         </ZoomableGroup>
       </ComposableMap>
 
-      {activeCountry === 'GBR' && !showTerritories && (
+      {(activeCountry === 'GBR' || activeCountry === 'USA') && !showTerritories && (
         <button
           onClick={() => setShowTerritories(true)}
           className="glass-button"
           style={{ position: 'absolute', top: '1rem', right: '1rem', zIndex: 40, padding: '0.6rem 1rem', boxShadow: '0 4px 12px rgba(0,0,0,0.2)' }}
         >
-          <List size={18} /> Overseas Territories
+          <List size={18} /> {activeCountry === 'GBR' ? 'Overseas Territories' : 'US Territories'}
         </button>
       )}
 
       {activeCountry === 'GBR' && showTerritories && (
-        <div className="glass-panel" style={{
-          position: 'absolute', top: '1rem', right: '1rem', 
-          width: 'min(380px, calc(100vw - 2rem))', 
-          maxHeight: 'calc(100% - 2rem)', zIndex: 40,
-          display: 'flex', flexDirection: 'column', overflow: 'hidden', padding: 0,
-          boxShadow: '0 8px 32px rgba(0,0,0,0.4)',
-          animation: 'slideInRight 0.3s ease-out forwards'
-        }}>
-          <div style={{ padding: '0.75rem', borderBottom: '1px solid var(--glass-border)', background: 'var(--map-fill-unselected)', display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
-            <h3 style={{ margin: 0, fontSize: '0.85rem', color: 'var(--text-secondary)', textTransform: 'uppercase', letterSpacing: '0.05em' }}>
-              Crown Dependencies & Overseas Territories
-            </h3>
-            <button 
-              onClick={() => setShowTerritories(false)}
-              style={{ background: 'transparent', border: 'none', color: 'var(--text-secondary)', cursor: 'pointer', display: 'flex' }}
-            >
-              <XIcon size={18} />
-            </button>
-          </div>
-          <div style={{ 
-            flex: 1, overflowY: 'auto', padding: '0.5rem',
-            display: 'flex', flexDirection: 'column',
-            gap: '0.5rem', alignContent: 'start'
-          }}>
-            {UK_TERRITORIES.map((territory) => {
-              const status = places[territory.id]?.status || 'NONE';
-              return (
-                <div key={territory.id} className="glass-panel" style={{
-                  display: 'flex', alignItems: 'center', gap: '0.75rem', padding: '1rem',
-                  borderStyle: 'solid', borderWidth: '1px',
-                  transition: 'transform 0.2s, border-color 0.2s, background-color 0.2s',
-                  borderColor: status === 'VISITED' ? 'var(--accent-visited)' : status === 'WISHLIST' ? 'var(--accent-wishlist)' : status === 'AVOID' ? '#ef4444' : 'var(--glass-border)',
-                  background: status !== 'NONE' ? (status === 'VISITED' ? 'rgba(34,197,94,0.05)' : status === 'WISHLIST' ? 'rgba(187,154,247,0.05)' : 'rgba(239,68,68,0.05)') : 'rgba(255,255,255,0.02)'
-                }}>
-                  {territory.flagCode ? (
-                    <img 
-                      src={`https://flagcdn.com/24x18/${territory.flagCode}.png`} 
-                      alt={`${territory.name} flag`}
-                      style={{ width: '24px', height: '18px', borderRadius: '3px', boxShadow: '0 1px 3px rgba(0,0,0,0.3)', border: '1px solid var(--glass-border)' }}
-                    />
-                  ) : (
-                    <div style={{ 
-                      width: '10px', height: '10px', borderRadius: '50%', flexShrink: 0,
-                      background: getFillColor(status, false, true),
-                      border: '1px solid var(--glass-border)'
-                    }} />
-                  )}
-                  <span style={{ flex: 1, fontSize: '0.85rem', fontWeight: 500, color: 'var(--text-primary)' }}>
-                    {territory.name}
-                  </span>
-                  <div style={{ display: 'flex', gap: '4px' }}>
-                    <button 
-                      title="Mark Visited"
-                      onClick={() => setCountryStatus(territory.id, status === 'VISITED' ? 'NONE' : 'VISITED')}
-                      style={{ 
-                        width: '30px', height: '30px', display: 'flex', alignItems: 'center', justifyContent: 'center',
-                        borderRadius: '6px', border: '1px solid var(--glass-border)', cursor: 'pointer',
-                        background: status === 'VISITED' ? 'var(--accent-visited)' : 'var(--glass-bg)',
-                        color: status === 'VISITED' ? '#0b0c14' : 'var(--text-muted)',
-                        transition: 'all 0.2s', padding: 0
-                      }}
-                    ><Check size={16} strokeWidth={status === 'VISITED' ? 3 : 2} /></button>
-                    <button 
-                      title="Mark Wishlist"
-                      onClick={() => setCountryStatus(territory.id, status === 'WISHLIST' ? 'NONE' : 'WISHLIST')}
-                      style={{ 
-                        width: '30px', height: '30px', display: 'flex', alignItems: 'center', justifyContent: 'center',
-                        borderRadius: '6px', border: '1px solid var(--glass-border)', cursor: 'pointer',
-                        background: status === 'WISHLIST' ? 'var(--accent-wishlist)' : 'var(--glass-bg)',
-                        color: status === 'WISHLIST' ? '#0b0c14' : 'var(--text-muted)',
-                        transition: 'all 0.2s', padding: 0
-                      }}
-                    ><Heart size={16} strokeWidth={status === 'WISHLIST' ? 3 : 2} /></button>
-                    <button 
-                      title="Mark Avoid"
-                      onClick={() => setCountryStatus(territory.id, status === 'AVOID' ? 'NONE' : 'AVOID')}
-                      style={{ 
-                        width: '30px', height: '30px', display: 'flex', alignItems: 'center', justifyContent: 'center',
-                        borderRadius: '6px', border: '1px solid var(--glass-border)', cursor: 'pointer',
-                        background: status === 'AVOID' ? '#ef4444' : 'var(--glass-bg)',
-                        color: status === 'AVOID' ? '#ffffff' : 'var(--text-muted)',
-                        transition: 'all 0.2s', padding: 0
-                      }}
-                    ><Ban size={16} strokeWidth={status === 'AVOID' ? 3 : 2} /></button>
-                  </div>
-                </div>
-              );
-            })}
-          </div>
-        </div>
+        <TerritoryListPanel
+          title="Crown Dependencies & Overseas Territories"
+          territories={UK_TERRITORIES}
+          places={places}
+          setCountryStatus={setCountryStatus}
+          onClose={() => setShowTerritories(false)}
+          getFillColor={getFillColor}
+        />
+      )}
+
+      {activeCountry === 'USA' && showTerritories && (
+        <TerritoryListPanel
+          title="US Territories"
+          territories={USA_TERRITORIES}
+          places={places}
+          setCountryStatus={setCountryStatus}
+          onClose={() => setShowTerritories(false)}
+          getFillColor={getFillColor}
+        />
       )}
     </>
   );
