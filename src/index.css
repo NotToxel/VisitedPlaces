@@ -19,6 +19,8 @@
   --color-they-only: #e0af68; /* They only visited */
   --color-wishlist-both: #f7768e; /* Both wishlisted */
   --color-avoid: #ef4444; /* Everyone avoids */
+  --accent-highlight: #fbbf24; /* Search Highlight */
+  --accent-avoid: var(--color-avoid);
   
   --font-main: 'Inter', system-ui, -apple-system, sans-serif;
   
@@ -49,6 +51,8 @@
   --color-they-only: #d97706; 
   --color-wishlist-both: #e11d48;
   --color-avoid: #dc2626;
+  --accent-highlight: #f59e0b;
+  --accent-avoid: var(--color-avoid);
   
   /* Map Specific Overrides (Light) */
   --map-stroke: rgba(30, 50, 120, 0.55);
@@ -142,6 +146,30 @@ body {
 .glass-input:focus {
   border-color: var(--accent-primary);
   box-shadow: 0 0 0 2px rgba(122, 162, 247, 0.2);
+}
+
+/* Map Controls Layout */
+.map-controls-header {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 1rem;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 1rem;
+  z-index: 10;
+}
+
+.map-controls-group {
+  display: flex;
+  flex-wrap: nowrap;
+  gap: 0.5rem;
+  background: var(--map-fill-unselected);
+  padding: 0.25rem;
+  border-radius: 8px;
+  border: 1px solid var(--glass-border);
+  align-items: center;
+  overflow-x: auto;
+  width: max-content;
 }
 
 /* Base Layout */

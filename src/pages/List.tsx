@@ -1,4 +1,5 @@
 import React, { useState, useEffect, useMemo, useDeferredValue } from 'react';
+import { REST_COUNTRIES_URL } from '../config/constants';
 import { useStore } from '../store/useStore';
 import type { PlaceStatus } from '../store/useStore';
 import { Search, Filter, Check, Heart, ChevronDown, ChevronRight, Map as MapIcon, Ban, Loader2 } from 'lucide-react';
@@ -24,7 +25,7 @@ const List: React.FC = () => {
 
   useEffect(() => {
     // Fetch exhaustive list from restcountries API
-    fetch('https://restcountries.com/v3.1/all?fields=name,cca3,cca2,continents,flags,independent')
+    fetch(`${REST_COUNTRIES_URL},independent`)
       .then(res => res.json())
       .then((data: any[]) => {
         const extracted: CountryMeta[] = data

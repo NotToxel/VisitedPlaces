@@ -1,16 +1,13 @@
 import React, { memo, useState, useEffect, useRef, useCallback } from 'react';
 import { useStore } from '../../store/useStore';
-import type { PlaceStatus } from '../../store/useStore';
 import { hexGridData } from '../../utils/hexGridData';
+import { getFillColor } from '../../utils/mapUtils';
 
 interface HexagonMapProps {
   setTooltipContent: (content: string) => void;
   selectionMode: 'VISITED' | 'WISHLIST' | 'AVOID';
   highlightedCountry?: string | null;
   showLabels?: boolean;
-  showVisited: boolean;
-  showWishlist: boolean;
-  showAvoid: boolean;
 }
 
 const RADIUS = 11;
@@ -40,20 +37,7 @@ const generateHexagonPath = (r: number) => {
 
 const HEX_PATH = generateHexagonPath(RADIUS);
 
-const getFillColor = (
-  status: PlaceStatus,
-  isHovered: boolean,
-  isHighlighted: boolean,
-  showVisited = true,
-  showWishlist = true,
-  showAvoid = true,
-) => {
-  if (isHighlighted) return '#fbbf24';
-  if (status === 'VISITED' && showVisited) return 'var(--accent-visited)';
-  if (status === 'WISHLIST' && showWishlist) return 'var(--accent-wishlist)';
-  if (status === 'AVOID' && showAvoid) return '#ef4444';
-  return isHovered ? 'var(--map-fill-hover)' : 'var(--map-fill-unselected)';
-};
+
 
 /** SVG group-space pixel centre for a hex grid dot */
 function hexCenter(dot: { x: number; y: number }) {
@@ -68,9 +52,6 @@ const HexagonMapBase: React.FC<HexagonMapProps> = ({
   selectionMode,
   highlightedCountry,
   showLabels,
-  showVisited,
-  showWishlist,
-  showAvoid,
 }) => {
   const { places, setCountryStatus } = useStore();
   const [hoveredId, setHoveredId] = useState<string | null>(null);
@@ -227,7 +208,6 @@ const HexagonMapBase: React.FC<HexagonMapProps> = ({
           const isHovered = hoveredId === countryId;
           const isHighlighted = highlightedCountry === countryId;
           const isSelected = status !== 'NONE';
-          const fill = getFillColor(status, isHovered, isHighlighted, showVisited, showWishlist, showAvoid);
           const { cx, cy } = hexCenter(dot);
 
           return (
@@ -235,7 +215,7 @@ const HexagonMapBase: React.FC<HexagonMapProps> = ({
               <path
                 d={HEX_PATH}
                 transform={`translate(${cx}, ${cy}) ${isHighlighted ? 'scale(1.15)' : isHovered ? 'scale(1.05)' : 'scale(1)'}`}
-                fill={fill}
+                fill={getFillColor(status, isHovered || isHighlighted)}
                 stroke="var(--map-stroke)"
                 strokeWidth={0.8}
                 style={{ cursor: 'pointer', outline: 'none', transition: 'fill 0.2s ease, transform 0.2s ease' }}

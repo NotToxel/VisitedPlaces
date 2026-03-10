@@ -52,7 +52,7 @@ export const TerritoryListPanel: React.FC<TerritoryListPanelProps> = memo(({
               display: 'flex', alignItems: 'center', gap: '0.75rem', padding: '1rem',
               borderStyle: 'solid', borderWidth: '1px',
               transition: 'transform 0.2s, border-color 0.2s, background-color 0.2s',
-              borderColor: status === 'VISITED' ? 'var(--accent-visited)' : status === 'WISHLIST' ? 'var(--accent-wishlist)' : status === 'AVOID' ? '#ef4444' : 'var(--glass-border)',
+              borderColor: status === 'VISITED' ? 'var(--accent-visited)' : status === 'WISHLIST' ? 'var(--accent-wishlist)' : status === 'AVOID' ? 'var(--color-avoid)' : 'var(--glass-border)',
               background: status !== 'NONE' ? (status === 'VISITED' ? 'rgba(34,197,94,0.05)' : status === 'WISHLIST' ? 'rgba(187,154,247,0.05)' : 'rgba(239,68,68,0.05)') : 'rgba(255,255,255,0.02)'
             }}>
               {territory.flagCode ? (

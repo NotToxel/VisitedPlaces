@@ -1,4 +1,5 @@
 import React, { useState, useEffect } from 'react';
+import { REST_COUNTRIES_URL } from '../../config/constants';
 import { StandardMap } from './StandardMap';
 import { HexagonMap } from './HexagonMap';
 import { Eye, EyeOff } from 'lucide-react';
@@ -22,7 +23,7 @@ export const MapContainer: React.FC = () => {
   const [showAvoid, setShowAvoid] = useState(true);
 
   useEffect(() => {
-    fetch('https://restcountries.com/v3.1/all?fields=name,cca2,cca3,ccn3,independent')
+    fetch(`${REST_COUNTRIES_URL},independent`)
       .then(res => res.json())
       .then((data: any[]) => {
         const filtered = data.filter(c => c.independent === true || c.cca3 === 'TWN' || c.cca3 === 'HKG' || c.cca3 === 'MAC')
@@ -51,9 +52,9 @@ export const MapContainer: React.FC = () => {
   return (
     <div className="map-container" style={{ display: 'flex', flexDirection: 'column', height: '100%', width: '100%', position: 'relative' }}>
       {/* Map Header / Controls */}
-      <div style={{ display: 'flex', flexWrap: 'wrap', gap: '1rem', justifyContent: 'space-between', alignItems: 'center', marginBottom: '1rem', zIndex: 10 }}>
+      <div className="map-controls-header">
         <div style={{ display: 'flex', flexDirection: 'column', gap: '0.5rem', overflowX: 'auto', maxWidth: '100%' }}>
-          <div style={{ display: 'flex', flexWrap: 'nowrap', gap: '0.5rem', background: 'var(--map-fill-unselected)', padding: '0.25rem', borderRadius: '8px', border: '1px solid var(--glass-border)', width: 'max-content' }}>
+          <div className="map-controls-group">
           <button 
             className={`glass-button ${activeMode === 'VISITED' ? 'glass-button--primary' : ''}`}
             onClick={() => setActiveMode('VISITED')}
@@ -78,8 +79,8 @@ export const MapContainer: React.FC = () => {
             className={`glass-button ${activeMode === 'AVOID' ? 'glass-button--primary' : ''}`}
             onClick={() => setActiveMode('AVOID')}
             style={{ 
-              borderColor: activeMode === 'AVOID' ? '#ef4444' : 'transparent', 
-              color: activeMode === 'AVOID' ? '#ef4444' : '' 
+              borderColor: activeMode === 'AVOID' ? 'var(--color-avoid)' : 'transparent', 
+              color: activeMode === 'AVOID' ? 'var(--color-avoid)' : '' 
             }}
           >
             Mark Avoid
@@ -87,11 +88,11 @@ export const MapContainer: React.FC = () => {
           </div>
         </div>
         
-        <div style={{ display: 'flex', flexWrap: 'nowrap', gap: '0.5rem', background: 'var(--map-fill-unselected)', padding: '0.25rem', borderRadius: '8px', border: '1px solid var(--glass-border)', alignItems: 'center', overflowX: 'auto' }}>
+        <div className="map-controls-group">
           {(
             [['VISITED', showVisited, setShowVisited, 'var(--accent-visited)'],
              ['WISHLIST', showWishlist, setShowWishlist, 'var(--accent-wishlist)'],
-             ['AVOID', showAvoid, setShowAvoid, '#ef4444']] as const
+             ['AVOID', showAvoid, setShowAvoid, 'var(--color-avoid)']] as const
           ).map(([label, shown, setter, color]) => (
             <button
               key={label}
@@ -160,12 +161,9 @@ export const MapContainer: React.FC = () => {
         ) : (
           <HexagonMap 
             selectionMode={activeMode} 
-            setTooltipContent={setTooltipContent} 
+            setTooltipContent={setTooltipContent}
             highlightedCountry={highlightedCountryA3}
             showLabels={showHexLabels}
-            showVisited={showVisited}
-            showWishlist={showWishlist}
-            showAvoid={showAvoid}
           />
         )}
         
