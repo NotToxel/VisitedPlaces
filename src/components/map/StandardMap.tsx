@@ -2,7 +2,7 @@ import React, { memo, useState, useEffect, useRef } from 'react';
 import { ComposableMap, Geographies, Geography, ZoomableGroup, Marker } from 'react-simple-maps';
 import { useStore } from '../../store/useStore';
 import type { PlaceStatus } from '../../store/useStore';
-import { ArrowLeft, List } from 'lucide-react';
+import { ArrowLeft, List, Map as MapIcon } from 'lucide-react';
 import { getSubRegionUrl } from '../../utils/topojsonCache';
 import { MICROSTATES, UK_TERRITORIES, USA_TERRITORIES, OBSOLETE_UK_REGIONS } from '../../data/mapData';
 import { TerritoryListPanel } from './TerritoryListPanel';
@@ -164,6 +164,10 @@ const StandardMapBase: React.FC<StandardMapProps> = ({ setTooltipContent, select
                });
                data.objects = { default: data.objects.utla };
            } else if (activeCountry === 'USA' && data.objects && data.objects.states) {
+               // geoAlbersUsa mathematically blows up if we feed it geometries outside its programmed bounding boxes
+               // (Guam, American Samoa, Northern Marianas, US Virgin Islands). Puerto Rico (72) is safe in modern D3.
+               const unsupportedIds = new Set(['66', '60', '69', '78']);
+               data.objects.states.geometries = data.objects.states.geometries.filter((g: any) => !unsupportedIds.has(g.id.toString()));
                data.objects = { default: data.objects.states };
            }
            setGeoData(data);
@@ -213,29 +217,14 @@ const StandardMapBase: React.FC<StandardMapProps> = ({ setTooltipContent, select
         
         setActiveCountry(countryId);
         
-        // Isolate sub-region zoom state so we don't corrupt global mapCenter when roaming inside.
+        // Always reset to a clean default view when drilling down
         if (countryId === 'USA') {
-            const isZoomedIntoNA = currentCoordinates[0] < -50 && currentCoordinates[1] > 20;
-            if (isZoomedIntoNA) {
-                setSubRegionZoom(Math.min(3, Math.max(1, currentZoom / 3)));
-            } else {
-                setSubRegionZoom(1);
-            }
-            // geoAlbersUsa ALWAYS expects bounds around the US. 
-            // Setting a wild center breaks the D3 projection bounds math and causes the distortion in the screenshot.
             setSubRegionCenter([-97, 38]);
+            setSubRegionZoom(1);
         } else if (countryId === 'GBR') {
-            const isZoomedIntoEurope = currentCoordinates[0] > -20 && currentCoordinates[0] < 40 && currentCoordinates[1] > 35;
-            if (isZoomedIntoEurope) {
-                const dx = currentCoordinates[0] - (-2);
-                const dy = currentCoordinates[1] - 54.5;
-                setSubRegionCenter([dx * 2, dy * 2]);
-                setSubRegionZoom(Math.max(1, currentZoom / 4));
-            } else {
-                // If they enter from afar, center cleanly on the UK.
-                setSubRegionCenter([-2, 54.5]);
-                setSubRegionZoom(1);
-            }
+            // Zoom out slightly and center to show the entire British Isles
+            setSubRegionCenter([-3, 54.5]);
+            setSubRegionZoom(0.6);
         }
     } else {
         setTooltipContent(`No sub-regions available for ${geo.properties.name}`);
@@ -246,13 +235,23 @@ const StandardMapBase: React.FC<StandardMapProps> = ({ setTooltipContent, select
   return (
     <>
       {activeCountry && (
-         <button 
-           onClick={() => setActiveCountry(null)}
-           className="glass-button"
-           style={{ position: 'absolute', top: '1rem', left: '1rem', zIndex: 50 }}
-         >
-             <ArrowLeft size={16} /> Back to World
-         </button>
+         <div style={{ position: 'absolute', top: '1rem', left: '1rem', zIndex: 50, display: 'flex', gap: '0.5rem' }}>
+           <button 
+             onClick={() => setActiveCountry(null)}
+             className="glass-button"
+           >
+               <ArrowLeft size={16} /> Back to World
+           </button>
+           <button 
+             onClick={() => {
+                 setSubRegionCenter(activeCountry === 'USA' ? [-97, 38] : [-3, 54.5]);
+                 setSubRegionZoom(activeCountry === 'USA' ? 1 : 0.6);
+             }}
+             className="glass-button"
+           >
+               <MapIcon size={16} /> Reset Zoom
+           </button>
+         </div>
       )}
 
       {isLoading && (
