@@ -62,6 +62,10 @@ export const TerritoryListPanel: React.FC<TerritoryListPanelProps> = memo(({
                   style={{ width: '24px', height: '18px', borderRadius: '3px', boxShadow: '0 1px 3px rgba(0,0,0,0.3)', border: '1px solid var(--glass-border)' }}
                 />
               ) : (
+                <div style={{ 
+                  width: '10px', height: '10px', borderRadius: '50%', flexShrink: 0,
+                  background: getFillColor(status, false, true),
+                  border: '1px solid var(--glass-border)'
                 }} />
               )}
               <span style={{ flex: 1, fontSize: '0.85rem', fontWeight: 500, color: 'var(--text-primary)' }}>

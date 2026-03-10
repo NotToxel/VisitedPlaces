@@ -1,6 +1,6 @@
 // Supported: USA, GBR (United Kingdom)
 
-import { OBSOLETE_UK_REGIONS } from '../data/mapData';
+import { OBSOLETE_UK_REGIONS, UK_TERRITORIES, USA_TERRITORIES } from '../data/mapData';
 
 export interface TopoRegion {
   id: string; // The canonical ID (e.g. E06000001 or 01)
@@ -36,7 +36,7 @@ export const fetchSubRegions = async (countryA3: string): Promise<TopoRegion[]> 
       // Handle USA
       if (countryA3 === 'USA' && data.objects.states) {
         regions = data.objects.states.geometries.map((g: any) => ({
-          id: g.id,
+          id: `USA-${g.id}`,
           name: g.properties.name
         }));
       } 
@@ -47,10 +47,28 @@ export const fetchSubRegions = async (countryA3: string): Promise<TopoRegion[]> 
              const id = g.properties.AREACD || g.properties.areacd || g.id;
              return !OBSOLETE_UK_REGIONS.has(id);
           })
-          .map((g: any) => ({
-            id: g.properties.AREACD || g.properties.areacd || g.id,
-            name: g.properties.AREANM || g.properties.areanm || g.properties.name
-          }));
+          .map((g: any) => {
+            const rawId = g.properties.AREACD || g.properties.areacd || g.id;
+            return {
+              id: `GBR-${rawId}`,
+              name: g.properties.AREANM || g.properties.areanm || g.properties.name
+            };
+          });
+      }
+      
+      // Inject missing territories to ensure synchronization
+      if (countryA3 === 'GBR') {
+        UK_TERRITORIES.forEach(t => {
+          if (!regions.some(r => r.id === t.id)) {
+            regions.push({ id: t.id, name: t.name });
+          }
+        });
+      } else if (countryA3 === 'USA') {
+        USA_TERRITORIES.forEach(t => {
+          if (!regions.some(r => r.id === t.id)) {
+            regions.push({ id: t.id, name: t.name });
+          }
+        });
       }
 
       regions.sort((a, b) => a.name.localeCompare(b.name));

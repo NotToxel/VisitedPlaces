@@ -29,46 +29,46 @@ export const MICROSTATES: MapMarker[] = [
   { id: 'FSM', name: 'Federated States of Micronesia', coordinates: [158.1499, 6.9147], flagCode: 'fm' },
   { id: 'MHL', name: 'Marshall Islands', coordinates: [171.1845, 7.1315], flagCode: 'mh' },
   { id: 'PLW', name: 'Palau', coordinates: [134.5825, 7.5149], flagCode: 'pw' },
-  { id: 'BMU', name: 'Bermuda', coordinates: [-64.7505, 32.3078], flagCode: 'bm' },
-  { id: 'FLK', name: 'Falkland Islands', coordinates: [-59.5236, -51.7963], flagCode: 'fk' },
-  { id: 'GIB', name: 'Gibraltar', coordinates: [-5.3536, 36.1408], flagCode: 'gi' },
-  { id: 'SHN', name: 'Saint Helena', coordinates: [-5.7089, -15.9650], flagCode: 'sh' },
+  { id: 'GBR-BMU', name: 'Bermuda', coordinates: [-64.7505, 32.3078], flagCode: 'bm' },
+  { id: 'GBR-FLK', name: 'Falkland Islands', coordinates: [-59.5236, -51.7963], flagCode: 'fk' },
+  { id: 'GBR-GIB', name: 'Gibraltar', coordinates: [-5.3536, 36.1408], flagCode: 'gi' },
+  { id: 'GBR-SHN', name: 'Saint Helena', coordinates: [-5.7089, -15.9650], flagCode: 'sh' },
   { id: 'HKG', name: 'Hong Kong', coordinates: [114.1694, 22.3193], flagCode: 'hk' },
   { id: 'MAC', name: 'Macau', coordinates: [113.5439, 22.1987], flagCode: 'mo' },
   // US Territories for global map (markers)
-  { id: 'PRI', name: 'Puerto Rico', coordinates: [-66.5901, 18.2208], flagCode: 'pr' },
-  { id: 'VIR', name: 'US Virgin Islands', coordinates: [-64.8963, 18.3358], flagCode: 'vi' },
-  { id: 'GUM', name: 'Guam', coordinates: [144.7448, 13.4443], flagCode: 'gu' },
-  { id: 'MNP', name: 'Northern Mariana Islands', coordinates: [145.6739, 15.0979], flagCode: 'mp' },
-  { id: 'ASM', name: 'American Samoa', coordinates: [-170.7020, -14.2710], flagCode: 'as' },
+  { id: 'USA-72', name: 'Puerto Rico', coordinates: [-66.5901, 18.2208], flagCode: 'pr' },
+  { id: 'USA-78', name: 'US Virgin Islands', coordinates: [-64.8963, 18.3358], flagCode: 'vi' },
+  { id: 'USA-66', name: 'Guam', coordinates: [144.7448, 13.4443], flagCode: 'gu' },
+  { id: 'USA-69', name: 'Northern Mariana Islands', coordinates: [145.6739, 15.0979], flagCode: 'mp' },
+  { id: 'USA-60', name: 'American Samoa', coordinates: [-170.7020, -14.2710], flagCode: 'as' },
 ];
 
 // UK Crown Dependencies and Overseas Territories (Checklist)
 export const UK_TERRITORIES: MapMarker[] = [
-  { id: 'JEY', name: 'Jersey', coordinates: [-2.1358, 49.2144], flagCode: 'je' },
-  { id: 'GGY', name: 'Guernsey', coordinates: [-2.5853, 49.4657], flagCode: 'gg' },
-  { id: 'IMN', name: 'Isle of Man', coordinates: [-4.5481, 54.2361], flagCode: 'im' },
-  { id: 'GIB', name: 'Gibraltar', coordinates: [-5.3536, 36.1408], flagCode: 'gi' },
-  { id: 'BMU', name: 'Bermuda', coordinates: [-64.7505, 32.3078], flagCode: 'bm' },
-  { id: 'FLK', name: 'Falkland Islands', coordinates: [-59.5236, -51.7963], flagCode: 'fk' },
-  { id: 'SHN', name: 'Saint Helena', coordinates: [-5.7089, -15.9650], flagCode: 'sh' },
-  { id: 'CYM', name: 'Cayman Islands', coordinates: [-81.2546, 19.3133], flagCode: 'ky' },
-  { id: 'TCA', name: 'Turks and Caicos', coordinates: [-71.7979, 21.6820], flagCode: 'tc' },
-  { id: 'VGB', name: 'British Virgin Islands', coordinates: [-64.6395, 18.4207], flagCode: 'vg' },
-  { id: 'AIA', name: 'Anguilla', coordinates: [-63.0501, 18.2206], flagCode: 'ai' },
-  { id: 'MSR', name: 'Montserrat', coordinates: [-62.1875, 16.7425], flagCode: 'ms' },
-  { id: 'IOT', name: 'British Indian Ocean Territory', coordinates: [72.3735, -7.3696], flagCode: 'io' },
-  { id: 'PCN', name: 'Pitcairn Islands', coordinates: [-128.3242, -24.3768], flagCode: 'pn' },
-  { id: 'SGS', name: 'South Georgia', coordinates: [-36.5879, -54.4296], flagCode: 'gs' }
+  { id: 'GBR-JEY', name: 'Jersey', coordinates: [-2.1358, 49.2144], flagCode: 'je' },
+  { id: 'GBR-GGY', name: 'Guernsey', coordinates: [-2.5853, 49.4657], flagCode: 'gg' },
+  { id: 'GBR-IMN', name: 'Isle of Man', coordinates: [-4.5481, 54.2361], flagCode: 'im' },
+  { id: 'GBR-GIB', name: 'Gibraltar', coordinates: [-5.3536, 36.1408], flagCode: 'gi' },
+  { id: 'GBR-BMU', name: 'Bermuda', coordinates: [-64.7505, 32.3078], flagCode: 'bm' },
+  { id: 'GBR-FLK', name: 'Falkland Islands', coordinates: [-59.5236, -51.7963], flagCode: 'fk' },
+  { id: 'GBR-SHN', name: 'Saint Helena', coordinates: [-5.7089, -15.9650], flagCode: 'sh' },
+  { id: 'GBR-CYM', name: 'Cayman Islands', coordinates: [-81.2546, 19.3133], flagCode: 'ky' },
+  { id: 'GBR-TCA', name: 'Turks and Caicos', coordinates: [-71.7979, 21.6820], flagCode: 'tc' },
+  { id: 'GBR-VGB', name: 'British Virgin Islands', coordinates: [-64.6395, 18.4207], flagCode: 'vg' },
+  { id: 'GBR-AIA', name: 'Anguilla', coordinates: [-63.0501, 18.2206], flagCode: 'ai' },
+  { id: 'GBR-MSR', name: 'Montserrat', coordinates: [-62.1875, 16.7425], flagCode: 'ms' },
+  { id: 'GBR-IOT', name: 'British Indian Ocean Territory', coordinates: [72.3735, -7.3696], flagCode: 'io' },
+  { id: 'GBR-PCN', name: 'Pitcairn Islands', coordinates: [-128.3242, -24.3768], flagCode: 'pn' },
+  { id: 'GBR-SGS', name: 'South Georgia', coordinates: [-36.5879, -54.4296], flagCode: 'gs' }
 ];
 
 // USA Territories (Checklist)
 export const USA_TERRITORIES: MapMarker[] = [
-  { id: 'PRI', name: 'Puerto Rico', coordinates: [-66.5901, 18.2208], flagCode: 'pr' },
-  { id: 'VIR', name: 'US Virgin Islands', coordinates: [-64.8963, 18.3358], flagCode: 'vi' },
-  { id: 'GUM', name: 'Guam', coordinates: [144.7448, 13.4443], flagCode: 'gu' },
-  { id: 'MNP', name: 'Northern Mariana Islands', coordinates: [145.6739, 15.0979], flagCode: 'mp' },
-  { id: 'ASM', name: 'American Samoa', coordinates: [-170.7020, -14.2710], flagCode: 'as' }
+  { id: 'USA-72', name: 'Puerto Rico', coordinates: [-66.5901, 18.2208], flagCode: 'pr' },
+  { id: 'USA-78', name: 'US Virgin Islands', coordinates: [-64.8963, 18.3358], flagCode: 'vi' },
+  { id: 'USA-66', name: 'Guam', coordinates: [144.7448, 13.4443], flagCode: 'gu' },
+  { id: 'USA-69', name: 'Northern Mariana Islands', coordinates: [145.6739, 15.0979], flagCode: 'mp' },
+  { id: 'USA-60', name: 'American Samoa', coordinates: [-170.7020, -14.2710], flagCode: 'as' }
 ];
 
 // Replaced by 2023 Unitary Authorities in TopoJSON but still provided in map bundle overlaps

@@ -327,11 +327,11 @@ const List: React.FC = () => {
                           </div>
                         </div>
                         
-                        {/* Sub-regions / States */}
                         {isExpanded && countryStates.length > 0 && (
                           <div style={{ paddingLeft: '2rem', display: 'flex', flexDirection: 'column', gap: '0.5rem' }}>
                             {countryStates.map(state => {
-                              const stateId = `${country.id}-${state.id}`;
+                              // state.id from topojsonCache is already prefixed (e.g., USA-72, GBR-JEY)
+                              const stateId = (state.id.toString().startsWith(`${country.id}-`)) ? state.id : `${country.id}-${state.id}`;
                               const stateStatus = places[stateId]?.status || 'NONE';
                               
                               return (

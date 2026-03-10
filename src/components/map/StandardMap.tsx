@@ -33,10 +33,11 @@ const getFillColor = (status: PlaceStatus, isHighlighted: boolean, isSubRegion =
 
 const getRegionId = (geo: any, numericToA3: Record<string, string>, activeCountry: string | null) => {
   if (activeCountry === 'GBR') {
-     return geo.properties?.AREACD || geo.properties?.areacd || geo.id;
+     const rawId = geo.properties?.AREACD || geo.properties?.areacd || geo.id;
+     return `GBR-${rawId}`;
   }
   if (activeCountry === 'USA') {
-     return geo.id;
+     return `USA-${geo.id}`;
   }
   const rawId = geo.properties?.ISO_A3 || geo.id;
   return numericToA3[rawId] || rawId;
@@ -51,6 +52,8 @@ const StandardMapBase: React.FC<StandardMapProps> = ({ setTooltipContent, select
   const [showTerritories, setShowTerritories] = useState(false);
   const [mapCenter, setMapCenter] = useState<[number, number]>([0, 0]);
   const [mapZoom, setMapZoom] = useState(1);
+  const [subRegionCenter, setSubRegionCenter] = useState<[number, number]>([0, 0]);
+  const [subRegionZoom, setSubRegionZoom] = useState(1);
   const worldTopoRef = useRef<any>(null);
   const animFrameRef = useRef<number | null>(null);
   // Tracks live values during animation
@@ -180,7 +183,9 @@ const StandardMapBase: React.FC<StandardMapProps> = ({ setTooltipContent, select
     const countryId = getRegionId(geo, numericToA3, activeCountry);
     if (!countryId) return;
 
-    const placeIdForStore = activeCountry ? `${activeCountry}-${countryId}` : countryId;
+    const placeIdForStore = (activeCountry && !countryId.toString().startsWith(`${activeCountry}-`)) 
+       ? `${activeCountry}-${countryId}` 
+       : countryId;
     const currentStatus = places[placeIdForStore]?.status || 'NONE';
     
     if (currentStatus === selectionMode) {
@@ -193,10 +198,45 @@ const StandardMapBase: React.FC<StandardMapProps> = ({ setTooltipContent, select
   const handleRightClick = (e: React.MouseEvent, geo: any) => {
     e.preventDefault();
     const countryId = getRegionId(geo, numericToA3, activeCountry);
+    console.log(`[StandardMap] Right-clicked geo:`, geo.properties?.name, `ID:`, countryId, `Active:`, activeCountry);
+    
     if (!countryId || activeCountry) return;
 
     if (getSubRegionUrl(countryId)) {
+        // MATCH ZOOM LOGIC:
+        // Before we switch projections, we capture contemporary world-view coords & zoom 
+        // to map them into the sub-region view.
+        const currentCoordinates = [...mapCenter];
+        const currentZoom = mapZoom;
+        
+        console.log(`[StandardMap] Transitioning to ${countryId}. Current World View:`, { currentCoordinates, currentZoom });
+        
         setActiveCountry(countryId);
+        
+        // Isolate sub-region zoom state so we don't corrupt global mapCenter when roaming inside.
+        if (countryId === 'USA') {
+            const isZoomedIntoNA = currentCoordinates[0] < -50 && currentCoordinates[1] > 20;
+            if (isZoomedIntoNA) {
+                setSubRegionZoom(Math.min(3, Math.max(1, currentZoom / 3)));
+            } else {
+                setSubRegionZoom(1);
+            }
+            // geoAlbersUsa ALWAYS expects bounds around the US. 
+            // Setting a wild center breaks the D3 projection bounds math and causes the distortion in the screenshot.
+            setSubRegionCenter([-97, 38]);
+        } else if (countryId === 'GBR') {
+            const isZoomedIntoEurope = currentCoordinates[0] > -20 && currentCoordinates[0] < 40 && currentCoordinates[1] > 35;
+            if (isZoomedIntoEurope) {
+                const dx = currentCoordinates[0] - (-2);
+                const dy = currentCoordinates[1] - 54.5;
+                setSubRegionCenter([dx * 2, dy * 2]);
+                setSubRegionZoom(Math.max(1, currentZoom / 4));
+            } else {
+                // If they enter from afar, center cleanly on the UK.
+                setSubRegionCenter([-2, 54.5]);
+                setSubRegionZoom(1);
+            }
+        }
     } else {
         setTooltipContent(`No sub-regions available for ${geo.properties.name}`);
         setTimeout(() => setTooltipContent(''), 2000);
@@ -221,22 +261,41 @@ const StandardMapBase: React.FC<StandardMapProps> = ({ setTooltipContent, select
           </div>
       )}
 
-      <ComposableMap
+      <ComposableMap 
         projection={activeCountry === 'USA' ? "geoAlbersUsa" : "geoMercator"}
         projectionConfig={{ 
           scale: activeCountry === 'USA' ? 800 : (activeCountry === 'GBR' ? 3200 : 147),
-          center: activeCountry === 'GBR' ? [-2, 54.5] : [0, 0]
+          center: activeCountry === 'GBR' ? [-2, 54.5] : (activeCountry === 'USA' ? undefined : [0, 0]),
         }}
         width={800}
         height={500}
-        style={{ width: '100%', height: '100%', outline: 'none', opacity: isLoading ? 0.5 : 1, transition: 'opacity 0.3s' }}
+        style={{ width: "100%", height: "100%", outline: 'none' }}
       >
-        <ZoomableGroup key={activeCountry || 'world'} center={mapCenter} zoom={mapZoom} minZoom={0.5} maxZoom={24} onMoveEnd={({ coordinates, zoom }) => { setMapCenter(coordinates); setMapZoom(zoom); }}>
+        <ZoomableGroup 
+          key={activeCountry || 'world'} 
+          center={activeCountry ? subRegionCenter : mapCenter} 
+          zoom={activeCountry ? subRegionZoom : mapZoom} 
+          minZoom={0.5} 
+          maxZoom={24} 
+          onMoveEnd={({ coordinates, zoom }) => { 
+            if (isFinite(coordinates[0]) && isFinite(coordinates[1])) { 
+               if (activeCountry) {
+                  setSubRegionCenter(coordinates);
+                  setSubRegionZoom(zoom);
+               } else {
+                  setMapCenter(coordinates); 
+                  setMapZoom(zoom); 
+               }
+            } 
+          }}
+        >
           <Geographies geography={geoData}>
             {({ geographies }) =>
               geographies.map((geo) => {
                 const countryId = getRegionId(geo, numericToA3, activeCountry);
-                const placeIdForStore = activeCountry ? `${activeCountry}-${countryId}` : countryId;
+                const placeIdForStore = (activeCountry && !countryId.toString().startsWith(`${activeCountry}-`)) 
+                   ? `${activeCountry}-${countryId}` 
+                   : countryId;
                 const status = places[placeIdForStore]?.status || 'NONE';
                 const isSelected = status !== 'NONE';
                 const countryName = geo.properties?.AREANM || geo.properties?.areanm || geo.properties?.name || 'Unknown Region';
@@ -281,7 +340,7 @@ const StandardMapBase: React.FC<StandardMapProps> = ({ setTooltipContent, select
                 onMouseEnter={() => setTooltipContent(`${marker.name}${status !== 'NONE' ? ` - ${status}` : ''}`)}
                 onMouseLeave={() => setTooltipContent('')}
               >
-                <circle cx={0} cy={0} r={isHighlighted ? 4 : 2.5} fill={getFillColor(status, isHighlighted, false, showVisited, showWishlist, showAvoid)} stroke={isHighlighted ? "#fff" : "var(--map-stroke)"} strokeWidth={0.5} style={{ cursor: 'pointer' }} />
+                <circle cx={0} cy={0} r={isHighlighted ? 4 : 2.5} fill={getFillColor(status, isHighlighted, false, showVisited, showWishlist, showAvoid)} stroke={isHighlighted ? "#fbbf24" : "var(--map-stroke)"} strokeWidth={0.5} style={{ cursor: 'pointer' }} />
               </Marker>
             );
           })}
