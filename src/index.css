@@ -470,15 +470,14 @@ body {
   padding: 1rem;
 }
 
-/* Collapse Panel Accordion */
-.collapse {
-  visibility: visible !important;
+/* Accordion Panel (Replacing daisyUI collapse) */
+.accordion {
   display: block;
   overflow: hidden;
   border-radius: 0.75rem;
   transition: all 0.25s ease;
 }
-.collapse-title {
+.accordion-title {
   position: relative;
   display: flex;
   align-items: center;
@@ -487,18 +486,17 @@ body {
   cursor: pointer;
   list-style: none;
 }
-.collapse-title::-webkit-details-marker {
+.accordion-title::-webkit-details-marker {
   display: none;
 }
-.collapse-content {
+.accordion-content {
   display: none;
   padding-top: 0.5rem;
 }
-details.collapse[open] .collapse-content {
+details.accordion[open] .accordion-content {
   display: flex;
 }
-
-.collapse-arrow > .collapse-title::after {
+.accordion-arrow > .accordion-title::after {
   content: "";
   position: absolute;
   right: 1.25rem;
@@ -510,8 +508,16 @@ details.collapse[open] .collapse-content {
   transform: translateY(-50%) rotate(45deg);
   transition: transform 0.2s ease;
 }
-details.collapse[open] > .collapse-title::after {
+details.accordion[open] > .accordion-title::after {
   transform: translateY(-25%) rotate(-135deg);
+}
+
+/* Ensure padding utility overrides work with base shorthand input padding */
+.input.\!pl-8 {
+  padding-left: 2rem !important;
+}
+.input.\!pr-8 {
+  padding-right: 2rem !important;
 }
 
 /* Stats metrics blocks */

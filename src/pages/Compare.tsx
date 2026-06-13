@@ -404,12 +404,12 @@ const Compare: React.FC = () => {
             </button>
           </div>
 
-          {/* Share Code Collapse */}
-          <details className="collapse collapse-arrow bg-base-200/40 border border-base-300/40 rounded-xl shrink-0" open>
-            <summary className="collapse-title text-[10px] font-bold tracking-wider text-base-content/50 uppercase select-none cursor-pointer py-3 min-h-0">
+          {/* Share Code Accordion */}
+          <details className="accordion accordion-arrow bg-base-200/40 border border-base-300/40 rounded-xl shrink-0" open>
+            <summary className="accordion-title text-[10px] font-bold tracking-wider text-base-content/50 uppercase select-none cursor-pointer py-3 min-h-0">
               Your Share Code
             </summary>
-            <div className="collapse-content flex flex-col text-xs">
+            <div className="accordion-content flex flex-col text-xs">
               <div className="join w-full mt-0.5">
                 <input 
                   readOnly 
@@ -427,12 +427,12 @@ const Compare: React.FC = () => {
             </div>
           </details>
 
-          {/* Group Members Collapse */}
-          <details className="collapse collapse-arrow bg-base-200/40 border border-base-300/40 rounded-xl shrink-0" open>
-            <summary className="collapse-title text-[10px] font-bold tracking-wider text-base-content/50 uppercase select-none cursor-pointer py-3 min-h-0">
+          {/* Group Members Accordion */}
+          <details className="accordion accordion-arrow bg-base-200/40 border border-base-300/40 rounded-xl shrink-0" open>
+            <summary className="accordion-title text-[10px] font-bold tracking-wider text-base-content/50 uppercase select-none cursor-pointer py-3 min-h-0">
               Group Members ({friends.length + 1})
             </summary>
-            <div className="collapse-content flex flex-col gap-2.5 text-xs">
+            <div className="accordion-content flex flex-col gap-2.5 text-xs">
               <div className="join w-full mt-0.5">
                 <input 
                   type="text" 
@@ -476,12 +476,12 @@ const Compare: React.FC = () => {
           {/* Redesigned comparison layout flow: Hide Map Legend and Analytics lists until friend code is loaded */}
           {hasImportedFriend && (
             <>
-              {/* Map Legend Collapse */}
-              <details className="collapse collapse-arrow bg-base-200/40 border border-base-300/40 rounded-xl shrink-0" open>
-                <summary className="collapse-title text-[10px] font-bold tracking-wider text-base-content/50 uppercase select-none cursor-pointer py-3 min-h-0">
+              {/* Map Legend Accordion */}
+              <details className="accordion accordion-arrow bg-base-200/40 border border-base-300/40 rounded-xl shrink-0" open>
+                <summary className="accordion-title text-[10px] font-bold tracking-wider text-base-content/50 uppercase select-none cursor-pointer py-3 min-h-0">
                   Map Legend
                 </summary>
-                <div className="collapse-content grid grid-cols-2 gap-2 text-[10px] p-1 select-none font-semibold text-base-content/85">
+                <div className="accordion-content grid grid-cols-2 gap-2 text-[10px] p-1 select-none font-semibold text-base-content/85">
                   <div className="flex items-center gap-1.5"><div className="w-2.5 h-2.5 rounded-full shrink-0" style={{ background: 'var(--color-both)' }}></div> Both Visited</div>
                   <div className="flex items-center gap-1.5"><div className="w-2.5 h-2.5 rounded-full shrink-0" style={{ background: 'var(--accent-visited)' }}></div> Most Visited</div>
                   <div className="flex items-center gap-1.5"><div className="w-2.5 h-2.5 rounded-full shrink-0" style={{ background: 'var(--color-me-only)' }}></div> Me Only</div>
@@ -500,12 +500,12 @@ const Compare: React.FC = () => {
                   Comparison Analytics
                 </span>
                 
-                {/* Mutual Visited Collapse */}
-                <details className="collapse collapse-arrow bg-base-200/40 border border-base-300/40 rounded-xl shrink-0" open>
-                  <summary className="collapse-title text-[10px] font-bold tracking-wider text-color-both uppercase select-none cursor-pointer py-3 min-h-0">
+                {/* Mutual Visited Accordion */}
+                <details className="accordion accordion-arrow bg-base-200/40 border border-base-300/40 rounded-xl shrink-0" open>
+                  <summary className="accordion-title text-[10px] font-bold tracking-wider text-color-both uppercase select-none cursor-pointer py-3 min-h-0">
                     We've All Visited ({commonVisited.length})
                   </summary>
-                  <div className="collapse-content flex flex-col text-xs">
+                  <div className="accordion-content flex flex-col text-xs">
                     <ul className="compare-list border border-base-300 rounded-xl p-2 bg-base-300/10 max-h-36 overflow-y-auto">
                       {commonVisited.map(([code]) => renderCountryItem(code, countryData[code]))}
                       {commonVisited.length === 0 && <li className="text-[10px] text-base-content/50 px-2 py-1 italic font-medium">No mutually visited places.</li>}
@@ -513,12 +513,12 @@ const Compare: React.FC = () => {
                   </div>
                 </details>
 
-                {/* Mutual Wishlisted Collapse */}
-                <details className="collapse collapse-arrow bg-base-200/40 border border-base-300/40 rounded-xl shrink-0">
-                  <summary className="collapse-title text-[10px] font-bold tracking-wider text-color-wishlist-both uppercase select-none cursor-pointer py-3 min-h-0">
+                {/* Mutual Wishlisted Accordion */}
+                <details className="accordion accordion-arrow bg-base-200/40 border border-base-300/40 rounded-xl shrink-0">
+                  <summary className="accordion-title text-[10px] font-bold tracking-wider text-color-wishlist-both uppercase select-none cursor-pointer py-3 min-h-0">
                     Mutual Wishlists ({commonWishlist.length})
                   </summary>
-                  <div className="collapse-content flex flex-col text-xs">
+                  <div className="accordion-content flex flex-col text-xs">
                     <ul className="compare-list border border-base-300 rounded-xl p-2 bg-base-300/10 max-h-36 overflow-y-auto">
                       {commonWishlist.map(([code]) => renderCountryItem(code, countryData[code]))}
                       {commonWishlist.length === 0 && <li className="text-[10px] text-base-content/50 px-2 py-1 italic font-medium">No mutually wishlisted places.</li>}
@@ -526,12 +526,12 @@ const Compare: React.FC = () => {
                   </div>
                 </details>
 
-                {/* Mutual Revisit Collapse */}
-                <details className="collapse collapse-arrow bg-base-200/40 border border-base-300/40 rounded-xl shrink-0">
-                  <summary className="collapse-title text-[10px] font-bold tracking-wider text-accent-revisit uppercase select-none cursor-pointer py-3 min-h-0">
+                {/* Mutual Revisit Accordion */}
+                <details className="accordion accordion-arrow bg-base-200/40 border border-base-300/40 rounded-xl shrink-0">
+                  <summary className="accordion-title text-[10px] font-bold tracking-wider text-accent-revisit uppercase select-none cursor-pointer py-3 min-h-0">
                     Mutual Revisit ({commonRevisit.length})
                   </summary>
-                  <div className="collapse-content flex flex-col text-xs">
+                  <div className="accordion-content flex flex-col text-xs">
                     <ul className="compare-list border border-base-300 rounded-xl p-2 bg-base-300/10 max-h-36 overflow-y-auto">
                       {commonRevisit.map(([code]) => renderCountryItem(code, countryData[code]))}
                       {commonRevisit.length === 0 && <li className="text-[10px] text-base-content/50 px-2 py-1 italic font-medium">No mutually revisited places.</li>}
@@ -539,12 +539,12 @@ const Compare: React.FC = () => {
                   </div>
                 </details>
 
-                {/* Mutual Avoids Collapse */}
-                <details className="collapse collapse-arrow bg-base-200/40 border border-base-300/40 rounded-xl shrink-0">
-                  <summary className="collapse-title text-[10px] font-bold tracking-wider text-accent-avoid uppercase select-none cursor-pointer py-3 min-h-0">
+                {/* Mutual Avoids Accordion */}
+                <details className="accordion accordion-arrow bg-base-200/40 border border-base-300/40 rounded-xl shrink-0">
+                  <summary className="accordion-title text-[10px] font-bold tracking-wider text-accent-avoid uppercase select-none cursor-pointer py-3 min-h-0">
                     Mutual Avoids ({commonAvoid.length})
                   </summary>
-                  <div className="collapse-content flex flex-col text-xs">
+                  <div className="accordion-content flex flex-col text-xs">
                     <ul className="compare-list border border-base-300 rounded-xl p-2 bg-base-300/10 max-h-36 overflow-y-auto">
                       {commonAvoid.map(([code]) => renderCountryItem(code, countryData[code]))}
                       {commonAvoid.length === 0 && <li className="text-[10px] text-base-content/50 px-2 py-1 italic font-medium">No mutually avoided places.</li>}
@@ -552,12 +552,12 @@ const Compare: React.FC = () => {
                   </div>
                 </details>
 
-                {/* Most Wanted Collapse */}
-                <details className="collapse collapse-arrow bg-base-200/40 border border-base-300/40 rounded-xl shrink-0">
-                  <summary className="collapse-title text-[10px] font-bold tracking-wider text-primary uppercase select-none cursor-pointer py-3 min-h-0">
+                {/* Most Wanted Accordion */}
+                <details className="accordion accordion-arrow bg-base-200/40 border border-base-300/40 rounded-xl shrink-0">
+                  <summary className="accordion-title text-[10px] font-bold tracking-wider text-primary uppercase select-none cursor-pointer py-3 min-h-0">
                     Most Wanted ({topWantedUnvisited.length})
                   </summary>
-                  <div className="collapse-content flex flex-col text-xs">
+                  <div className="accordion-content flex flex-col text-xs">
                     <ul className="compare-list border border-base-300 rounded-xl p-2 bg-base-300/10 max-h-36 overflow-y-auto">
                       {topWantedUnvisited.map(({code, wishlist}) => (
                         <li key={code} className="compare-list-item compare-list-item--flex flex items-center justify-between p-1.5 px-2.5 rounded-lg text-xs gap-2 border border-transparent hover:bg-base-200/50">
@@ -577,12 +577,12 @@ const Compare: React.FC = () => {
                   </div>
                 </details>
 
-                {/* Travel Mentorships Collapse */}
-                <details className="collapse collapse-arrow bg-base-200/40 border border-base-300/40 rounded-xl shrink-0">
-                  <summary className="collapse-title text-[10px] font-bold tracking-wider text-color-me-only uppercase select-none cursor-pointer py-3 min-h-0">
+                {/* Travel Mentorships Accordion */}
+                <details className="accordion accordion-arrow bg-base-200/40 border border-base-300/40 rounded-xl shrink-0">
+                  <summary className="accordion-title text-[10px] font-bold tracking-wider text-color-me-only uppercase select-none cursor-pointer py-3 min-h-0">
                     Travel Mentorships ({wantedButVisited.length})
                   </summary>
-                  <div className="collapse-content flex flex-col gap-2 max-h-44 overflow-y-auto pr-1">
+                  <div className="accordion-content flex flex-col gap-2 max-h-44 overflow-y-auto pr-1">
                     {wantedButVisited.map(({code, whoVisited, whoWants}) => (
                       <div key={code} className="mentorship-card">
                         <div className="mentorship-card-header">

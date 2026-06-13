@@ -157,12 +157,12 @@ export const MapContainer: React.FC = () => {
                 <h3 className="text-md font-extrabold text-base-content truncate">{activeCountryName}</h3>
               </div>
 
-              {/* Selection Mode Details Collapse */}
-              <details className="collapse collapse-arrow bg-base-200/40 border border-base-300/40 rounded-xl shrink-0" open>
-                <summary className="collapse-title text-[10px] font-bold tracking-wider text-base-content/50 uppercase select-none cursor-pointer py-3 min-h-0">
+              {/* Selection Mode Details Accordion */}
+              <details className="accordion accordion-arrow bg-base-200/40 border border-base-300/40 rounded-xl shrink-0" open>
+                <summary className="accordion-title text-[10px] font-bold tracking-wider text-base-content/50 uppercase select-none cursor-pointer py-3 min-h-0">
                   Select Mode
                 </summary>
-                <div className="collapse-content grid grid-cols-2 gap-1.5 text-xs">
+                <div className="accordion-content grid grid-cols-2 gap-1.5 text-xs">
                   {(['VISITED', 'WISHLIST', 'REVISIT', 'AVOID'] as const).map((mode) => {
                     const label = mode === 'VISITED' ? 'Visited' : mode === 'WISHLIST' ? 'Wishlist' : mode === 'REVISIT' ? 'Revisit' : 'Avoid';
                     const activeColor = 
@@ -192,11 +192,11 @@ export const MapContainer: React.FC = () => {
 
               {/* List of sub-region territories */}
               {currentConfig?.territories && currentConfig.territories.length > 0 && (
-                <details className="collapse collapse-arrow bg-base-200/40 border border-base-300/40 rounded-xl shrink-0" open>
-                  <summary className="collapse-title text-[10px] font-bold tracking-wider text-base-content/50 uppercase select-none cursor-pointer py-3 min-h-0">
+                <details className="accordion accordion-arrow bg-base-200/40 border border-base-300/40 rounded-xl shrink-0" open>
+                  <summary className="accordion-title text-[10px] font-bold tracking-wider text-base-content/50 uppercase select-none cursor-pointer py-3 min-h-0">
                     {currentConfig.territoryLabel || 'Territories'}
                   </summary>
-                  <div className="collapse-content flex flex-col gap-1.5 max-h-[30vh] overflow-y-auto p-2">
+                  <div className="accordion-content flex flex-col gap-1.5 max-h-[30vh] overflow-y-auto p-2">
                     {currentConfig.territories.map((territory) => {
                       const status = places[territory.id]?.status || 'NONE';
                       
@@ -279,7 +279,7 @@ export const MapContainer: React.FC = () => {
                   <Search size={14} className="absolute left-2.5 top-1/2 -translate-y-1/2 text-base-content/40" />
                   <input 
                     type="text"
-                    className="input input-bordered input-sm pl-8 pr-8 w-full text-xs" 
+                    className="input input-bordered input-sm !pl-8 !pr-8 w-full text-xs" 
                     placeholder="Find Country..."
                     value={searchVal} 
                     onChange={(e) => {
@@ -334,12 +334,12 @@ export const MapContainer: React.FC = () => {
                 )}
               </div>
 
-              {/* Marking Tool Details Collapse */}
-              <details className="collapse collapse-arrow bg-base-200/40 border border-base-300/40 rounded-xl shrink-0" open>
-                <summary className="collapse-title text-[10px] font-bold tracking-wider text-base-content/50 uppercase select-none cursor-pointer py-3 min-h-0">
+              {/* Marking Tool Details Accordion */}
+              <details className="accordion accordion-arrow bg-base-200/40 border border-base-300/40 rounded-xl shrink-0" open>
+                <summary className="accordion-title text-[10px] font-bold tracking-wider text-base-content/50 uppercase select-none cursor-pointer py-3 min-h-0">
                   Marking Tool
                 </summary>
-                <div className="collapse-content flex flex-col gap-1 text-xs">
+                <div className="accordion-content flex flex-col gap-1 text-xs">
                   {(['VISITED', 'WISHLIST', 'REVISIT', 'AVOID'] as const).map((mode) => {
                     const label = mode === 'VISITED' ? 'Mark Visited' : mode === 'WISHLIST' ? 'Mark Wishlist' : mode === 'REVISIT' ? 'Mark Revisit' : 'Mark Avoid';
                     const activeColor = 
@@ -368,12 +368,12 @@ export const MapContainer: React.FC = () => {
                 </div>
               </details>
 
-              {/* Map Visibility filters Details Collapse */}
-              <details className="collapse collapse-arrow bg-base-200/40 border border-base-300/40 rounded-xl shrink-0" open>
-                <summary className="collapse-title text-[10px] font-bold tracking-wider text-base-content/50 uppercase select-none cursor-pointer py-3 min-h-0">
+              {/* Map Visibility filters Details Accordion */}
+              <details className="accordion accordion-arrow bg-base-200/40 border border-base-300/40 rounded-xl shrink-0" open>
+                <summary className="accordion-title text-[10px] font-bold tracking-wider text-base-content/50 uppercase select-none cursor-pointer py-3 min-h-0">
                   Visibility Filters
                 </summary>
-                <div className="collapse-content flex flex-col gap-1 text-xs">
+                <div className="accordion-content flex flex-col gap-1 text-xs">
                   {(
                     [
                       ['Visited', showVisited, setShowVisited, 'var(--accent-visited)'],
@@ -401,12 +401,12 @@ export const MapContainer: React.FC = () => {
                 </div>
               </details>
 
-              {/* Map Type Config Details Collapse */}
-              <details className="collapse collapse-arrow bg-base-200/40 border border-base-300/40 rounded-xl shrink-0" open>
-                <summary className="collapse-title text-[10px] font-bold tracking-wider text-base-content/50 uppercase select-none cursor-pointer py-3 min-h-0">
+              {/* Map Type Config Details Accordion */}
+              <details className="accordion accordion-arrow bg-base-200/40 border border-base-300/40 rounded-xl shrink-0" open>
+                <summary className="accordion-title text-[10px] font-bold tracking-wider text-base-content/50 uppercase select-none cursor-pointer py-3 min-h-0">
                   Presentation Style
                 </summary>
-                <div className="collapse-content flex flex-col gap-2 text-xs">
+                <div className="accordion-content flex flex-col gap-2 text-xs">
                   <div className="grid grid-cols-2 gap-1.5">
                     <button 
                       className={`btn btn-xs ${mapStyle === 'STANDARD' ? 'btn-primary' : 'btn-outline border-base-300/30 text-base-content/80 hover:text-primary'}`}
