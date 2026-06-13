@@ -1,5 +1,4 @@
-// API Endpoints
-export const REST_COUNTRIES_URL = 'https://restcountries.com/v3.1/all?fields=name,cca2,cca3,ccn3,flags,region,subregion';
+// Map Data Source
 export const WORLD_GEO_URL = 'https://unpkg.com/world-atlas@2.0.2/countries-50m.json';
 
 // Shared Colors (Mirrors CSS variables but accessible to JS/Canvas plugins)

@@ -1,73 +1,138 @@
-# React + TypeScript + Vite
+# 🌍 VisitedPlaces
 
-This template provides a minimal setup to get React working in Vite with HMR and some ESLint rules.
+**An interactive, offline-first world travel tracker** — mark countries and regions you've visited, explore your travel analytics, and compare maps with friends using shareable codes.
 
-Currently, two official plugins are available:
+[![Version](https://img.shields.io/badge/version-1.0.0-blue.svg)](package.json)
+[![License: AGPL-3.0](https://img.shields.io/badge/License-AGPL--3.0-blue.svg)](LICENSE)
+[![TypeScript](https://img.shields.io/badge/TypeScript-Strict-3178C6.svg)](tsconfig.app.json)
 
-- [@vitejs/plugin-react](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react) uses [Babel](https://babeljs.io/) (or [oxc](https://oxc.rs) when used in [rolldown-vite](https://vite.dev/guide/rolldown)) for Fast Refresh
-- [@vitejs/plugin-react-swc](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react-swc) uses [SWC](https://swc.rs/) for Fast Refresh
+---
 
-## React Compiler
+## ✨ Features
 
-The React Compiler is not enabled on this template because of its impact on dev & build performances. To add it, see [this documentation](https://react.dev/learn/react-compiler/installation).
+| Feature | Description |
+|---|---|
+| 🗺️ **Interactive World Map** | Click countries to mark them. Right-click to drill into sub-regions (US states, UK counties). |
+| 📋 **Country Directory** | Searchable list of all countries grouped by continent, with sub-region expansion. |
+| 📊 **Analytics Dashboard** | Coverage stats, continent breakdowns, pie charts, and traveler persona badges. |
+| 🤝 **Compare Mode** | Paste friends' share codes to see a side-by-side map with common destinations and recommendations. |
+| 🔄 **Share Codes** | Export your map as a compact base64 code. Import codes from friends to compare or restore backups. |
+| 🌓 **Dark & Light Mode** | Toggle between dark and light themes from the Settings panel. |
+| ⬡ **Hexagon Map** | Alternative hexagonal visualization for a unique view of global coverage. |
+| 🔒 **Privacy First** | Zero server, zero accounts. All data stays in your browser's `localStorage`. |
 
-## Expanding the ESLint configuration
+### Status Types
 
-If you are developing a production application, we recommend updating the configuration to enable type-aware lint rules:
+- ✅ **Visited** — You've been there
+- 💜 **Wishlist** — You want to go
+- 🔄 **Revisit** — You'd go back
+- 🚫 **Avoid** — Not interested
 
-```js
-export default defineConfig([
-  globalIgnores(['dist']),
-  {
-    files: ['**/*.{ts,tsx}'],
-    extends: [
-      // Other configs...
+---
 
-      // Remove tseslint.configs.recommended and replace with this
-      tseslint.configs.recommendedTypeChecked,
-      // Alternatively, use this for stricter rules
-      tseslint.configs.strictTypeChecked,
-      // Optionally, add this for stylistic rules
-      tseslint.configs.stylisticTypeChecked,
+## 🚀 Quick Start
 
-      // Other configs...
-    ],
-    languageOptions: {
-      parserOptions: {
-        project: ['./tsconfig.node.json', './tsconfig.app.json'],
-        tsconfigRootDir: import.meta.dirname,
-      },
-      // other options...
-    },
-  },
-])
+### Prerequisites
+
+- [Node.js](https://nodejs.org/) 20+
+- npm 10+
+
+### Install & Run
+
+```bash
+git clone https://github.com/your-username/VisitedPlaces.git
+cd VisitedPlaces
+npm install
+npm run dev
 ```
 
-You can also install [eslint-plugin-react-x](https://github.com/Rel1cx/eslint-react/tree/main/packages/plugins/eslint-plugin-react-x) and [eslint-plugin-react-dom](https://github.com/Rel1cx/eslint-react/tree/main/packages/plugins/eslint-plugin-react-dom) for React-specific lint rules:
+Open [http://localhost:5173](http://localhost:5173) in your browser.
 
-```js
-// eslint.config.js
-import reactX from 'eslint-plugin-react-x'
-import reactDom from 'eslint-plugin-react-dom'
+### Build for Production
 
-export default defineConfig([
-  globalIgnores(['dist']),
-  {
-    files: ['**/*.{ts,tsx}'],
-    extends: [
-      // Other configs...
-      // Enable lint rules for React
-      reactX.configs['recommended-typescript'],
-      // Enable lint rules for React DOM
-      reactDom.configs.recommended,
-    ],
-    languageOptions: {
-      parserOptions: {
-        project: ['./tsconfig.node.json', './tsconfig.app.json'],
-        tsconfigRootDir: import.meta.dirname,
-      },
-      // other options...
-    },
-  },
-])
+```bash
+npm run build     # TypeScript check + Vite build → dist/
+npm run preview   # Preview the production build locally
 ```
+
+The `dist/` folder is a static site — deploy it to GitHub Pages, Netlify, Vercel, or any static host. No server or environment variables needed.
+
+---
+
+## 🏗️ Tech Stack
+
+| Layer | Technology |
+|---|---|
+| Framework | React 19 + TypeScript (strict mode) |
+| Build | Vite 7 |
+| State | Zustand 5 + localStorage persistence |
+| Routing | React Router 7 |
+| Maps | react-simple-maps + D3 (TopoJSON) |
+| Charts | Recharts |
+| Icons | Lucide React |
+| Styling | Vanilla CSS with custom properties |
+
+---
+
+## 📁 Project Structure
+
+```
+src/
+├── components/
+│   ├── layout/          # AppLayout, Navbar, SettingsModal
+│   └── map/             # StandardMap, HexagonMap, CompareMap, MapContainer
+├── config/              # Constants, drill-down registry
+├── data/                # Static country data, territory markers
+├── hooks/               # useDrilldownGeography, useMapAnimation
+├── pages/               # Home, List, Analytics, Compare
+├── store/               # Zustand store (places, theme, actions)
+└── utils/               # Map utilities, serialization, caching
+```
+
+---
+
+## 🤝 How Sharing Works
+
+1. Open **Settings** → your map is encoded as a compact base64 string
+2. Copy the code and send it to a friend
+3. Your friend pastes it into the **Compare** page
+4. A merged map shows common destinations, recommendations, and travel overlaps
+
+No server involved — the code contains your data directly.
+
+---
+
+## 🧑‍💻 Contributing
+
+Contributions are welcome! Please read the [AGENTS.MD](AGENTS.MD) file for:
+- Architecture overview and design decisions
+- Coding standards (TypeScript strict mode, BEM CSS, Zustand patterns)
+- Step-by-step guides for adding new features
+- Testing strategy and quality gates
+
+### Development Workflow
+
+```bash
+npm run dev       # Start dev server with HMR
+npm run lint      # Run ESLint
+npm run build     # Type-check + production build
+```
+
+### Commit Convention
+
+We use [Conventional Commits](https://www.conventionalcommits.org/):
+
+```
+feat: add trip dates to country data
+fix: resolve projection error on UK drill-down
+chore: update dependencies
+refactor: extract map tooltip into component
+```
+
+---
+
+## 📄 License
+
+This project is licensed under the **GNU Affero General Public License v3.0** — see the [LICENSE](LICENSE) file for details.
+
+In short: you're free to use, modify, and distribute this software, but if you run a modified version on a public server, you must make the source code available to users of that server.

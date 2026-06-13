@@ -2,9 +2,7 @@ import React, { memo } from 'react';
 import { ComposableMap, Geographies, Geography, ZoomableGroup, Marker } from 'react-simple-maps';
 import type { MapCompareResult } from '../../pages/Compare';
 import { MICROSTATES } from '../../data/mapData';
-
-const worldGeoUrl = 'https://unpkg.com/world-atlas@2.0.2/countries-50m.json';
-
+import { WORLD_GEO_URL } from '../../config/constants';
 
 
 interface CompareMapProps {
@@ -38,7 +36,7 @@ const CompareMapBase: React.FC<CompareMapProps> = ({ mergedData, setTooltipConte
       style={{ width: '100%', height: '100%', outline: 'none' }}
     >
       <ZoomableGroup center={[0, 0]} zoom={1} minZoom={1} maxZoom={8}>
-        <Geographies geography={worldGeoUrl}>
+        <Geographies geography={WORLD_GEO_URL}>
           {({ geographies }) =>
             geographies.map((geo) => {
               const rawId = geo.properties?.ISO_A3 || geo.id;

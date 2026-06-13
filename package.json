@@ -2,6 +2,7 @@
   "name": "visitedplaces",
   "private": true,
   "version": "1.0.0",
+  "license": "AGPL-3.0-only",
   "type": "module",
   "scripts": {
     "dev": "vite",
@@ -10,9 +11,6 @@
     "preview": "vite preview"
   },
   "dependencies": {
-    "clsx": "^2.1.1",
-    "countries-list": "^3.3.0",
-    "country-state-city": "^3.2.1",
     "d3-geo": "^3.1.1",
     "d3-hexbin": "^0.2.2",
     "lucide-react": "^0.577.0",

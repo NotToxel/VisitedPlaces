@@ -1,12 +1,10 @@
 import React from 'react';
 import { NavLink } from 'react-router-dom';
-import { Map, List, BarChart3, Users, Settings, Sun, Moon } from 'lucide-react';
+import { Map, List, BarChart3, Users, Settings } from 'lucide-react';
 import { SettingsModal } from './SettingsModal';
-import { useStore } from '../../store/useStore';
 
 export const Navbar: React.FC = () => {
   const [isSettingsOpen, setIsSettingsOpen] = React.useState(false);
-  const { theme, toggleTheme } = useStore();
 
   return (
     <nav className="navbar glass-panel">
@@ -45,26 +43,11 @@ export const Navbar: React.FC = () => {
           <span>Compare</span>
         </NavLink>
 
-        {/* Theme Toggle — always visible in Navbar */}
-        <button
-          onClick={toggleTheme}
-          className="navbar__link"
-          title={theme === 'dark' ? 'Switch to Light Mode' : 'Switch to Dark Mode'}
-          style={{
-            background: 'transparent', border: 'none', cursor: 'pointer',
-            color: theme === 'dark' ? '#f0a500' : '#3b82f6',
-          }}
-        >
-          {theme === 'dark' ? <Sun size={18} /> : <Moon size={18} />}
-          <span>{theme === 'dark' ? 'Light' : 'Dark'}</span>
-        </button>
-
         {/* Data Manager / Settings */}
         <button
           onClick={() => setIsSettingsOpen(true)}
-          className="navbar__link"
-          title="Data Manager — Import / Export"
-          style={{ background: 'transparent', border: 'none', cursor: 'pointer' }}
+          className="navbar__link navbar__action-btn"
+          title="Settings"
         >
           <Settings size={18} />
           <span>Settings</span>
