@@ -1,6 +1,6 @@
 import React, { memo } from 'react';
 import { Geographies, Geography } from 'react-simple-maps';
-import { getFillColor, getRegionId } from '../../utils/mapUtils';
+import { getFillColor, getRegionId, showMapTooltip, hideMapTooltip } from '../../utils/mapUtils';
 import type { GeoFeature, GeoProperties } from '../../utils/mapUtils';
 import type { PlaceStatus } from '../../store/useStore';
 
@@ -14,7 +14,6 @@ interface MapGeographiesProps {
   showWishlist: boolean;
   showAvoid: boolean;
   showRevisit: boolean;
-  setTooltipContent: (content: string) => void;
   handleCountryClick: (geo: GeoFeature) => void;
   handleRightClick: (e: React.MouseEvent, geo: GeoFeature) => void;
 }
@@ -42,7 +41,6 @@ const MapGeographiesBase: React.FC<MapGeographiesProps> = ({
   showWishlist,
   showAvoid,
   showRevisit,
-  setTooltipContent,
   handleCountryClick,
   handleRightClick
 }) => {
@@ -76,8 +74,9 @@ const MapGeographiesBase: React.FC<MapGeographiesProps> = ({
             <Geography
               key={geo.rsmKey}
               geography={geo}
-              onMouseEnter={() => setTooltipContent(`${countryName}${isSelected ? ` - ${status}` : ''}`)}
-              onMouseLeave={() => setTooltipContent('')}
+              onMouseEnter={(e) => showMapTooltip(`${countryName}${isSelected ? ` - ${status}` : ''}`, e)}
+              onMouseMove={(e) => showMapTooltip(`${countryName}${isSelected ? ` - ${status}` : ''}`, e)}
+              onMouseLeave={hideMapTooltip}
               onClick={() => handleCountryClick(feature)}
               onContextMenu={(e) => handleRightClick(e, feature)}
               fill={fill}

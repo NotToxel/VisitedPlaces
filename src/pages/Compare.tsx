@@ -39,7 +39,6 @@ const Compare: React.FC = () => {
   const [copied, setCopied] = useState(false);
   const [isSidebarCollapsed, setIsSidebarCollapsed] = useState(false);
   const [friendInput, setFriendInput] = useState('');
-  const [tooltipContent, setTooltipContent] = useState('');
 
   // Load groups from localStorage, or initialize with a default group
   const [groups, setGroups] = useState<CompareGroup[]>(() => {
@@ -624,14 +623,7 @@ const Compare: React.FC = () => {
 
         <div className="flex-1 w-full h-full relative overflow-hidden">
           {hasImportedFriend ? (
-            <>
-              <CompareMap mergedData={mergedData} setTooltipContent={setTooltipContent} numericToA3={NUMERIC_TO_A3} />
-              {tooltipContent && (
-                <div className="absolute bottom-6 left-1/2 -translate-x-1/2 px-3 py-1.5 bg-base-300/95 backdrop-blur-md border border-base-300 rounded-lg shadow-xl text-xs font-bold text-base-content select-none pointer-events-none z-40 transition-opacity">
-                  {tooltipContent}
-                </div>
-              )}
-            </>
+            <CompareMap mergedData={mergedData} numericToA3={NUMERIC_TO_A3} />
           ) : (
             <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[90%] max-w-lg card bg-base-200/50 border border-base-300 shadow-2xl p-6 text-center select-none backdrop-blur-md flex flex-col gap-4">
               <div className="w-16 h-16 bg-primary/10 rounded-full flex items-center justify-center mx-auto text-primary">

@@ -56,3 +56,26 @@ export const getRegionId = (
   const rawId = geo.properties?.ISO_A3 || geo.id?.toString() || '';
   return numericToA3[rawId] || rawId;
 };
+
+/**
+ * Direct DOM helper to display and position the high-performance floating tooltip.
+ */
+export const showMapTooltip = (content: string, e: React.MouseEvent | MouseEvent) => {
+  const el = document.getElementById('map-tooltip');
+  if (el) {
+    el.textContent = content;
+    el.style.left = `${e.clientX + 10}px`;
+    el.style.top = `${e.clientY + 12}px`;
+    el.style.opacity = '1';
+  }
+};
+
+/**
+ * Direct DOM helper to hide the high-performance floating tooltip.
+ */
+export const hideMapTooltip = () => {
+  const el = document.getElementById('map-tooltip');
+  if (el) {
+    el.style.opacity = '0';
+  }
+};

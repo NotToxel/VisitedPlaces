@@ -24,7 +24,6 @@ export const MapContainer: React.FC = () => {
   const [activeMode, setActiveMode] = useState<'VISITED' | 'WISHLIST' | 'AVOID' | 'REVISIT'>('VISITED');
   const [mapStyle, setMapStyle] = useState<'STANDARD' | 'HEXAGON'>('STANDARD');
   const [showHexLabels, setShowHexLabels] = useState(false);
-  const [tooltipContent, setTooltipContent] = useState('');
   const [activeCountry, setActiveCountry] = useState<string | null>(null);
   const [isSidebarCollapsed, setIsSidebarCollapsed] = useState(false);
 
@@ -457,7 +456,6 @@ export const MapContainer: React.FC = () => {
           {mapStyle === 'STANDARD' ? (
             <StandardMap 
               selectionMode={activeMode} 
-              setTooltipContent={setTooltipContent} 
               activeCountry={activeCountry}
               setActiveCountry={setActiveCountry}
               highlightedCountry={highlightedCountryA3}
@@ -470,7 +468,6 @@ export const MapContainer: React.FC = () => {
           ) : (
             <HexagonMap 
               selectionMode={activeMode} 
-              setTooltipContent={setTooltipContent}
               highlightedCountry={highlightedCountryA3}
               showLabels={showHexLabels}
               showVisited={showVisited}
@@ -478,13 +475,6 @@ export const MapContainer: React.FC = () => {
               showAvoid={showAvoid}
               showRevisit={showRevisit}
             />
-          )}
-          
-          {/* Elegant Tooltip overlay */}
-          {tooltipContent && (
-            <div className="absolute bottom-6 left-1/2 -translate-x-1/2 px-3 py-1.5 bg-base-300/95 backdrop-blur-md border border-base-300 rounded-lg shadow-xl text-xs font-bold text-base-content select-none pointer-events-none z-40 transition-opacity">
-              {tooltipContent}
-            </div>
           )}
         </div>
       </main>

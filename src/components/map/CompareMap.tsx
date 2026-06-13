@@ -4,10 +4,10 @@ import type { MapCompareResult } from '../../pages/Compare';
 import { MICROSTATES } from '../../data/mapData';
 import { WORLD_GEO_URL } from '../../config/constants';
 import { fetchRawTopology } from '../../utils/topojsonCache';
+import { showMapTooltip, hideMapTooltip } from '../../utils/mapUtils';
 
 interface CompareMapProps {
   mergedData: Record<string, MapCompareResult>;
-  setTooltipContent: (content: string) => void;
   numericToA3: Record<string, string>;
 }
 
@@ -34,19 +34,19 @@ const GEOGRAPHY_STYLE = {
   pressed: { outline: 'none' }
 };
 
+const COMPOSABLE_MAP_STYLE = { width: '100%', height: '100%', outline: 'none' };
+
 interface CompareMapGeographiesProps {
   worldData: string | object;
   mergedData: Record<string, MapCompareResult>;
   numericToA3: Record<string, string>;
-  setTooltipContent: (content: string) => void;
 }
 
 // Memoized Geographies component to prevent re-rendering paths during tooltip status updates
 const CompareMapGeographiesBase: React.FC<CompareMapGeographiesProps> = ({
   worldData,
   mergedData,
-  numericToA3,
-  setTooltipContent
+  numericToA3
 }) => {
   return (
     <Geographies geography={worldData}>
@@ -61,11 +61,15 @@ const CompareMapGeographiesBase: React.FC<CompareMapGeographiesProps> = ({
             <Geography
               key={geo.rsmKey}
               geography={geo}
-              onMouseEnter={() => {
+              onMouseEnter={(e) => {
                 const label = result ? `${countryName} - ${result.label} (${result.count}/${result.totalUsers})` : countryName;
-                setTooltipContent(label);
+                showMapTooltip(label, e);
               }}
-              onMouseLeave={() => setTooltipContent('')}
+              onMouseMove={(e) => {
+                const label = result ? `${countryName} - ${result.label} (${result.count}/${result.totalUsers})` : countryName;
+                showMapTooltip(label, e);
+              }}
+              onMouseLeave={hideMapTooltip}
               fill={getCompareColor(result)}
               stroke="var(--map-stroke)"
               strokeWidth={0.5}
@@ -80,7 +84,7 @@ const CompareMapGeographiesBase: React.FC<CompareMapGeographiesProps> = ({
 
 const CompareMapGeographies = memo(CompareMapGeographiesBase);
 
-const CompareMapBase: React.FC<CompareMapProps> = ({ mergedData, setTooltipContent, numericToA3 }) => {
+const CompareMapBase: React.FC<CompareMapProps> = ({ mergedData, numericToA3 }) => {
   const [worldData, setWorldData] = useState<object | string | null>(null);
   const [isLoading, setIsLoading] = useState(true);
 
@@ -106,7 +110,7 @@ const CompareMapBase: React.FC<CompareMapProps> = ({ mergedData, setTooltipConte
         projectionConfig={{ scale: 147, center: [0, 0] }}
         width={800}
         height={500}
-        style={{ width: '100%', height: '100%', outline: 'none' }}
+        style={COMPOSABLE_MAP_STYLE}
       >
         <ZoomableGroup center={[0, 0]} zoom={1} minZoom={0.5} maxZoom={24}>
           {worldData && (
@@ -114,7 +118,6 @@ const CompareMapBase: React.FC<CompareMapProps> = ({ mergedData, setTooltipConte
               worldData={worldData}
               mergedData={mergedData}
               numericToA3={numericToA3}
-              setTooltipContent={setTooltipContent}
             />
           )}
 
@@ -125,25 +128,13 @@ const CompareMapBase: React.FC<CompareMapProps> = ({ mergedData, setTooltipConte
             const hasResult = !!result;
 
             return (
-              <Marker
+              <CompareMicrostateMarker
                 key={marker.id}
-                coordinates={marker.coordinates as [number, number]}
-                onMouseEnter={() => {
-                  const label = result ? `${marker.name} - ${result.label} (${result.count}/${result.totalUsers})` : marker.name;
-                  setTooltipContent(label);
-                }}
-                onMouseLeave={() => setTooltipContent('')}
-              >
-                <circle
-                  cx={0}
-                  cy={0}
-                  r={hasResult ? 4 : 2.5}
-                  fill={color}
-                  stroke="var(--map-stroke)"
-                  strokeWidth={0.5}
-                  style={{ cursor: 'default', transition: 'all 0.2s ease' }}
-                />
-              </Marker>
+                marker={marker}
+                result={result}
+                color={color}
+                hasResult={hasResult}
+              />
             );
           })}
         </ZoomableGroup>
@@ -158,5 +149,39 @@ const CompareMapBase: React.FC<CompareMapProps> = ({ mergedData, setTooltipConte
     </div>
   );
 };
+
+interface CompareMicrostateMarkerProps {
+  marker: typeof MICROSTATES[number];
+  result: MapCompareResult | undefined;
+  color: string;
+  hasResult: boolean;
+}
+
+const CompareMicrostateMarkerBase: React.FC<CompareMicrostateMarkerProps> = ({
+  marker,
+  result,
+  color,
+  hasResult
+}) => {
+  const label = result ? `${marker.name} - ${result.label} (${result.count}/${result.totalUsers})` : marker.name;
+  return (
+    <Marker coordinates={marker.coordinates as [number, number]}>
+      <circle
+        cx={0}
+        cy={0}
+        r={hasResult ? 4 : 2.5}
+        fill={color}
+        stroke="var(--map-stroke)"
+        strokeWidth={0.5}
+        style={{ cursor: 'default', transition: 'all 0.2s ease' }}
+        onMouseEnter={(e) => showMapTooltip(label, e)}
+        onMouseMove={(e) => showMapTooltip(label, e)}
+        onMouseLeave={hideMapTooltip}
+      />
+    </Marker>
+  );
+};
+
+const CompareMicrostateMarker = memo(CompareMicrostateMarkerBase);
 
 export const CompareMap = memo(CompareMapBase);

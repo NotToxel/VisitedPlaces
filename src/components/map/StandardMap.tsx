@@ -1,10 +1,11 @@
 import React, { memo, useEffect, useRef, useCallback } from 'react';
 import { ComposableMap, ZoomableGroup, Marker } from 'react-simple-maps';
 import { useStore } from '../../store/useStore';
+import type { PlaceStatus } from '../../store/useStore';
 import { MICROSTATES } from '../../data/mapData';
 import * as topojson from 'topojson-client';
 import { geoCentroid } from 'd3-geo';
-import { getFillColor, getRegionId } from '../../utils/mapUtils';
+import { getFillColor, getRegionId, showMapTooltip, hideMapTooltip } from '../../utils/mapUtils';
 import type { GeoFeature } from '../../utils/mapUtils';
 import { WORLD_GEO_URL } from '../../config/constants';
 import { drilldownRegistry } from '../../config/drilldownConfig';
@@ -15,7 +16,6 @@ import { MapGeographies } from './MapGeographies';
 import { getSubRegionUrl, fetchRawTopology } from '../../utils/topojsonCache';
 
 interface StandardMapProps {
-  setTooltipContent: (content: string) => void;
   selectionMode: 'VISITED' | 'WISHLIST' | 'AVOID' | 'REVISIT';
   activeCountry: string | null;
   setActiveCountry: (id: string | null) => void;
@@ -27,8 +27,10 @@ interface StandardMapProps {
   showRevisit: boolean;
 }
 
+const COMPOSABLE_MAP_STYLE = { width: "100%", height: "100%", outline: 'none' };
+
 const StandardMapBase: React.FC<StandardMapProps> = ({ 
-  setTooltipContent, selectionMode, activeCountry, setActiveCountry, highlightedCountry, 
+  selectionMode, activeCountry, setActiveCountry, highlightedCountry, 
   numericToA3, showVisited, showWishlist, showAvoid, showRevisit
 }) => {
   const { places, setCountryStatus } = useStore();
@@ -129,10 +131,26 @@ const StandardMapBase: React.FC<StandardMapProps> = ({
             setSubRegionZoom(config.defaultView.zoom);
         }
     } else {
-        setTooltipContent(`No sub-regions available for ${geo.properties?.name || 'this country'}`);
-        setTimeout(() => setTooltipContent(''), 2000);
+        showMapTooltip(`No sub-regions available for ${geo.properties?.name || 'this country'}`, e);
+        setTimeout(hideMapTooltip, 2000);
     }
-  }, [numericToA3, activeCountry, setActiveCountry, setSubRegionCenter, setSubRegionZoom, setTooltipContent]);
+  }, [numericToA3, activeCountry, setActiveCountry, setSubRegionCenter, setSubRegionZoom]);
+
+  const handleMicrostateClick = useCallback((id: string, currentStatus: PlaceStatus) => {
+    setCountryStatus(id, currentStatus === selectionMode ? 'NONE' : selectionMode);
+  }, [selectionMode, setCountryStatus]);
+
+  const handleMoveEnd = useCallback(({ coordinates, zoom }: { coordinates: [number, number]; zoom: number }) => {
+    if (isFinite(coordinates[0]) && isFinite(coordinates[1])) { 
+       if (activeCountry) {
+          setSubRegionCenter(coordinates);
+          setSubRegionZoom(zoom);
+       } else {
+          setMapCenter(coordinates); 
+          setMapZoom(zoom); 
+       }
+    } 
+  }, [activeCountry, setSubRegionCenter, setSubRegionZoom, setMapCenter, setMapZoom]);
 
   const currentConfig = activeCountry ? drilldownRegistry[activeCountry] : null;
 
@@ -158,7 +176,7 @@ const StandardMapBase: React.FC<StandardMapProps> = ({
         }}
         width={800}
         height={500}
-        style={{ width: "100%", height: "100%", outline: 'none' }}
+        style={COMPOSABLE_MAP_STYLE}
       >
         <ZoomableGroup 
           key={activeCountry || 'world'} 
@@ -166,17 +184,7 @@ const StandardMapBase: React.FC<StandardMapProps> = ({
           zoom={activeCountry ? subRegionZoom : mapZoom} 
           minZoom={0.5} 
           maxZoom={24} 
-          onMoveEnd={({ coordinates, zoom }) => { 
-            if (isFinite(coordinates[0]) && isFinite(coordinates[1])) { 
-               if (activeCountry) {
-                  setSubRegionCenter(coordinates);
-                  setSubRegionZoom(zoom);
-               } else {
-                  setMapCenter(coordinates); 
-                  setMapZoom(zoom); 
-               }
-            } 
-          }}
+          onMoveEnd={handleMoveEnd}
         >
           <MapGeographies 
             geoData={geoData}
@@ -188,7 +196,6 @@ const StandardMapBase: React.FC<StandardMapProps> = ({
             showWishlist={showWishlist}
             showAvoid={showAvoid}
             showRevisit={showRevisit}
-            setTooltipContent={setTooltipContent}
             handleCountryClick={handleCountryClick}
             handleRightClick={handleRightClick}
           />
@@ -197,23 +204,17 @@ const StandardMapBase: React.FC<StandardMapProps> = ({
             const status = places[marker.id]?.status || 'NONE';
             const isHighlighted = highlightedCountry === marker.id;
             return (
-              <Marker 
+              <MicrostateMarker 
                 key={marker.id} 
-                coordinates={marker.coordinates as [number, number]}
-                onClick={() => setCountryStatus(marker.id, status === selectionMode ? 'NONE' : selectionMode)}
-                onMouseEnter={() => setTooltipContent(`${marker.name}${status !== 'NONE' ? ` - ${status}` : ''}`)}
-                onMouseLeave={() => setTooltipContent('')}
-              >
-                <circle 
-                  cx={0} 
-                  cy={0} 
-                  r={isHighlighted ? 4 : 2.5} 
-                  fill={getFillColor(status, isHighlighted, false, showVisited, showWishlist, showAvoid, showRevisit)} 
-                  stroke={isHighlighted ? "var(--accent-highlight)" : "var(--map-stroke)"} 
-                  strokeWidth={0.5} 
-                  style={{ cursor: 'pointer' }} 
-                />
-              </Marker>
+                marker={marker}
+                status={status}
+                isHighlighted={isHighlighted}
+                showVisited={showVisited}
+                showWishlist={showWishlist}
+                showAvoid={showAvoid}
+                showRevisit={showRevisit}
+                onMarkerClick={handleMicrostateClick}
+              />
             );
           })}
         </ZoomableGroup>
@@ -228,5 +229,47 @@ const StandardMapBase: React.FC<StandardMapProps> = ({
     </div>
   );
 };
+
+interface MicrostateMarkerProps {
+  marker: typeof MICROSTATES[number];
+  status: PlaceStatus;
+  isHighlighted: boolean;
+  showVisited: boolean;
+  showWishlist: boolean;
+  showAvoid: boolean;
+  showRevisit: boolean;
+  onMarkerClick: (id: string, currentStatus: PlaceStatus) => void;
+}
+
+const MicrostateMarkerBase: React.FC<MicrostateMarkerProps> = ({
+  marker,
+  status,
+  isHighlighted,
+  showVisited,
+  showWishlist,
+  showAvoid,
+  showRevisit,
+  onMarkerClick
+}) => {
+  return (
+    <Marker coordinates={marker.coordinates as [number, number]}>
+      <circle 
+        cx={0} 
+        cy={0} 
+        r={isHighlighted ? 4 : 2.5} 
+        fill={getFillColor(status, isHighlighted, false, showVisited, showWishlist, showAvoid, showRevisit)} 
+        stroke={isHighlighted ? "var(--accent-highlight)" : "var(--map-stroke)"} 
+        strokeWidth={0.5} 
+        style={{ cursor: 'pointer' }} 
+        onClick={() => onMarkerClick(marker.id, status)}
+        onMouseEnter={(e) => showMapTooltip(`${marker.name}${status !== 'NONE' ? ` - ${status}` : ''}`, e)}
+        onMouseMove={(e) => showMapTooltip(`${marker.name}${status !== 'NONE' ? ` - ${status}` : ''}`, e)}
+        onMouseLeave={hideMapTooltip}
+      />
+    </Marker>
+  );
+};
+
+const MicrostateMarker = memo(MicrostateMarkerBase);
 
 export const StandardMap = memo(StandardMapBase);

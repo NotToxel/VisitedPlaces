@@ -1,10 +1,9 @@
 import React, { memo, useState, useEffect, useRef, useCallback } from 'react';
 import { useStore } from '../../store/useStore';
 import { hexGridData } from '../../utils/hexGridData';
-import { getFillColor } from '../../utils/mapUtils';
+import { getFillColor, showMapTooltip, hideMapTooltip } from '../../utils/mapUtils';
 
 interface HexagonMapProps {
-  setTooltipContent: (content: string) => void;
   selectionMode: 'VISITED' | 'WISHLIST' | 'AVOID' | 'REVISIT';
   highlightedCountry?: string | null;
   showLabels?: boolean;
@@ -52,7 +51,6 @@ function hexCenter(dot: { x: number; y: number }) {
 }
 
 const HexagonMapBase: React.FC<HexagonMapProps> = ({
-  setTooltipContent,
   selectionMode,
   highlightedCountry,
   showLabels,
@@ -200,9 +198,9 @@ const HexagonMapBase: React.FC<HexagonMapProps> = ({
 
   const handleRightClick = useCallback((e: React.MouseEvent) => {
     e.preventDefault();
-    setTooltipContent('Sub-regions are only visible in Standard Map view.');
-    setTimeout(() => setTooltipContent(''), 3000);
-  }, [setTooltipContent]);
+    showMapTooltip('Sub-regions are only visible in Standard Map view.', e);
+    setTimeout(hideMapTooltip, 3000);
+  }, []);
 
   return (
     <svg
@@ -232,11 +230,17 @@ const HexagonMapBase: React.FC<HexagonMapProps> = ({
                 stroke="var(--map-stroke)"
                 strokeWidth={0.8}
                 style={{ cursor: 'pointer', outline: 'none', transition: 'fill 0.2s ease, transform 0.2s ease' }}
-                onMouseEnter={() => {
+                onMouseEnter={(e) => {
                   setHoveredId(countryId);
-                  setTooltipContent(`${dot.name}${isSelected ? ` - ${status}` : ''}`);
+                  showMapTooltip(`${dot.name}${isSelected ? ` - ${status}` : ''}`, e);
                 }}
-                onMouseLeave={() => { setHoveredId(null); setTooltipContent(''); }}
+                onMouseMove={(e) => {
+                  showMapTooltip(`${dot.name}${isSelected ? ` - ${status}` : ''}`, e);
+                }}
+                onMouseLeave={() => {
+                  setHoveredId(null);
+                  hideMapTooltip();
+                }}
                 onClick={() => handleCountryClick(countryId)}
                 onContextMenu={handleRightClick}
               />
