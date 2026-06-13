@@ -59,7 +59,7 @@
   --bg-base-100: #0d0e15;
   --bg-base-200: #1a1b26;
   --bg-base-300: #24283b;
-  --text-base-content: #a9b1d6;
+  --text-base-content: #c0caf5;
 }
 
 /* Light mode overrides for map and charts */
@@ -84,8 +84,8 @@
   --color-revisit-both: #b8860b;
   --color-revisit-mixed: #d97706;
   
-  --glass-bg: rgba(255, 255, 255, 0.45);
-  --glass-border: rgba(0, 0, 0, 0.08);
+  --glass-bg: rgba(255, 255, 255, 0.7);
+  --glass-border: rgba(15, 23, 42, 0.12);
   --glass-blur: 16px;
 
   /* Custom component theme support in Light mode */
@@ -96,7 +96,7 @@
   --bg-base-100: #f8fafc;
   --bg-base-200: #f1f5f9;
   --bg-base-300: #e2e8f0;
-  --text-base-content: #374151;
+  --text-base-content: #0f172a;
 }
 
 /* App-wide custom overrides for smooth layouts */
@@ -647,4 +647,51 @@ path.rsm-geography:hover {
 }
 path.rsm-geography:active {
   fill: var(--accent-primary) !important;
+}
+
+/* Accessibility & High Contrast overrides in Light mode */
+[data-theme="light"] {
+  /* Elevate opacity classes for text elements to meet WCAG contrast requirements on light backgrounds */
+  .text-base-content\/40 {
+    color: rgba(15, 23, 42, 0.55) !important;
+  }
+  .text-base-content\/50 {
+    color: rgba(15, 23, 42, 0.65) !important;
+  }
+  .text-base-content\/60 {
+    color: rgba(15, 23, 42, 0.72) !important;
+  }
+  .text-base-content\/70 {
+    color: rgba(15, 23, 42, 0.8) !important;
+  }
+  .text-base-content\/80 {
+    color: rgba(15, 23, 42, 0.88) !important;
+  }
+  .text-base-content\/85 {
+    color: rgba(15, 23, 42, 0.92) !important;
+  }
+  
+  /* Elevate opacity for card backgrounds */
+  .bg-base-200\/25, .bg-base-200\/30 {
+    background-color: rgba(15, 23, 42, 0.04) !important;
+  }
+  .bg-base-200\/40 {
+    background-color: rgba(15, 23, 42, 0.05) !important;
+  }
+  .border-base-300\/40, .border-base-300\/35 {
+    border-color: rgba(15, 23, 42, 0.12) !important;
+  }
+  
+  /* Badges & stats descriptions */
+  .stat-title {
+    color: rgba(15, 23, 42, 0.65) !important;
+  }
+  .stat-desc {
+    color: rgba(15, 23, 42, 0.55) !important;
+  }
+  
+  /* Inputs placeholder */
+  ::placeholder {
+    color: rgba(15, 23, 42, 0.5) !important;
+  }
 }

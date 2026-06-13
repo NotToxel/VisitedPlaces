@@ -338,9 +338,9 @@ export const MapContainer: React.FC = () => {
                 <summary className="accordion-title text-[10px] font-bold tracking-wider text-base-content/50 uppercase select-none cursor-pointer py-3 min-h-0">
                   Marking Tool
                 </summary>
-                <div className="accordion-content flex flex-col gap-1 text-xs">
+                <div className="accordion-content grid grid-cols-2 gap-1.5 text-xs">
                   {(['VISITED', 'WISHLIST', 'REVISIT', 'AVOID'] as const).map((mode) => {
-                    const label = mode === 'VISITED' ? 'Mark Visited' : mode === 'WISHLIST' ? 'Mark Wishlist' : mode === 'REVISIT' ? 'Mark Revisit' : 'Mark Avoid';
+                    const label = mode === 'VISITED' ? 'Visited' : mode === 'WISHLIST' ? 'Wishlist' : mode === 'REVISIT' ? 'Revisit' : 'Avoid';
                     const activeColor = 
                       mode === 'VISITED' ? 'var(--accent-visited)' : 
                       mode === 'WISHLIST' ? 'var(--accent-wishlist)' : 
@@ -350,8 +350,8 @@ export const MapContainer: React.FC = () => {
                     return (
                       <button 
                         key={mode}
-                        className={`btn btn-outline btn-xs font-medium justify-start gap-2.5 w-full transition-all ${
-                          isActive ? 'btn-active text-primary bg-primary/10' : 'text-base-content/80 border-base-300/30 hover:text-primary'
+                        className={`btn btn-outline btn-xs font-semibold justify-start px-2 gap-1.5 w-full transition-all ${
+                          isActive ? 'btn-active text-primary bg-primary/10' : 'text-base-content/85 border-base-300/30 hover:text-primary'
                         }`}
                         onClick={() => setActiveMode(mode)}
                         style={{
@@ -372,19 +372,19 @@ export const MapContainer: React.FC = () => {
                 <summary className="accordion-title text-[10px] font-bold tracking-wider text-base-content/50 uppercase select-none cursor-pointer py-3 min-h-0">
                   Visibility Filters
                 </summary>
-                <div className="accordion-content flex flex-col gap-1 text-xs">
+                <div className="accordion-content grid grid-cols-2 gap-1.5 text-xs">
                   {(
                     [
                       ['Visited', showVisited, setShowVisited, 'var(--accent-visited)'],
-                      ['Revisit', showRevisit, setShowRevisit, 'var(--accent-revisit)'],
                       ['Wishlist', showWishlist, setShowWishlist, 'var(--accent-wishlist)'],
+                      ['Revisit', showRevisit, setShowRevisit, 'var(--accent-revisit)'],
                       ['Avoid', showAvoid, setShowAvoid, 'var(--accent-avoid)']
                     ] as const
                   ).map(([label, shown, setter, color]) => (
                     <button
                       key={label}
-                      className={`btn btn-outline btn-xs font-medium justify-start gap-2.5 w-full transition-all ${
-                        shown ? 'btn-active' : 'opacity-40 text-base-content/60 border-base-300/30 hover:text-base-content'
+                      className={`btn btn-outline btn-xs font-semibold justify-start px-2 gap-1.5 w-full transition-all ${
+                        shown ? 'btn-active' : 'text-base-content/85 border-base-300/30 hover:text-base-content'
                       }`}
                       onClick={() => setter(!shown)}
                       style={{ 
@@ -393,7 +393,7 @@ export const MapContainer: React.FC = () => {
                         background: shown ? `${color}15` : undefined
                       }}
                     >
-                      {shown ? <Eye size={12} /> : <EyeOff size={12} />}
+                      {shown ? <Eye size={11} /> : <EyeOff size={11} />}
                       <span>{label}</span>
                     </button>
                   ))}
