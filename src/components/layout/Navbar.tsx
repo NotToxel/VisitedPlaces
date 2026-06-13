@@ -12,7 +12,7 @@ export const Navbar: React.FC = () => {
     }`;
 
   return (
-    <nav className="navbar bg-base-200/80 backdrop-blur-md border-b border-base-300/50 justify-between px-4 py-2 shrink-0 select-none z-50">
+    <nav className="navbar bg-base-200/45 backdrop-blur-md border-b border-base-300/35 justify-between px-4 py-2 shrink-0 select-none z-50">
       <NavLink to="/" className="flex items-center gap-2 font-bold text-lg text-primary hover:opacity-85 transition-opacity">
         <Map className="w-5 h-5" />
         <span>VisitedPlaces</span>

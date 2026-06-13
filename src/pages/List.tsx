@@ -111,7 +111,7 @@ const List: React.FC = () => {
   };
 
   return (
-    <div className="p-4 md:p-6 h-full flex flex-col gap-4 overflow-hidden bg-base-100 select-none">
+    <div className="p-4 md:p-6 h-full flex flex-col gap-4 overflow-hidden bg-transparent select-none">
       {/* Header and Controls */}
       <div className="glass-panel border border-base-300/50 p-4 rounded-2xl shrink-0 flex flex-col gap-4">
         <h2 className="flex items-center gap-2 text-md font-bold text-base-content select-none">

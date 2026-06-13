@@ -103,7 +103,7 @@ const Analytics: React.FC = () => {
   const percentVisited = totalCountries > 0 ? ((totalVisitedAndRevisit / totalCountries) * 100).toFixed(1) : '0';
 
   return (
-    <div className="p-4 md:p-6 h-full flex flex-col gap-4 overflow-hidden bg-base-100">
+    <div className="p-4 md:p-6 h-full flex flex-col gap-4 overflow-hidden bg-transparent">
       {/* Header */}
       <div className="glass-panel border border-base-300/50 p-4 rounded-2xl shrink-0 flex items-center gap-2 select-none">
         <PieIcon size={18} className="text-primary" />

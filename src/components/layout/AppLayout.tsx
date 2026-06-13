@@ -6,12 +6,12 @@ export const AppLayout: React.FC = () => {
   const currentYear = new Date().getFullYear();
 
   return (
-    <div className="flex flex-col h-screen overflow-hidden bg-base-100 text-base-content">
+    <div className="flex flex-col h-screen overflow-hidden bg-transparent text-base-content">
       <Navbar />
       <main className="flex-1 overflow-hidden relative">
         <Outlet />
       </main>
-      <footer className="footer bg-base-300 text-base-content/70 py-2 px-4 border-t border-base-200 flex justify-between items-center text-xs shrink-0 select-none">
+      <footer className="footer bg-base-300/40 backdrop-blur-md text-base-content/70 py-2 px-4 border-t border-base-300/30 flex justify-between items-center text-xs shrink-0 select-none">
         <span>
           &copy; {currentYear} VisitedPlaces. Licensed under AGPL-3.0.
         </span>

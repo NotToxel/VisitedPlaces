@@ -83,7 +83,7 @@ export const SettingsModal: React.FC<SettingsModalProps> = ({ onClose }) => {
       />
 
       {/* Centered Modal */}
-      <div className="fixed top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[95%] max-w-md bg-base-100 border border-base-300 rounded-2xl shadow-2xl p-6 z-50 flex flex-col gap-4 max-h-[85vh] overflow-y-auto select-none">
+      <div className="fixed top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[95%] max-w-md glass-panel rounded-2xl shadow-2xl p-6 z-50 flex flex-col gap-4 max-h-[85vh] overflow-y-auto select-none">
         
         {/* Header */}
         <div className="flex justify-between items-start border-b border-base-200 pb-3">

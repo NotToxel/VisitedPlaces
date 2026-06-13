@@ -349,7 +349,7 @@ const Compare: React.FC = () => {
   const hasImportedFriend = friends.length > 0;
 
   return (
-    <div className="flex flex-col md:flex-row h-full w-full relative overflow-hidden bg-base-100 select-none">
+    <div className="flex flex-col md:flex-row h-full w-full relative overflow-hidden bg-transparent select-none">
       {/* Sidebar Controls */}
       <aside className={`glass-panel border-r border-base-300 flex flex-col transition-all duration-300 shrink-0 z-30 
         ${isSidebarCollapsed 

@@ -73,12 +73,31 @@
 }
 
 /* App-wide custom overrides for smooth layouts */
-html, body, #root {
+html, #root {
   height: 100%;
   margin: 0;
   padding: 0;
   overflow: hidden;
   font-family: 'Plus Jakarta Sans', system-ui, sans-serif;
+  background: transparent;
+}
+
+body {
+  height: 100%;
+  margin: 0;
+  padding: 0;
+  overflow: hidden;
+  font-family: 'Plus Jakarta Sans', system-ui, sans-serif;
+  background: radial-gradient(circle at 15% 15%, rgba(122, 162, 247, 0.06) 0%, transparent 40%),
+              radial-gradient(circle at 85% 85%, rgba(187, 154, 247, 0.06) 0%, transparent 40%),
+              #0d0e15; /* deep rich dark base */
+  transition: background 0.3s ease;
+}
+
+[data-theme="light"] body {
+  background: radial-gradient(circle at 15% 15%, rgba(59, 130, 246, 0.04) 0%, transparent 45%),
+              radial-gradient(circle at 85% 85%, rgba(139, 92, 246, 0.04) 0%, transparent 45%),
+              #f8fafc; /* slate-50 base */
 }
 
 /* Custom scrollbar styling for premium look */
@@ -151,4 +170,9 @@ html, body, #root {
   backdrop-filter: blur(var(--glass-blur));
   -webkit-backdrop-filter: blur(var(--glass-blur));
   border: 1px solid var(--glass-border);
+  box-shadow: 0 8px 32px 0 rgba(0, 0, 0, 0.3);
+}
+
+[data-theme="light"] .glass-panel {
+  box-shadow: 0 8px 32px 0 rgba(31, 38, 135, 0.04);
 }
