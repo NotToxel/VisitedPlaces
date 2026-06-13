@@ -15,10 +15,10 @@ export const Navbar: React.FC = () => {
 
   return (
     <nav className="w-full bg-base-200/45 backdrop-blur-md border-b border-base-300/35 py-3 sm:py-3.5 z-50 shadow-sm shrink-0 select-none">
-      <div className="max-w-5xl mx-auto px-6 md:px-8 flex flex-col sm:flex-row items-center justify-between gap-4">
+      <div className="max-w-5xl mx-auto px-6 md:px-8 flex flex-col sm:flex-row items-center justify-center gap-4">
         
-        {/* Left Column: Brand Logo (shifted inwards via container max-width) */}
-        <div className="w-full sm:flex-1 flex justify-center sm:justify-start">
+        {/* Mobile-only Brand Logo (stacked, centered) */}
+        <div className="flex sm:hidden items-center justify-center w-full">
           <NavLink to="/" className="flex items-center gap-2 hover:opacity-85 transition-opacity">
             <Map className="w-5 h-5 text-primary" />
             <span className="font-extrabold text-md tracking-tight">
@@ -28,50 +28,58 @@ export const Navbar: React.FC = () => {
           </NavLink>
         </div>
 
-        {/* Center Column: Navigation Tabs */}
-        <div className="w-full sm:flex-none flex justify-center">
-          <div className="flex flex-wrap items-center justify-center gap-2 md:gap-3">
-            <NavLink
-              to="/"
-              className={({ isActive }) => getLinkClass(isActive)}
-            >
-              <Map size={14} />
-              <span>Map</span>
+        {/* Navigation Wrapper (centered in the page layout) */}
+        <div className="relative flex flex-wrap items-center justify-center gap-2 md:gap-3">
+          
+          {/* Desktop-only Brand Logo (positioned just off-center to the left, relative to tabs) */}
+          <div className="hidden sm:flex sm:absolute sm:right-full sm:mr-8 md:mr-12 lg:mr-16 items-center shrink-0">
+            <NavLink to="/" className="flex items-center gap-2 hover:opacity-85 transition-opacity">
+              <Map className="w-5 h-5 text-primary" />
+              <span className="font-extrabold text-md tracking-tight">
+                <span className="text-base-content">Visited</span>
+                <span className="text-primary">Places</span>
+              </span>
             </NavLink>
-            <NavLink
-              to="/list"
-              className={({ isActive }) => getLinkClass(isActive)}
-            >
-              <List size={14} />
-              <span>List</span>
-            </NavLink>
-            <NavLink
-              to="/analytics"
-              className={({ isActive }) => getLinkClass(isActive)}
-            >
-              <BarChart3 size={14} />
-              <span>Analytics</span>
-            </NavLink>
-            <NavLink
-              to="/compare"
-              className={({ isActive }) => getLinkClass(isActive)}
-            >
-              <Users size={14} />
-              <span>Compare</span>
-            </NavLink>
-            <button
-              onClick={() => setIsSettingsOpen(true)}
-              className="px-4 py-2 rounded-lg flex items-center gap-2 font-bold text-sm text-base-content/80 hover:text-primary hover:bg-base-300/20 transition-all duration-200"
-              title="Settings"
-            >
-              <Settings size={14} />
-              <span>Settings</span>
-            </button>
           </div>
-        </div>
 
-        {/* Right Column: Spacer to balance centering on desktop */}
-        <div className="hidden sm:flex sm:flex-1 justify-end" />
+          {/* Navigation Tabs */}
+          <NavLink
+            to="/"
+            className={({ isActive }) => getLinkClass(isActive)}
+          >
+            <Map size={14} />
+            <span>Map</span>
+          </NavLink>
+          <NavLink
+            to="/list"
+            className={({ isActive }) => getLinkClass(isActive)}
+          >
+            <List size={14} />
+            <span>List</span>
+          </NavLink>
+          <NavLink
+            to="/analytics"
+            className={({ isActive }) => getLinkClass(isActive)}
+          >
+            <BarChart3 size={14} />
+            <span>Analytics</span>
+          </NavLink>
+          <NavLink
+            to="/compare"
+            className={({ isActive }) => getLinkClass(isActive)}
+          >
+            <Users size={14} />
+            <span>Compare</span>
+          </NavLink>
+          <button
+            onClick={() => setIsSettingsOpen(true)}
+            className="px-4 py-2 rounded-lg flex items-center gap-2 font-bold text-sm text-base-content/80 hover:text-primary hover:bg-base-300/20 transition-all duration-200"
+            title="Settings"
+          >
+            <Settings size={14} />
+            <span>Settings</span>
+          </button>
+        </div>
       </div>
 
       {isSettingsOpen && (
