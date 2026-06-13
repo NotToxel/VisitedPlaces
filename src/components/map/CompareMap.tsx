@@ -30,12 +30,13 @@ const getCompareColor = (result: MapCompareResult | undefined) => {
 const CompareMapBase: React.FC<CompareMapProps> = ({ mergedData, setTooltipContent, numericToA3 }) => {
   return (
     <ComposableMap
-      projectionConfig={{ scale: 147 }}
+      projection="geoMercator"
+      projectionConfig={{ scale: 147, center: [0, 0] }}
       width={800}
-      height={400}
+      height={500}
       style={{ width: '100%', height: '100%', outline: 'none' }}
     >
-      <ZoomableGroup center={[0, 0]} zoom={1} minZoom={1} maxZoom={8}>
+      <ZoomableGroup center={[0, 0]} zoom={1} minZoom={0.5} maxZoom={24}>
         <Geographies geography={WORLD_GEO_URL}>
           {({ geographies }) =>
             geographies.map((geo) => {
