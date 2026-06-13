@@ -472,6 +472,7 @@ body {
 
 /* Collapse Panel Accordion */
 .collapse {
+  visibility: visible !important;
   display: block;
   overflow: hidden;
   border-radius: 0.75rem;

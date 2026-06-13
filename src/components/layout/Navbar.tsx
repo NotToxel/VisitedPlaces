@@ -1,12 +1,10 @@
 import React from 'react';
 import { NavLink } from 'react-router-dom';
-import { Map, List, BarChart3, Users, Settings, Sun, Moon } from 'lucide-react';
+import { Map, List, BarChart3, Users, Settings } from 'lucide-react';
 import { SettingsModal } from './SettingsModal';
-import { useStore } from '../../store/useStore';
 
 export const Navbar: React.FC = () => {
   const [isSettingsOpen, setIsSettingsOpen] = React.useState(false);
-  const { theme, toggleTheme } = useStore();
 
   const getLinkClass = (isActive: boolean) => 
     `btn btn-ghost btn-sm flex items-center gap-1.5 font-medium transition-colors ${
@@ -49,15 +47,6 @@ export const Navbar: React.FC = () => {
           <Users size={16} />
           <span className="hidden sm:inline">Compare</span>
         </NavLink>
-
-        {/* Quick Theme Toggle */}
-        <button
-          onClick={toggleTheme}
-          className="btn btn-ghost btn-sm btn-circle flex items-center justify-center text-base-content/80 hover:text-primary transition-colors"
-          title={theme === 'dark' ? 'Switch to Light Mode' : 'Switch to Dark Mode'}
-        >
-          {theme === 'dark' ? <Sun size={16} /> : <Moon size={16} />}
-        </button>
 
         {/* Data Manager / Settings */}
         <button
