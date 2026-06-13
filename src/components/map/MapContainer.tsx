@@ -269,7 +269,7 @@ export const MapContainer: React.FC = () => {
               {/* Search Control */}
               <div 
                 ref={searchContainerRef} 
-                className="card bg-base-200/40 border border-base-300/40 p-3 rounded-xl relative flex flex-col gap-1.5 shrink-0"
+                className="card bg-base-200/40 border border-base-300/40 p-3 rounded-xl relative flex flex-col gap-1.5 shrink-0 z-40"
               >
                 <span className="text-[10px] font-bold tracking-wider text-base-content/50 uppercase">
                   Search Countries
