@@ -702,3 +702,17 @@ path.rsm-geography:active {
     color: rgba(15, 23, 42, 0.5) !important;
   }
 }
+
+/* Subtle pulse animation for active buttons */
+@keyframes pulse-subtle {
+  0%, 100% {
+    transform: scale(1.05);
+  }
+  50% {
+    transform: scale(1.02);
+    box-shadow: 0 4px 15px rgba(122, 162, 247, 0.45);
+  }
+}
+.animate-pulse-subtle {
+  animation: pulse-subtle 4s infinite ease-in-out;
+}

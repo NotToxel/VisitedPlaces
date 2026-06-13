@@ -1,8 +1,8 @@
 import React, { useMemo } from 'react';
 import { useStore } from '../store/useStore';
 import { COUNTRIES } from '../data/countries';
-import { PieChart, Pie, Cell, Tooltip as RechartsTooltip, Legend, ResponsiveContainer } from 'recharts';
-import { PieChart as PieIcon, TrendingUp, Globe, Map as MapIcon, Award } from 'lucide-react';
+import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip as RechartsTooltip, Legend, ResponsiveContainer } from 'recharts';
+import { BarChart3, Globe, Award, Trophy, ShieldCheck, Compass, Heart, CheckCircle2, Lock, Milestone } from 'lucide-react';
 
 const Analytics: React.FC = () => {
   const { places } = useStore();
@@ -16,10 +16,11 @@ const Analytics: React.FC = () => {
     return map;
   }, []);
 
-  const { stats, continentPies, mostExplored } = useMemo(() => {
+  const { stats, continentCounts } = useMemo(() => {
     let visited = 0;
     let wishlist = 0;
     let revisit = 0;
+    let avoid = 0;
     
     const continentCounts: Record<string, { visited: number, wishlist: number, revisit: number, total: number }> = {};
     
@@ -42,185 +43,370 @@ const Analytics: React.FC = () => {
         } else if (place.status === 'REVISIT') {
           revisit++;
           continentCounts[continent].revisit++;
+        } else if (place.status === 'AVOID') {
+          avoid++;
         }
       }
     });
 
     const unselected = totalCountries - visited - wishlist - revisit;
 
-    // Build array of continent-specific pie data
-    const continentPies = Object.entries(continentCounts)
-      .filter(([name]) => name !== 'Other' && name !== 'Antarctica')
-      .map(([name, data]) => {
-        const unexplored = data.total - data.visited - data.wishlist - data.revisit;
-        return {
-          name,
-          total: data.total,
-          visited: data.visited,
-          revisit: data.revisit,
-          pieData: [
-            { name: 'Visited', value: data.visited, color: 'var(--accent-visited)' },
-            { name: 'Revisit', value: data.revisit, color: 'var(--accent-revisit)' },
-            { name: 'Wishlist', value: data.wishlist, color: 'var(--accent-wishlist)' },
-            { name: 'Unexplored', value: unexplored > 0 ? unexplored : 0, color: 'var(--map-fill-hover)' }
-          ]
-        };
-      })
-      .sort((a, b) => b.total - a.total); 
-
-    const totalExplored = visited + revisit;
-    const visData = Object.entries(continentCounts)
-      .filter(([name]) => name !== 'Other')
-      .map(([name, data]) => ({ name, value: data.visited + data.revisit }))
-      .filter(d => d.value > 0);
-      
-    let maxVisited = 0;
-    let mostExploredName = 'Rookie Explorer';
-    visData.forEach(cont => {
-      if (cont.value > maxVisited) {
-        maxVisited = cont.value;
-        mostExploredName = `${cont.name} Expert`;
-      }
-    });
-    if (totalExplored === 0) mostExploredName = "Armchair Traveler";
-    else if (totalExplored > 50) mostExploredName = "Globe Trotter";
-
     return { 
-      stats: { visited, wishlist, revisit, unselected }, 
-      continentPies,
-      mostExplored: mostExploredName
+      stats: { visited, wishlist, revisit, avoid, unselected }, 
+      continentCounts
     };
   }, [places, totalCountries, countryContinents]);
 
-  const pieData = [
-    { name: 'Visited', value: stats.visited, color: 'var(--accent-visited)' },
-    { name: 'Revisit', value: stats.revisit, color: 'var(--accent-revisit)' },
-    { name: 'Wishlist', value: stats.wishlist, color: 'var(--accent-wishlist)' },
-    { name: 'Unexplored', value: stats.unselected > 0 ? stats.unselected : 0, color: 'var(--map-fill-hover)' },
-  ];
+  const totalExplored = stats.visited + stats.revisit;
+  const percentVisited = totalCountries > 0 ? ((totalExplored / totalCountries) * 100).toFixed(1) : '0';
 
-  const totalVisitedAndRevisit = stats.visited + stats.revisit;
-  const percentVisited = totalCountries > 0 ? ((totalVisitedAndRevisit / totalCountries) * 100).toFixed(1) : '0';
+  // Traveler Level & Milestones Calculator
+  const levelInfo = useMemo(() => {
+    if (totalExplored < 5) {
+      return {
+        level: 1,
+        name: 'Novice Explorer',
+        current: totalExplored,
+        target: 5,
+        percent: Math.min((totalExplored / 5) * 100, 100)
+      };
+    } else if (totalExplored < 15) {
+      return {
+        level: 2,
+        name: 'Globetrotter Apprentice',
+        current: totalExplored,
+        target: 15,
+        percent: Math.min(((totalExplored - 5) / 10) * 100, 100)
+      };
+    } else if (totalExplored < 30) {
+      return {
+        level: 3,
+        name: 'Wanderer',
+        current: totalExplored,
+        target: 30,
+        percent: Math.min(((totalExplored - 15) / 15) * 100, 100)
+      };
+    } else if (totalExplored < 60) {
+      return {
+        level: 4,
+        name: 'World Citizen',
+        current: totalExplored,
+        target: 60,
+        percent: Math.min(((totalExplored - 30) / 30) * 100, 100)
+      };
+    } else if (totalExplored < 100) {
+      return {
+        level: 5,
+        name: 'Globe Trotter',
+        current: totalExplored,
+        target: 100,
+        percent: Math.min(((totalExplored - 60) / 40) * 100, 100)
+      };
+    } else {
+      return {
+        level: 6,
+        name: 'Master Voyager',
+        current: totalExplored,
+        target: totalExplored,
+        percent: 100
+      };
+    }
+  }, [totalExplored]);
+
+  // Dynamic Achievements Calculator
+  const achievements = useMemo(() => {
+    const subRegionExploredCount = Object.keys(places).filter(k => k.includes('-') && (places[k]?.status === 'VISITED' || places[k]?.status === 'REVISIT')).length;
+    const visitedContinents = Object.values(continentCounts).filter(c => (c.visited + c.revisit) >= 1).length;
+
+    return [
+      {
+        id: 'first_step',
+        title: 'First Steps',
+        desc: 'Visit your first country.',
+        unlocked: totalExplored >= 1,
+        progress: `${totalExplored > 0 ? 1 : 0} / 1`,
+        icon: Compass
+      },
+      {
+        id: 'continent_strider',
+        title: 'Continent Strider',
+        desc: 'Explore at least one country in 3 continents.',
+        unlocked: visitedContinents >= 3,
+        progress: `${visitedContinents} / 3`,
+        icon: Globe
+      },
+      {
+        id: 'wishful_thinker',
+        title: 'Wishful Thinker',
+        desc: 'Add 10 places to your wishlist.',
+        unlocked: stats.wishlist >= 10,
+        progress: `${stats.wishlist} / 10`,
+        icon: Heart
+      },
+      {
+        id: 'regional_expert',
+        title: 'Regional Expert',
+        desc: 'Track at least 5 sub-regions (states/counties).',
+        unlocked: subRegionExploredCount >= 5,
+        progress: `${subRegionExploredCount} / 5`,
+        icon: Milestone
+      },
+      {
+        id: 'global_citizen',
+        title: 'Global Citizen',
+        desc: 'Visit 15 countries.',
+        unlocked: totalExplored >= 15,
+        progress: `${totalExplored} / 15`,
+        icon: ShieldCheck
+      },
+      {
+        id: 'world_explorer',
+        title: 'World Explorer',
+        desc: 'Reach 50 countries explored.',
+        unlocked: totalExplored >= 50,
+        progress: `${totalExplored} / 50`,
+        icon: Trophy
+      }
+    ];
+  }, [places, totalExplored, stats.wishlist, continentCounts]);
+
+  // Leaderboard data sorted by coverage percentage
+  const leaderboardData = useMemo(() => {
+    return Object.entries(continentCounts)
+      .filter(([name]) => name !== 'Other' && name !== 'Antarctica')
+      .map(([name, data]) => {
+        const explored = data.visited + data.revisit;
+        const percent = data.total > 0 ? Math.round((explored / data.total) * 100) : 0;
+        return {
+          name,
+          explored,
+          total: data.total,
+          percent
+        };
+      })
+      .sort((a, b) => b.percent - a.percent);
+  }, [continentCounts]);
+
+  // Stacked BarChart Data
+  const barChartData = useMemo(() => {
+    return Object.entries(continentCounts)
+      .filter(([name]) => name !== 'Other' && name !== 'Antarctica')
+      .map(([name, data]) => {
+        const explored = data.visited + data.revisit;
+        const unexplored = data.total - explored - data.wishlist;
+        return {
+          name,
+          Visited: explored,
+          Wishlist: data.wishlist,
+          Unexplored: unexplored > 0 ? unexplored : 0
+        };
+      });
+  }, [continentCounts]);
 
   return (
     <div className="p-3 md:p-6 h-full flex flex-col gap-4 overflow-hidden bg-transparent max-w-6xl mx-auto w-full">
       {/* Header */}
-      <div className="glass-panel border border-base-300/50 p-4 rounded-2xl shrink-0 flex items-center gap-2 select-none">
-        <PieIcon size={18} className="text-primary" />
-        <h2 className="font-bold text-sm text-base-content">Analytics Dashboard</h2>
+      <div className="glass-panel border border-base-300/50 p-4 rounded-2xl shrink-0 flex items-center justify-between select-none">
+        <div className="flex items-center gap-2">
+          <BarChart3 size={18} className="text-primary animate-pulse" />
+          <h2 className="font-extrabold text-sm text-base-content tracking-wide uppercase">Analytics Dashboard</h2>
+        </div>
+        <span className="text-[10px] bg-emerald-500/10 border border-emerald-500/25 text-emerald-400 font-bold px-2.5 py-0.5 rounded-full flex items-center gap-1">
+          <Globe size={11} /> Global View
+        </span>
       </div>
 
       {/* Scrollable Container */}
-      <div className="flex-1 overflow-y-auto flex flex-col gap-5 pr-1">
-        {/* KPI Dashboard Row */}
-        <div className="stats stats-vertical md:stats-horizontal shadow border border-base-300/40 rounded-2xl bg-base-200/20 backdrop-blur-md shrink-0 select-none w-full">
-          <div className="stat py-3">
-            <div className="stat-figure text-primary">
-              <Globe className="w-7 h-7" />
-            </div>
-            <div className="stat-title text-[10px] font-bold text-base-content/50 uppercase tracking-wide">Total Coverage</div>
-            <div className="stat-value text-primary text-2xl mt-0.5">{percentVisited}%</div>
-            <div className="stat-desc text-[10px] mt-0.5 text-base-content/60">of {totalCountries} countries visited</div>
-          </div>
+      <div className="flex-1 overflow-y-auto flex flex-col gap-5 pr-1 pb-4">
+        
+        {/* Row 1: Traveler Level & Global Stats Grid */}
+        <div className="grid grid-cols-1 lg:grid-cols-3 gap-4 shrink-0 select-none">
           
-          <div className="stat py-3 border-t md:border-t-0 md:border-l border-base-300/50">
-            <div className="stat-figure text-success">
-              <Award className="w-7 h-7 text-accent-visited" />
+          {/* Traveler Level Gamified Widget */}
+          <div className="lg:col-span-2 glass-panel border border-base-300/40 p-4.5 rounded-2xl bg-base-200/20 flex flex-col justify-between relative overflow-hidden">
+            <div className="absolute right-0 top-0 translate-x-1/4 -translate-y-1/4 opacity-[0.03] text-primary select-none pointer-events-none">
+              <Trophy size={180} />
             </div>
-            <div className="stat-title text-[10px] font-bold text-base-content/50 uppercase tracking-wide">Traveler Persona</div>
-            <div className="stat-value text-accent-visited text-md truncate mt-1.5 font-bold" title={mostExplored}>{mostExplored}</div>
-            <div className="stat-desc text-[10px] mt-0.5 text-base-content/60">Unlocked ranking profile</div>
+            
+            <div className="flex justify-between items-start gap-2">
+              <div className="flex flex-col">
+                <span className="text-[10px] uppercase font-bold text-base-content/40 tracking-wider">Explorer Standing</span>
+                <h3 className="text-xl font-extrabold text-base-content mt-1 flex items-center gap-2">
+                  <Award className="text-accent-visited w-6 h-6 shrink-0" />
+                  Level {levelInfo.level}: {levelInfo.name}
+                </h3>
+              </div>
+              <div className="text-right flex flex-col">
+                <span className="text-2xl font-black text-primary">{percentVisited}%</span>
+                <span className="text-[9px] font-bold text-base-content/40 uppercase mt-0.5">Total Coverage</span>
+              </div>
+            </div>
+
+            <div className="mt-5">
+              <div className="flex justify-between text-[10px] font-bold text-base-content/60 mb-1.5">
+                <span>Milestone Progress</span>
+                <span>
+                  {levelInfo.level === 6 
+                    ? `${totalExplored} countries explored` 
+                    : `${totalExplored} / ${levelInfo.target} countries to Level ${levelInfo.level + 1}`}
+                </span>
+              </div>
+              <div className="w-full bg-base-300/45 border border-base-300/20 rounded-full h-3.5 overflow-hidden p-0.5">
+                <div 
+                  className="bg-gradient-to-r from-primary to-accent-visited h-full rounded-full transition-all duration-1000 shadow-[0_0_8px_rgba(122,162,247,0.3)]"
+                  style={{ width: `${levelInfo.percent}%` }}
+                />
+              </div>
+            </div>
           </div>
-          
-          <div className="stat py-3 border-t md:border-t-0 md:border-l border-base-300/50 grid grid-cols-3 items-center text-center px-2 sm:px-4 gap-1">
-            <div className="border-r border-base-300/50 py-1">
-              <div className="text-[10px] font-semibold text-base-content/60 uppercase">Visited</div>
-              <div className="text-lg font-extrabold text-accent-visited mt-0.5">{stats.visited}</div>
+
+          {/* Core Counters Widget */}
+          <div className="glass-panel border border-base-300/40 p-4.5 rounded-2xl bg-base-200/20 flex flex-col justify-between gap-3">
+            <div className="flex items-center gap-1.5 border-b border-base-300/30 pb-2">
+              <Globe className="text-primary w-4.5 h-4.5 shrink-0" />
+              <span className="text-[10px] font-bold text-base-content/60 uppercase tracking-wide">Travel Stats</span>
             </div>
-            <div className="border-r border-base-300/50 py-1">
-              <div className="text-[10px] font-semibold text-base-content/60 uppercase">Revisit</div>
-              <div className="text-lg font-extrabold text-accent-revisit mt-0.5">{stats.revisit}</div>
-            </div>
-            <div className="py-1">
-              <div className="text-[10px] font-semibold text-base-content/60 uppercase">Wishlist</div>
-              <div className="text-lg font-extrabold text-accent-wishlist mt-0.5">{stats.wishlist}</div>
+            <div className="grid grid-cols-3 gap-2.5 text-center flex-1 items-center">
+              <div className="flex flex-col py-1">
+                <span className="text-[10px] font-semibold text-base-content/50 uppercase">Visited</span>
+                <span className="text-xl font-black text-accent-visited mt-0.5">{stats.visited}</span>
+              </div>
+              <div className="flex flex-col py-1 border-x border-base-300/40">
+                <span className="text-[10px] font-semibold text-base-content/50 uppercase">Revisit</span>
+                <span className="text-xl font-black text-accent-revisit mt-0.5">{stats.revisit}</span>
+              </div>
+              <div className="flex flex-col py-1">
+                <span className="text-[10px] font-semibold text-base-content/50 uppercase">Wishlist</span>
+                <span className="text-xl font-black text-accent-wishlist mt-0.5">{stats.wishlist}</span>
+              </div>
             </div>
           </div>
         </div>
 
-        {/* Global Charts Row */}
-        <div className="card card-compact bg-base-200/20 border border-base-300/40 rounded-2xl shadow-sm p-4 flex flex-col gap-3 h-80 select-none shrink-0">
-          <h3 className="flex items-center gap-2 font-bold text-xs text-base-content uppercase tracking-wider">
-            <TrendingUp size={14} className="text-primary" />
-            Global Coverage Breakdown
-          </h3>
-          <div className="flex-1 min-h-0">
-            <ResponsiveContainer width="100%" height="100%">
-              <PieChart>
-                <Pie data={pieData} cx="50%" cy="50%" innerRadius={45} outerRadius={72} paddingAngle={4} dataKey="value" stroke="none">
-                  {pieData.map((entry, index) => <Cell key={`cell-${index}`} fill={entry.color} />)}
-                </Pie>
-                <RechartsTooltip 
-                  contentStyle={{ 
-                    backgroundColor: 'var(--glass-bg)', 
-                    borderColor: 'var(--glass-border)', 
-                    borderRadius: '10px', 
-                    backdropFilter: 'blur(10px)' 
-                  }} 
-                  itemStyle={{ color: 'var(--text-primary)', fontSize: '0.75rem' }} 
-                  labelStyle={{ color: 'var(--text-primary)', fontSize: '0.75rem' }} 
-                />
-                <Legend 
-                  verticalAlign="bottom" 
-                  height={30} 
-                  formatter={(value) => <span className="text-base-content/80 text-xs font-semibold select-none">{value}</span>} 
-                />
-              </PieChart>
-            </ResponsiveContainer>
-          </div>
-        </div>
-
-        {/* Continental Breakdown Grid */}
-        <div className="flex flex-col gap-2.5">
-          <h3 className="flex items-center gap-1.5 font-bold text-xs text-base-content uppercase tracking-wider mt-1.5">
-            <MapIcon size={16} className="text-primary" />
-            Coverage by Continent
-          </h3>
+        {/* Row 2: Continent Leaderboard & Grouped Stacked BarChart */}
+        <div className="grid grid-cols-1 lg:grid-cols-2 gap-4 shrink-0">
           
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4 pb-4 select-none">
-            {continentPies.map((cont) => {
-              const totalVisitedInContinent = cont.visited + cont.revisit;
-              const percent = cont.total > 0 ? Math.round((totalVisitedInContinent / cont.total) * 100) : 0;
-              return (
-                <div key={cont.name} className="card card-compact bg-base-200/20 border border-base-300/40 rounded-xl shadow-sm p-4 flex flex-col gap-3 h-64 relative">
-                  <div className="flex justify-between items-start border-b border-base-300/30 pb-2">
-                    <h4 className="font-bold text-xs text-base-content">{cont.name}</h4>
-                    <div className="text-right flex flex-col">
-                      <span className="font-extrabold text-xs text-primary">{percent}%</span>
-                      <div className="text-[9px] opacity-50 mt-0.5">
-                        {totalVisitedInContinent} / {cont.total} visited
-                      </div>
+          {/* Continent Progress Leaderboard */}
+          <div className="glass-panel border border-base-300/40 p-4.5 rounded-2xl bg-base-200/20 flex flex-col gap-3 h-80 select-none overflow-hidden">
+            <h3 className="flex items-center gap-2 font-bold text-xs text-base-content uppercase tracking-wider border-b border-base-300/30 pb-2">
+              <Milestone size={14} className="text-primary shrink-0" />
+              Continent Leaderboard
+            </h3>
+            <div className="flex-1 overflow-y-auto pr-1 flex flex-col gap-3">
+              {leaderboardData.map((cont, idx) => (
+                <div key={cont.name} className="flex flex-col gap-1">
+                  <div className="flex items-center justify-between text-xs">
+                    <div className="flex items-center gap-2 font-semibold text-base-content">
+                      <span className={`text-[10px] font-bold w-5 h-5 rounded-full flex items-center justify-center font-mono shrink-0
+                        ${idx === 0 ? 'bg-amber-500/10 text-amber-400 border border-amber-500/20' : ''}
+                        ${idx === 1 ? 'bg-slate-300/10 text-slate-300 border border-slate-300/20' : ''}
+                        ${idx === 2 ? 'bg-amber-700/10 text-amber-600 border border-amber-700/20' : 'bg-base-300/20 text-base-content/40'}
+                      `}>
+                        {idx + 1}
+                      </span>
+                      <span>{cont.name}</span>
+                    </div>
+                    <div className="flex items-center gap-2">
+                      <span className="text-[10px] text-base-content/40 font-bold font-mono">
+                        {cont.explored} / {cont.total}
+                      </span>
+                      <span className="font-extrabold text-xs text-primary">{cont.percent}%</span>
                     </div>
                   </div>
-                  <div className="flex-1 min-h-0">
-                    <ResponsiveContainer width="100%" height="100%">
-                      <PieChart>
-                        <Pie data={cont.pieData} cx="50%" cy="50%" innerRadius={42} outerRadius={65} paddingAngle={2} dataKey="value" stroke="none">
-                          {cont.pieData.map((entry, index) => <Cell key={`cell-${index}`} fill={entry.color} />)}
-                        </Pie>
-                        <RechartsTooltip 
-                          contentStyle={{ backgroundColor: 'var(--glass-bg)', borderColor: 'var(--glass-border)', borderRadius: '10px' }} 
-                          itemStyle={{ color: 'var(--text-primary)', fontSize: '0.7rem' }} 
-                          labelStyle={{ color: 'var(--text-primary)', fontSize: '0.7rem' }} 
-                        />
-                      </PieChart>
-                    </ResponsiveContainer>
+                  <div className="w-full bg-base-300/35 border border-base-300/15 rounded-full h-1.5 overflow-hidden">
+                    <div 
+                      className={`h-full rounded-full transition-all duration-700
+                        ${idx === 0 ? 'bg-amber-500' : 'bg-primary'}
+                      `}
+                      style={{ width: `${cont.percent}%` }}
+                    />
+                  </div>
+                </div>
+              ))}
+            </div>
+          </div>
+
+          {/* Regional Stacked Bar Chart comparing totals */}
+          <div className="glass-panel border border-base-300/40 p-4.5 rounded-2xl bg-base-200/20 flex flex-col gap-3 h-80 select-none overflow-hidden">
+            <h3 className="flex items-center gap-2 font-bold text-xs text-base-content uppercase tracking-wider border-b border-base-300/30 pb-2">
+              <BarChart3 size={14} className="text-primary shrink-0" />
+              Regional Profile Comparison
+            </h3>
+            <div className="flex-1 min-h-0 mt-2">
+              <ResponsiveContainer width="100%" height="100%">
+                <BarChart data={barChartData} margin={{ top: 5, right: 5, left: -22, bottom: 0 }}>
+                  <CartesianGrid strokeDasharray="3 3" stroke="rgba(240, 240, 240, 0.04)" vertical={false} />
+                  <XAxis dataKey="name" stroke="var(--text-base-content)" opacity={0.6} fontSize={9} tickLine={false} />
+                  <YAxis stroke="var(--text-base-content)" opacity={0.6} fontSize={9} tickLine={false} />
+                  <RechartsTooltip 
+                    contentStyle={{ 
+                      backgroundColor: 'var(--bg-base-200)', 
+                      borderColor: 'var(--glass-border)', 
+                      borderRadius: '12px',
+                      color: 'var(--text-base-content)',
+                      fontSize: '11px'
+                    }} 
+                  />
+                  <Legend verticalAlign="top" height={32} iconSize={8} formatter={(value) => <span className="text-[10px] font-semibold text-base-content/85">{value}</span>} />
+                  <Bar dataKey="Visited" stackId="a" fill="var(--accent-visited)" />
+                  <Bar dataKey="Wishlist" stackId="a" fill="var(--accent-wishlist)" />
+                  <Bar dataKey="Unexplored" stackId="a" fill="var(--bg-base-300)" opacity={0.45} radius={[3, 3, 0, 0]} />
+                </BarChart>
+              </ResponsiveContainer>
+            </div>
+          </div>
+
+        </div>
+
+        {/* Row 3: Achievements & Dynamic Milestones */}
+        <div className="flex flex-col gap-3 shrink-0">
+          <h3 className="flex items-center gap-1.5 font-bold text-xs text-base-content uppercase tracking-wider mt-1 select-none">
+            <Trophy size={16} className="text-primary shrink-0" />
+            Milestones & Achievements
+          </h3>
+          
+          <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-3">
+            {achievements.map((ach) => {
+              const IconComp = ach.icon;
+              return (
+                <div 
+                  key={ach.id} 
+                  className={`glass-panel border p-3 rounded-xl flex items-center gap-3 relative transition-all duration-300 select-none
+                    ${ach.unlocked 
+                      ? 'bg-accent-visited/5 border-accent-visited/30 shadow-[0_2px_12px_-4px_rgba(158,206,106,0.15)]' 
+                      : 'bg-base-200/5 border-base-300/30 border-dashed opacity-55'}`}
+                >
+                  <div className={`w-9 h-9 rounded-lg flex items-center justify-center shrink-0
+                    ${ach.unlocked 
+                      ? 'bg-accent-visited/10 text-accent-visited' 
+                      : 'bg-base-300/30 text-base-content/30'}`}
+                  >
+                    <IconComp size={18} />
+                  </div>
+                  <div className="flex flex-col min-w-0 flex-1">
+                    <span className={`text-[12px] font-extrabold truncate leading-tight ${ach.unlocked ? 'text-base-content' : 'text-base-content/50'}`}>
+                      {ach.title}
+                    </span>
+                    <span className="text-[9px] text-base-content/40 font-medium truncate mt-0.5">
+                      {ach.desc}
+                    </span>
+                  </div>
+                  <div className="text-right shrink-0 flex flex-col justify-center items-end">
+                    {ach.unlocked ? (
+                      <CheckCircle2 size={13} className="text-accent-visited" />
+                    ) : (
+                      <div className="flex items-center gap-1">
+                        <Lock size={9} className="text-base-content/30" />
+                        <span className="text-[8px] font-mono text-base-content/30 font-bold">{ach.progress}</span>
+                      </div>
+                    )}
                   </div>
                 </div>
               );
             })}
           </div>
         </div>
+
       </div>
     </div>
   );
