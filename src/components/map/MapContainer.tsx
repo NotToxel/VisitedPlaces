@@ -305,7 +305,7 @@ export const MapContainer: React.FC = () => {
                 </div>
                 
                 {isDropdownOpen && filteredSuggestions.length > 0 && (
-                  <ul className="absolute left-0 right-0 top-full mt-1 bg-base-200/95 backdrop-blur-md border border-base-300/60 rounded-xl shadow-2xl max-h-56 overflow-y-auto z-[60] list-none p-1 flex flex-col gap-0.5">
+                  <ul className="absolute left-0 right-0 top-full mt-1 bg-base-200 border border-base-300 rounded-xl shadow-2xl max-h-56 overflow-y-auto z-[60] list-none p-1 flex flex-col gap-0.5">
                     {filteredSuggestions.map((country, idx) => {
                       const isHighlighted = idx === kbIndex;
                       const isSelected = country.id === highlightedCountryA3;
