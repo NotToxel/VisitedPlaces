@@ -1,8 +1,7 @@
-import React, { memo, useState, useEffect, useRef, useCallback } from 'react';
+import React, { memo, useEffect, useRef, useCallback } from 'react';
 import { ComposableMap, ZoomableGroup, Marker } from 'react-simple-maps';
 import { useStore } from '../../store/useStore';
 import { MICROSTATES } from '../../data/mapData';
-import { TerritoryListPanel } from './TerritoryListPanel';
 import * as topojson from 'topojson-client';
 import { geoCentroid } from 'd3-geo';
 import { getFillColor, getRegionId } from '../../utils/mapUtils';
@@ -33,7 +32,6 @@ const StandardMapBase: React.FC<StandardMapProps> = ({
   numericToA3, showVisited, showWishlist, showAvoid, showRevisit
 }) => {
   const { places, setCountryStatus } = useStore();
-  const [showTerritories, setShowTerritories] = useState(false);
   const worldTopoRef = useRef<unknown>(null);
 
   const { 
@@ -98,14 +96,6 @@ const StandardMapBase: React.FC<StandardMapProps> = ({
   }, [highlightedCountry, activeCountry, tryPanToCountry, animateTo]);
 
   useEffect(() => {
-    if (!activeCountry && showTerritories) {
-      Promise.resolve().then(() => {
-        setShowTerritories(false);
-      });
-    }
-  }, [activeCountry, showTerritories]);
-
-  useEffect(() => {
     if (!highlightedCountry) animateTo(0, 0, 1);
   }, [highlightedCountry, animateTo]);
 
@@ -114,8 +104,8 @@ const StandardMapBase: React.FC<StandardMapProps> = ({
     if (!countryId) return;
 
     const placeIdForStore = (activeCountry && !countryId.toString().startsWith(`${activeCountry}-`)) 
-       ? `${activeCountry}-${countryId}` 
-       : countryId;
+      ? `${activeCountry}-${countryId}` 
+      : countryId;
     const currentStatus = places[placeIdForStore]?.status || 'NONE';
     
     if (currentStatus === selectionMode) {
@@ -153,8 +143,8 @@ const StandardMapBase: React.FC<StandardMapProps> = ({
         <DrilldownControls 
           activeCountry={activeCountry}
           config={currentConfig}
-          showTerritories={showTerritories}
-          setShowTerritories={setShowTerritories}
+          showTerritories={false}
+          setShowTerritories={() => {}}
           setActiveCountry={setActiveCountry}
           setSubRegionCenter={setSubRegionCenter}
           setSubRegionZoom={setSubRegionZoom}
@@ -235,19 +225,6 @@ const StandardMapBase: React.FC<StandardMapProps> = ({
           })}
         </ZoomableGroup>
       </ComposableMap>
-
-      {currentConfig?.territories && showTerritories && (
-        <TerritoryListPanel
-          title={currentConfig.territoryLabel || 'Territories'}
-          territories={currentConfig.territories}
-          places={places}
-          setCountryStatus={setCountryStatus}
-          onClose={() => setShowTerritories(false)}
-          getFillColor={(status, isHighlighted, isSub, showVis, showWish, showAv) => 
-            getFillColor(status, isHighlighted, isSub, showVis, showWish, showAv, showRevisit)
-          }
-        />
-      )}
     </>
   );
 };

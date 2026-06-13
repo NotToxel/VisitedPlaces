@@ -4,7 +4,16 @@ import type { UserPlacesMap } from '../store/useStore';
 import { COUNTRIES, NUMERIC_TO_A3 } from '../data/countries';
 import { deserializePlaces, serializePlaces } from '../utils/serialization';
 import { CompareMap } from '../components/map/CompareMap';
-import { Share2, Users, Plus, Trash2, Copy, Check, Ban, RotateCcw } from 'lucide-react';
+import { 
+  Plus, 
+  Trash2, 
+  Copy, 
+  Check, 
+  Menu, 
+  ChevronLeft, 
+  ChevronRight, 
+  ChevronDown 
+} from 'lucide-react';
 
 export interface MapCompareResult {
   type: 'EVERYONE_VISITED' | 'MOST_VISITED' | 'ONLY_ME_VISITED' | 'THEY_VISITED' | 'EVERYONE_WISHLIST' | 'MIXED_WISHLIST' | 'EVERYONE_AVOID' | 'EVERYONE_REVISIT' | 'MIXED_REVISIT' | 'NONE';
@@ -25,7 +34,25 @@ const Compare: React.FC = () => {
   const [friendInput, setFriendInput] = useState('');
   const [tooltipContent, setTooltipContent] = useState('');
   const [copied, setCopied] = useState(false);
+  const [isSidebarCollapsed, setIsSidebarCollapsed] = useState(false);
   
+  // Accordion toggle states
+  const [openAccordions, setOpenAccordions] = useState<Record<string, boolean>>({
+    share: true,
+    group: true,
+    legend: false,
+    visited: true,
+    wishlist: false,
+    revisit: false,
+    avoid: false,
+    mostWanted: false,
+    mentorship: false
+  });
+  
+  const toggleAccordion = (key: string) => {
+    setOpenAccordions(prev => ({ ...prev, [key]: !prev[key] }));
+  };
+
   const myShareCode = useMemo(() => serializePlaces(myPlaces), [myPlaces]);
 
   const handleCopyCode = () => {
@@ -194,191 +221,291 @@ const Compare: React.FC = () => {
   }, [mergedData, myPlaces, friends]);
 
   const renderCountryItem = (code: string, data: { name: string, flag: string } | undefined) => (
-    <li key={code} className="compare-list-item">
+    <li key={code} className="compare-list-item" style={{ padding: '0.4rem 0.6rem', fontSize: '0.8rem', borderRadius: '6px' }}>
       {data?.flag ? (
-        <img src={data?.flag} alt={`${data?.name} flag`} className="country-flag" />
+        <img src={data?.flag} alt="" className="country-flag" style={{ width: '1.25rem', height: '0.95rem', borderRadius: '2px' }} />
       ) : (
-        <div className="country-flag-placeholder" />
+        <div className="country-flag-placeholder" style={{ width: '1.25rem', height: '0.95rem', borderRadius: '2px' }} />
       )}
       <span>{data?.name || code}</span>
     </li>
   );
 
   return (
-    <div className="page-container page-transition">
-      {/* Top Header / Share Code */}
-      <div className="glass-panel compare-share-row">
-        <div>
-          <h2 style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', marginBottom: '0.5rem' }}>
-            <Share2 size={24} color="var(--accent-primary)" />
-            Compare with Friends
-          </h2>
-          <p style={{ color: 'var(--text-secondary)' }}>Share your code and merge maps to find common destinations!</p>
-        </div>
-        
-        <div className="share-code-box">
-          <div className="share-code-label">Your Share Code:</div>
-          <input 
-            readOnly 
-            value={myShareCode} 
-            className="glass-input share-code-input"
-          />
-          <button className="glass-button glass-button--primary" onClick={handleCopyCode}>
-            {copied ? <Check size={16} /> : <Copy size={16} />}
+    <div className="dashboard-layout">
+      {/* Sidebar Controls */}
+      <aside className={`dashboard-sidebar glass-panel ${isSidebarCollapsed ? 'dashboard-sidebar--collapsed' : ''}`}>
+        {/* Header */}
+        <div className="dashboard-sidebar-header">
+          <span className="dashboard-sidebar-title">Comparison Config</span>
+          <button 
+            className="glass-button" 
+            style={{ border: 'none', background: 'transparent', padding: '0.25rem' }} 
+            onClick={() => setIsSidebarCollapsed(true)}
+            title="Collapse Sidebar"
+          >
+            <ChevronLeft size={18} />
           </button>
         </div>
-      </div>
 
-      <div className="compare-grid-three">
-        
-        {/* Friend Input List */}
-        <div className="glass-panel compare-group-panel">
-          <h3 style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}><Users size={20} /> Group ({friends.length + 1})</h3>
-          
-          <div className="friend-input-row">
-            <input 
-              type="text" 
-              className="glass-input" 
-              placeholder="Paste friend's code here..."
-              value={friendInput}
-              onChange={e => setFriendInput(e.target.value)}
-              onKeyDown={e => e.key === 'Enter' && handleAddFriend()}
-            />
-            <button className="glass-button" onClick={handleAddFriend}>
-              <Plus size={18} />
-            </button>
-          </div>
-
-          <div className="friends-list">
-            <div className="friend-card friend-card--me">
-              Me (Base)
-            </div>
-            {friends.map(f => (
-              <div key={f.id} className="friend-card">
-                <span>{f.name}</span>
-                <button onClick={() => removeFriend(f.id)} className="friend-remove-btn">
-                  <Trash2 size={16} />
+        {/* Scrollable controls */}
+        <div className="dashboard-sidebar-scroll">
+          {/* Share Code Accordion */}
+          <div style={{ display: 'flex', flexDirection: 'column' }}>
+            <h4 
+              onClick={() => toggleAccordion('share')}
+              style={{ fontSize: '0.75rem', fontWeight: 800, color: 'var(--text-secondary)', textTransform: 'uppercase', letterSpacing: '0.05em', cursor: 'pointer', display: 'flex', alignItems: 'center', gap: '0.35rem', marginBottom: '0.5rem' }}
+            >
+              {openAccordions.share ? <ChevronDown size={14} /> : <ChevronRight size={14} />}
+              Your Share Code
+            </h4>
+            {openAccordions.share && (
+              <div style={{ display: 'flex', gap: '0.35rem', background: 'rgba(0,0,0,0.1)', padding: '0.5rem', borderRadius: '10px', border: '1px solid var(--glass-border)', alignItems: 'center' }}>
+                <input 
+                  readOnly 
+                  value={myShareCode} 
+                  className="glass-input share-code-input"
+                  style={{ flex: 1, padding: '0.35rem 0.5rem', fontSize: '0.75rem', background: 'transparent', border: 'none' }}
+                />
+                <button 
+                  className="glass-button glass-button--primary" 
+                  onClick={handleCopyCode}
+                  style={{ padding: '0.35rem 0.5rem' }}
+                  title="Copy share code"
+                >
+                  {copied ? <Check size={14} /> : <Copy size={14} />}
                 </button>
               </div>
-            ))}
+            )}
+          </div>
+
+          {/* Group Members Accordion */}
+          <div style={{ display: 'flex', flexDirection: 'column' }}>
+            <h4 
+              onClick={() => toggleAccordion('group')}
+              style={{ fontSize: '0.75rem', fontWeight: 800, color: 'var(--text-secondary)', textTransform: 'uppercase', letterSpacing: '0.05em', cursor: 'pointer', display: 'flex', alignItems: 'center', gap: '0.35rem', marginBottom: '0.5rem' }}
+            >
+              {openAccordions.group ? <ChevronDown size={14} /> : <ChevronRight size={14} />}
+              Group ({friends.length + 1})
+            </h4>
+            {openAccordions.group && (
+              <div style={{ display: 'flex', flexDirection: 'column', gap: '0.5rem' }}>
+                <div className="friend-input-row">
+                  <input 
+                    type="text" 
+                    className="glass-input" 
+                    placeholder="Friend's share code..."
+                    value={friendInput}
+                    onChange={e => setFriendInput(e.target.value)}
+                    onKeyDown={e => e.key === 'Enter' && handleAddFriend()}
+                    style={{ padding: '0.4rem 0.75rem', fontSize: '0.75rem' }}
+                  />
+                  <button className="glass-button" onClick={handleAddFriend} style={{ padding: '0.4rem' }}>
+                    <Plus size={16} />
+                  </button>
+                </div>
+
+                <div className="friends-list" style={{ maxHeight: '150px', overflowY: 'auto' }}>
+                  <div className="friend-card friend-card--me" style={{ padding: '0.4rem 0.75rem', borderRadius: '8px', fontSize: '0.75rem' }}>
+                    Me (Base Profile)
+                  </div>
+                  {friends.map(f => (
+                    <div key={f.id} className="friend-card" style={{ padding: '0.4rem 0.75rem', borderRadius: '8px', fontSize: '0.75rem' }}>
+                      <span>{f.name}</span>
+                      <button onClick={() => removeFriend(f.id)} className="friend-remove-btn" style={{ padding: 0 }}>
+                        <Trash2 size={12} />
+                      </button>
+                    </div>
+                  ))}
+                </div>
+              </div>
+            )}
+          </div>
+
+          {/* Map Legend Accordion */}
+          <div style={{ display: 'flex', flexDirection: 'column' }}>
+            <h4 
+              onClick={() => toggleAccordion('legend')}
+              style={{ fontSize: '0.75rem', fontWeight: 800, color: 'var(--text-secondary)', textTransform: 'uppercase', letterSpacing: '0.05em', cursor: 'pointer', display: 'flex', alignItems: 'center', gap: '0.35rem', marginBottom: '0.5rem' }}
+            >
+              {openAccordions.legend ? <ChevronDown size={14} /> : <ChevronRight size={14} />}
+              Map Legend
+            </h4>
+            {openAccordions.legend && (
+              <div className="legend-grid" style={{ background: 'rgba(0,0,0,0.1)', padding: '0.75rem', borderRadius: '10px', border: '1px solid var(--glass-border)' }}>
+                <div className="legend-item"><div className="legend-circle" style={{ background: 'var(--color-both)' }}></div> Both Visited</div>
+                <div className="legend-item"><div className="legend-circle" style={{ background: 'var(--accent-visited)' }}></div> Most Visited</div>
+                <div className="legend-item"><div className="legend-circle" style={{ background: 'var(--color-me-only)' }}></div> Me Only</div>
+                <div className="legend-item"><div className="legend-circle" style={{ background: 'var(--color-they-only)' }}></div> Others Only</div>
+                <div className="legend-item"><div className="legend-circle" style={{ background: 'var(--color-revisit-both)' }}></div> Both Revisit</div>
+                <div className="legend-item"><div className="legend-circle" style={{ background: 'var(--color-revisit-mixed)' }}></div> Some Revisit</div>
+                <div className="legend-item"><div className="legend-circle" style={{ background: 'var(--color-wishlist-both)' }}></div> Both Wishlist</div>
+                <div className="legend-item"><div className="legend-circle" style={{ background: 'var(--accent-wishlist)' }}></div> Some Wishlist</div>
+                <div className="legend-item" style={{ gridColumn: 'span 2' }}><div className="legend-circle" style={{ background: 'var(--color-avoid)' }}></div> Everyone Avoids</div>
+              </div>
+            )}
+          </div>
+
+          {/* Comparison Mutual Lists */}
+          <div style={{ display: 'flex', flexDirection: 'column', gap: '0.75rem', borderTop: '1px solid var(--glass-border)', paddingTop: '1rem' }}>
+            <span style={{ fontSize: '0.7rem', fontWeight: 700, color: 'var(--text-secondary)', textTransform: 'uppercase', letterSpacing: '0.05em' }}>
+              Comparison Analytics
+            </span>
+            
+            {/* Mutual Visited Accordion */}
+            <div style={{ display: 'flex', flexDirection: 'column' }}>
+              <h4 
+                onClick={() => toggleAccordion('visited')}
+                style={{ fontSize: '0.75rem', fontWeight: 700, color: 'var(--color-both)', cursor: 'pointer', display: 'flex', alignItems: 'center', gap: '0.35rem' }}
+              >
+                {openAccordions.visited ? <ChevronDown size={14} /> : <ChevronRight size={14} />}
+                We've All Visited ({commonVisited.length})
+              </h4>
+              {openAccordions.visited && (
+                <ul className="compare-list" style={{ marginTop: '0.5rem', maxHeight: '140px', overflowY: 'auto' }}>
+                  {commonVisited.map(([code]) => renderCountryItem(code, countryData[code]))}
+                  {commonVisited.length === 0 && <li style={{ fontSize: '0.75rem', color: 'var(--text-secondary)', paddingLeft: '0.5rem' }}>No mutually visited places.</li>}
+                </ul>
+              )}
+            </div>
+
+            {/* Mutual Wishlisted Accordion */}
+            <div style={{ display: 'flex', flexDirection: 'column' }}>
+              <h4 
+                onClick={() => toggleAccordion('wishlist')}
+                style={{ fontSize: '0.75rem', fontWeight: 700, color: 'var(--color-wishlist-both)', cursor: 'pointer', display: 'flex', alignItems: 'center', gap: '0.35rem' }}
+              >
+                {openAccordions.wishlist ? <ChevronDown size={14} /> : <ChevronRight size={14} />}
+                Mutual Wishlists ({commonWishlist.length})
+              </h4>
+              {openAccordions.wishlist && (
+                <ul className="compare-list" style={{ marginTop: '0.5rem', maxHeight: '140px', overflowY: 'auto' }}>
+                  {commonWishlist.map(([code]) => renderCountryItem(code, countryData[code]))}
+                  {commonWishlist.length === 0 && <li style={{ fontSize: '0.75rem', color: 'var(--text-secondary)', paddingLeft: '0.5rem' }}>No mutually wishlisted places.</li>}
+                </ul>
+              )}
+            </div>
+
+            {/* Mutual Revisit Accordion */}
+            <div style={{ display: 'flex', flexDirection: 'column' }}>
+              <h4 
+                onClick={() => toggleAccordion('revisit')}
+                style={{ fontSize: '0.75rem', fontWeight: 700, color: 'var(--accent-revisit)', cursor: 'pointer', display: 'flex', alignItems: 'center', gap: '0.35rem' }}
+              >
+                {openAccordions.revisit ? <ChevronDown size={14} /> : <ChevronRight size={14} />}
+                Mutual Revisit ({commonRevisit.length})
+              </h4>
+              {openAccordions.revisit && (
+                <ul className="compare-list" style={{ marginTop: '0.5rem', maxHeight: '140px', overflowY: 'auto' }}>
+                  {commonRevisit.map(([code]) => renderCountryItem(code, countryData[code]))}
+                  {commonRevisit.length === 0 && <li style={{ fontSize: '0.75rem', color: 'var(--text-secondary)', paddingLeft: '0.5rem' }}>No mutually revisited places.</li>}
+                </ul>
+              )}
+            </div>
+
+            {/* Mutual Avoids Accordion */}
+            <div style={{ display: 'flex', flexDirection: 'column' }}>
+              <h4 
+                onClick={() => toggleAccordion('avoid')}
+                style={{ fontSize: '0.75rem', fontWeight: 700, color: 'var(--accent-avoid)', cursor: 'pointer', display: 'flex', alignItems: 'center', gap: '0.35rem' }}
+              >
+                {openAccordions.avoid ? <ChevronDown size={14} /> : <ChevronRight size={14} />}
+                Mutual Avoids ({commonAvoid.length})
+              </h4>
+              {openAccordions.avoid && (
+                <ul className="compare-list" style={{ marginTop: '0.5rem', maxHeight: '140px', overflowY: 'auto' }}>
+                  {commonAvoid.map(([code]) => renderCountryItem(code, countryData[code]))}
+                  {commonAvoid.length === 0 && <li style={{ fontSize: '0.75rem', color: 'var(--text-secondary)', paddingLeft: '0.5rem' }}>No mutually avoided places.</li>}
+                </ul>
+              )}
+            </div>
+
+            {/* Most Wanted Accordion */}
+            <div style={{ display: 'flex', flexDirection: 'column' }}>
+              <h4 
+                onClick={() => toggleAccordion('mostWanted')}
+                style={{ fontSize: '0.75rem', fontWeight: 700, color: 'var(--accent-primary)', cursor: 'pointer', display: 'flex', alignItems: 'center', gap: '0.35rem' }}
+              >
+                {openAccordions.mostWanted ? <ChevronDown size={14} /> : <ChevronRight size={14} />}
+                Most Wanted ({topWantedUnvisited.length})
+              </h4>
+              {openAccordions.mostWanted && (
+                <ul className="compare-list" style={{ marginTop: '0.5rem', maxHeight: '140px', overflowY: 'auto' }}>
+                  {topWantedUnvisited.map(({code, wishlist}) => (
+                    <li key={code} className="compare-list-item compare-list-item--flex" style={{ padding: '0.4rem 0.6rem', fontSize: '0.8rem', borderRadius: '6px' }}>
+                      <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
+                        {countryData[code]?.flag ? (
+                          <img src={countryData[code]?.flag} alt="" className="country-flag" style={{ width: '1.25rem', height: '0.95rem', borderRadius: '2px' }} />
+                        ) : (
+                          <div className="country-flag-placeholder" style={{ width: '1.25rem', height: '0.95rem', borderRadius: '2px' }} />
+                        )}
+                        <span>{countryData[code]?.name || code}</span>
+                      </div>
+                      <span style={{ color: 'var(--accent-wishlist)' }}>{wishlist} ❤️</span>
+                    </li>
+                  ))}
+                  {topWantedUnvisited.length === 0 && <li style={{ fontSize: '0.75rem', color: 'var(--text-secondary)', paddingLeft: '0.5rem' }}>Not enough data.</li>}
+                </ul>
+              )}
+            </div>
+
+            {/* Travel Mentorships Accordion */}
+            <div style={{ display: 'flex', flexDirection: 'column' }}>
+              <h4 
+                onClick={() => toggleAccordion('mentorship')}
+                style={{ fontSize: '0.75rem', fontWeight: 700, color: 'var(--color-me-only)', cursor: 'pointer', display: 'flex', alignItems: 'center', gap: '0.35rem' }}
+              >
+                {openAccordions.mentorship ? <ChevronDown size={14} /> : <ChevronRight size={14} />}
+                Travel Mentorships ({wantedButVisited.length})
+              </h4>
+              {openAccordions.mentorship && (
+                <div style={{ display: 'flex', flexDirection: 'column', gap: '0.5rem', marginTop: '0.5rem', maxHeight: '180px', overflowY: 'auto', paddingRight: '0.25rem' }}>
+                  {wantedButVisited.map(({code, whoVisited, whoWants}) => (
+                    <div key={code} className="mentorship-card" style={{ padding: '0.5rem', borderRadius: '8px' }}>
+                      <div className="mentorship-card-header" style={{ gap: '0.35rem' }}>
+                        {countryData[code]?.flag ? (
+                          <img src={countryData[code]?.flag} alt="" className="country-flag" style={{ width: '1.25rem', height: '0.95rem', borderRadius: '2px' }} />
+                        ) : (
+                          <div className="country-flag-placeholder" style={{ width: '1.25rem', height: '0.95rem', borderRadius: '2px' }} />
+                        )}
+                        <span className="mentorship-card-title" style={{ fontSize: '0.75rem' }}>{countryData[code]?.name || code}</span>
+                      </div>
+                      <div className="mentorship-card-body" style={{ fontSize: '0.7rem', marginTop: '0.25rem', lineHeight: 1.3 }}>
+                        Visited: <span style={{ color: 'var(--accent-visited)' }}>{whoVisited.join(', ')}</span><br/>
+                        Wants: <span style={{ color: 'var(--accent-wishlist)' }}>{whoWants.join(', ')}</span>
+                      </div>
+                    </div>
+                  ))}
+                  {wantedButVisited.length === 0 && <span style={{ fontSize: '0.75rem', color: 'var(--text-secondary)', paddingLeft: '0.5rem' }}>No mentorship combinations found.</span>}
+                </div>
+              )}
+            </div>
           </div>
         </div>
+      </aside>
 
-        {/* Legend */}
-        <div className="glass-panel legend-panel">
-          <h3>Map Legend</h3>
-          <div className="legend-grid">
-            <div className="legend-item"><div className="legend-circle" style={{ background: 'var(--color-both)' }}></div> Everyone Visited</div>
-            <div className="legend-item"><div className="legend-circle" style={{ background: 'var(--accent-visited)' }}></div> Most Visited</div>
-            <div className="legend-item"><div className="legend-circle" style={{ background: 'var(--color-me-only)' }}></div> Only I Visited</div>
-            <div className="legend-item"><div className="legend-circle" style={{ background: 'var(--color-they-only)' }}></div> Someone Else Visited</div>
-            <div className="legend-item"><div className="legend-circle" style={{ background: 'var(--color-revisit-both)' }}></div> Everyone Revisit</div>
-            <div className="legend-item"><div className="legend-circle" style={{ background: 'var(--color-revisit-mixed)' }}></div> Revisit by Some</div>
-            <div className="legend-item"><div className="legend-circle" style={{ background: 'var(--color-wishlist-both)' }}></div> Everyone Wishlisted</div>
-            <div className="legend-item"><div className="legend-circle" style={{ background: 'var(--accent-wishlist)' }}></div> Wishlisted by Some</div>
-            <div className="legend-item"><div className="legend-circle" style={{ background: 'var(--color-avoid)' }}></div> Everyone Avoids</div>
-          </div>
-        </div>
-      </div>
-
-      {/* Compare Map */}
-      <div className="glass-panel compare-map-wrapper">
-        <CompareMap mergedData={mergedData} setTooltipContent={setTooltipContent} numericToA3={NUMERIC_TO_A3} />
-        {tooltipContent && (
-          <div className="compare-tooltip">
-            {tooltipContent}
-          </div>
+      {/* Map Viewport Area */}
+      <main className="dashboard-viewport">
+        {/* Toggle Sidebar Trigger if Collapsed */}
+        {isSidebarCollapsed && (
+          <button 
+            className="glass-button sidebar-toggle-btn"
+            onClick={() => setIsSidebarCollapsed(false)}
+            title="Expand Controls"
+          >
+            <Menu size={16} /> <span className="hide-mobile-text">Compare Panel</span>
+          </button>
         )}
-      </div>
 
-      {/* Common Lists & Complex Analytics */}
-      <div className="compare-lists-grid">
-        <div className="glass-panel compare-list-panel">
-          <h3 className="compare-list-title" style={{ color: 'var(--color-both)' }}>We've All Been To ({commonVisited.length})</h3>
-          <ul className="compare-list">
-            {commonVisited.map(([code]) => renderCountryItem(code, countryData[code]))}
-            {commonVisited.length === 0 && <li style={{ color: 'var(--text-muted)' }}>No common visited places.</li>}
-          </ul>
+        <div className="compare-map-wrapper">
+          <CompareMap mergedData={mergedData} setTooltipContent={setTooltipContent} numericToA3={NUMERIC_TO_A3} />
+          {tooltipContent && (
+            <div className="compare-tooltip">
+              {tooltipContent}
+            </div>
+          )}
         </div>
-
-        <div className="glass-panel compare-list-panel">
-          <h3 className="compare-list-title" style={{ color: 'var(--color-revisit-both)', display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
-            <RotateCcw size={20} /> We All Want to Revisit ({commonRevisit.length})
-          </h3>
-          <ul className="compare-list">
-            {commonRevisit.map(([code]) => renderCountryItem(code, countryData[code]))}
-            {commonRevisit.length === 0 && <li style={{ color: 'var(--text-muted)' }}>No common revisit places.</li>}
-          </ul>
-        </div>
-        
-        <div className="glass-panel compare-list-panel">
-          <h3 className="compare-list-title" style={{ color: 'var(--color-wishlist-both)' }}>We All Want To Go To ({commonWishlist.length})</h3>
-          <ul className="compare-list">
-            {commonWishlist.map(([code]) => renderCountryItem(code, countryData[code]))}
-            {commonWishlist.length === 0 && <li style={{ color: 'var(--text-muted)' }}>No common wishlist places.</li>}
-          </ul>
-        </div>
-        
-        <div className="glass-panel compare-list-panel">
-          <h3 className="compare-list-title" style={{ color: 'var(--color-avoid)', display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
-            <Ban size={20} /> We All Avoid ({commonAvoid.length})
-          </h3>
-          <ul className="compare-list">
-            {commonAvoid.map(([code]) => renderCountryItem(code, countryData[code]))}
-            {commonAvoid.length === 0 && <li style={{ color: 'var(--text-muted)' }}>No common avoided places.</li>}
-          </ul>
-        </div>
-
-        <div className="glass-panel compare-list-panel">
-          <h3 className="compare-list-title" style={{ color: 'var(--accent-primary)', display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
-            Most Wanted (Unvisited)
-          </h3>
-          <p style={{ fontSize: '0.8rem', color: 'var(--text-muted)', marginBottom: '1rem' }}>Top destinations no one in the group has visited yet, but multiple people want to go to.</p>
-          <ul className="compare-list">
-            {topWantedUnvisited.map(({code, wishlist}) => (
-              <li key={code} className="compare-list-item compare-list-item--flex">
-                <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
-                  {countryData[code]?.flag ? (
-                    <img src={countryData[code]?.flag} alt={`${countryData[code]?.name} flag`} className="country-flag" />
-                  ) : (
-                    <div className="country-flag-placeholder" />
-                  )}
-                  <span>{countryData[code]?.name || code}</span>
-                </div>
-                <span style={{ color: 'var(--accent-wishlist)' }}>{wishlist} ❤️</span>
-              </li>
-            ))}
-            {topWantedUnvisited.length === 0 && <li style={{ color: 'var(--text-muted)' }}>Not enough data.</li>}
-          </ul>
-        </div>
-
-        <div className="glass-panel compare-list-panel">
-          <h3 className="compare-list-title" style={{ color: 'var(--color-me-only)', display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
-            Travel Mentorship
-          </h3>
-          <p style={{ fontSize: '0.8rem', color: 'var(--text-muted)', marginBottom: '1rem' }}>Destinations someone wants to visit, but someone else has already been to.</p>
-          <ul className="compare-list">
-            {wantedButVisited.map(({code, whoVisited, whoWants}) => (
-              <li key={code} className="mentorship-card">
-                <div className="mentorship-card-header">
-                  {countryData[code]?.flag ? (
-                    <img src={countryData[code]?.flag} alt={`${countryData[code]?.name} flag`} className="country-flag" />
-                  ) : (
-                    <div className="country-flag-placeholder" />
-                  )}
-                  <span className="mentorship-card-title">{countryData[code]?.name || code}</span>
-                </div>
-                <div className="mentorship-card-body">
-                  Visited by: <span style={{ color: 'var(--accent-visited)' }}>{whoVisited.join(', ')}</span><br/>
-                  Wanted by: <span style={{ color: 'var(--accent-wishlist)' }}>{whoWants.join(', ')}</span>
-                </div>
-              </li>
-            ))}
-            {wantedButVisited.length === 0 && <li style={{ color: 'var(--text-muted)' }}>Not enough data.</li>}
-          </ul>
-        </div>
-      </div>
-
+      </main>
     </div>
   );
 };

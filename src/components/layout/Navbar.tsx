@@ -10,7 +10,7 @@ export const Navbar: React.FC = () => {
     <nav className="navbar glass-panel">
       <NavLink to="/" className="navbar__brand">
         <Map className="navbar__brand-icon" size={24} />
-        VisitedPlaces
+        <span>VisitedPlaces</span>
       </NavLink>
 
       <div className="navbar__links">

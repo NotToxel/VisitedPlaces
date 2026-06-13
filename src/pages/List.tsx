@@ -143,7 +143,7 @@ const List: React.FC = () => {
       </div>
 
       {/* Grid */}
-      <div className="glass-panel directory-grid-panel">
+      <div className="glass-panel directory-grid-panel" style={{ padding: '1.25rem' }}>
         <p className="directory-stats">
           Showing {filteredCountries.length} countries
         </p>
@@ -203,21 +203,10 @@ const List: React.FC = () => {
                         <div key={country.id} className="country-card-container">
                           <div className={cardClass}>
                             <div className="country-info">
-                              {country.flag ? (
-                                <img src={country.flag} alt={`${country.name} flag`} className="country-flag" />
-                              ) : (
-                                <div className="country-flag-placeholder" />
-                              )}
-                              <div className="country-name-wrapper">
-                                <span>{country.name}</span>
-                                <span className="country-id-sub">{country.id}</span>
-                              </div>
-                              
-                              {/* Expand button — only shown if sub-regions are available for this country */}
-                              {getSubRegionUrl(country.id) !== null && (
+                              {/* Expand button placed first for vertical alignment alignment of flags/names */}
+                              {getSubRegionUrl(country.id) !== null ? (
                                 <button
-                                  className="glass-button"
-                                  style={{ padding: '0.4rem', border: 'none', background: 'transparent' }}
+                                  className="action-btn"
                                   onClick={(e) => {
                                     e.stopPropagation();
                                     const isNowExpanded = !expandedCountries[country.id];
@@ -225,14 +214,27 @@ const List: React.FC = () => {
                                     if (isNowExpanded) loadSubRegions(country.id);
                                   }}
                                   title="View Regions"
+                                  style={{ flexShrink: 0 }}
                                 >
                                   {loadingSubRegions[country.id] ? (
-                                    <Loader2 size={18} className="animate-spin" />
+                                    <Loader2 size={14} className="animate-spin" />
                                   ) : (
-                                    isExpanded ? <ChevronDown size={18} /> : <MapIcon size={18} />
+                                    isExpanded ? <ChevronDown size={14} /> : <MapIcon size={14} />
                                   )}
                                 </button>
+                              ) : (
+                                <div style={{ width: '28px', flexShrink: 0 }} />
                               )}
+
+                              {country.flag ? (
+                                <img src={country.flag} alt="" className="country-flag" />
+                              ) : (
+                                <div className="country-flag-placeholder" />
+                              )}
+                              <div className="country-name-wrapper">
+                                <span>{country.name}</span>
+                                <span className="country-id-sub">{country.id}</span>
+                              </div>
                             </div>
                             
                             <div className="country-actions">
@@ -241,28 +243,28 @@ const List: React.FC = () => {
                                 title="Mark as Visited"
                                 className={`action-btn ${status === 'VISITED' ? 'action-btn--visited' : ''}`}
                               >
-                                <Check size={16} />
+                                <Check size={14} />
                               </button>
                               <button 
                                 onClick={() => handleStatusChange(country.id, 'WISHLIST')}
                                 title="Add to Wishlist"
                                 className={`action-btn ${status === 'WISHLIST' ? 'action-btn--wishlist' : ''}`}
                               >
-                                <Heart size={16} />
+                                <Heart size={14} />
                               </button>
                               <button 
                                 onClick={() => handleStatusChange(country.id, 'REVISIT')}
                                 title="Mark as Revisit"
                                 className={`action-btn ${status === 'REVISIT' ? 'action-btn--revisit' : ''}`}
                               >
-                                <RotateCcw size={16} />
+                                <RotateCcw size={14} />
                               </button>
                               <button 
                                 onClick={() => handleStatusChange(country.id, 'AVOID')}
                                 title="Don't want to go"
                                 className={`action-btn ${status === 'AVOID' ? 'action-btn--avoid' : ''}`}
                               >
-                                <Ban size={16} />
+                                <Ban size={14} />
                               </button>
                             </div>
                           </div>
@@ -270,7 +272,6 @@ const List: React.FC = () => {
                           {isExpanded && countryStates.length > 0 && (
                             <div className="subregions-container">
                               {countryStates.map(state => {
-                                // state.id from topojsonCache is already prefixed (e.g., USA-72, GBR-JEY)
                                 const stateId = (state.id.toString().startsWith(`${country.id}-`)) ? state.id : `${country.id}-${state.id}`;
                                 const stateStatus = places[stateId]?.status || 'NONE';
                                 
@@ -286,36 +287,28 @@ const List: React.FC = () => {
                                     <span className="subregion-name">{state.name}</span>
                                     <div className="subregion-actions">
                                       <button 
-                                        className={`glass-button ${stateStatus === 'VISITED' ? 'glass-button--primary' : ''}`}
-                                        style={{ padding: '0.25rem 0.5rem', minWidth: 'unset', fontSize: '0.75rem' }}
+                                        className={`action-btn ${stateStatus === 'VISITED' ? 'action-btn--visited' : ''}`}
                                         onClick={() => setCountryStatus(stateId, stateStatus === 'VISITED' ? 'NONE' : 'VISITED')}
+                                        title="Visited"
                                       >
                                         <Check size={12} />
                                       </button>
                                       <button 
-                                        className={`glass-button ${stateStatus === 'WISHLIST' ? 'glass-button--primary' : ''}`}
-                                        style={{ padding: '0.25rem 0.5rem', minWidth: 'unset', fontSize: '0.75rem' }}
+                                        className={`action-btn ${stateStatus === 'WISHLIST' ? 'action-btn--wishlist' : ''}`}
                                         onClick={() => setCountryStatus(stateId, stateStatus === 'WISHLIST' ? 'NONE' : 'WISHLIST')}
+                                        title="Wishlist"
                                       >
                                         <Heart size={12} />
                                       </button>
                                       <button 
-                                        className={`glass-button ${stateStatus === 'REVISIT' ? 'glass-button--primary' : ''}`}
-                                        style={{ padding: '0.25rem 0.5rem', minWidth: 'unset', fontSize: '0.75rem' }}
+                                        className={`action-btn ${stateStatus === 'REVISIT' ? 'action-btn--revisit' : ''}`}
                                         onClick={() => setCountryStatus(stateId, stateStatus === 'REVISIT' ? 'NONE' : 'REVISIT')}
                                         title="Mark as Revisit"
                                       >
                                         <RotateCcw size={12} />
                                       </button>
                                       <button 
-                                        className="glass-button"
-                                        style={{ 
-                                          padding: '0.25rem 0.5rem', 
-                                          minWidth: 'unset', 
-                                          fontSize: '0.75rem', 
-                                          background: stateStatus === 'AVOID' ? 'var(--accent-avoid)' : '', 
-                                          color: stateStatus === 'AVOID' ? '#fff' : '' 
-                                        }}
+                                        className={`action-btn ${stateStatus === 'AVOID' ? 'action-btn--avoid' : ''}`}
                                         onClick={() => setCountryStatus(stateId, stateStatus === 'AVOID' ? 'NONE' : 'AVOID')}
                                         title="Don't want to go"
                                       >
@@ -328,7 +321,7 @@ const List: React.FC = () => {
                             </div>
                           )}
                           {isExpanded && countryStates.length === 0 && !loadingSubRegions[country.id] && (
-                            <div style={{ paddingLeft: '2rem', fontSize: '0.8rem', color: 'var(--text-muted)' }}>
+                            <div className="subregions-container" style={{ borderLeft: 'none', color: 'var(--text-secondary)', fontSize: '0.8rem', paddingLeft: '0.5rem' }}>
                               No specific sub-regions available for map drill-down.
                             </div>
                           )}
