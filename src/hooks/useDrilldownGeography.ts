@@ -5,7 +5,7 @@ import { drilldownRegistry } from '../config/drilldownConfig';
 
 export function useDrilldownGeography(activeCountry: string | null, setActiveCountry: (id: string | null) => void) {
   const [geoData, setGeoData] = useState<string | object>(WORLD_GEO_URL);
-  const [isLoading, setIsLoading] = useState(false);
+  const [isLoading, setIsLoading] = useState(true);
 
   useEffect(() => {
     let active = true;

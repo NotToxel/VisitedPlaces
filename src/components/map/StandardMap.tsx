@@ -151,9 +151,10 @@ const StandardMapBase: React.FC<StandardMapProps> = ({
       )}
 
       {isLoading && (
-          <div style={{ position: 'absolute', top: '50%', left: '50%', transform: 'translate(-50%, -50%)', zIndex: 60, color: 'var(--text-secondary)' }}>
-              Loading Sub-regions...
-          </div>
+        <div className="map-loading-overlay">
+          <div className="map-loading-spinner" />
+          <span>Loading Map Data...</span>
+        </div>
       )}
 
       <ComposableMap 

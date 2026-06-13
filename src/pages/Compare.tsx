@@ -1,9 +1,10 @@
-import React, { useState, useMemo } from 'react';
+import React, { useState, useMemo, useEffect } from 'react';
 import { useStore } from '../store/useStore';
 import type { UserPlacesMap } from '../store/useStore';
 import { COUNTRIES, NUMERIC_TO_A3 } from '../data/countries';
 import { deserializePlaces, serializePlaces } from '../utils/serialization';
 import { CompareMap } from '../components/map/CompareMap';
+import { MICROSTATES, UK_TERRITORIES, USA_TERRITORIES } from '../data/mapData';
 import { 
   Plus, 
   Trash2, 
@@ -12,7 +13,8 @@ import {
   Menu, 
   ChevronLeft, 
   ChevronRight, 
-  ChevronDown 
+  ChevronDown,
+  Users
 } from 'lucide-react';
 
 export interface MapCompareResult {
@@ -28,19 +30,24 @@ interface FriendData {
   places: UserPlacesMap;
 }
 
+interface CompareGroup {
+  id: string;
+  name: string;
+  friends: FriendData[];
+}
+
 const Compare: React.FC = () => {
   const { places: myPlaces } = useStore();
-  const [friends, setFriends] = useState<FriendData[]>([]);
-  const [friendInput, setFriendInput] = useState('');
-  const [tooltipContent, setTooltipContent] = useState('');
   const [copied, setCopied] = useState(false);
   const [isSidebarCollapsed, setIsSidebarCollapsed] = useState(false);
-  
+  const [friendInput, setFriendInput] = useState('');
+  const [tooltipContent, setTooltipContent] = useState('');
+
   // Accordion toggle states
   const [openAccordions, setOpenAccordions] = useState<Record<string, boolean>>({
     share: true,
     group: true,
-    legend: false,
+    legend: true,
     visited: true,
     wishlist: false,
     revisit: false,
@@ -48,7 +55,50 @@ const Compare: React.FC = () => {
     mostWanted: false,
     mentorship: false
   });
-  
+
+  // Load groups from localStorage, or initialize with a default group
+  const [groups, setGroups] = useState<CompareGroup[]>(() => {
+    try {
+      const saved = localStorage.getItem('visited-places-compare-groups');
+      if (saved) {
+        const parsed = JSON.parse(saved);
+        if (Array.isArray(parsed) && parsed.length > 0) return parsed;
+      }
+    } catch (e) {
+      console.warn("Could not load compare groups", e);
+    }
+    return [{
+      id: 'default',
+      name: 'Default Group',
+      friends: []
+    }];
+  });
+
+  const [activeGroupId, setActiveGroupId] = useState<string>(() => {
+    try {
+      const saved = localStorage.getItem('visited-places-active-group-id');
+      if (saved) return saved;
+    } catch {
+      // Ignore
+    }
+    return 'default';
+  });
+
+  // Save to localStorage when groups/activeGroup change
+  useEffect(() => {
+    localStorage.setItem('visited-places-compare-groups', JSON.stringify(groups));
+  }, [groups]);
+
+  useEffect(() => {
+    localStorage.setItem('visited-places-active-group-id', activeGroupId);
+  }, [activeGroupId]);
+
+  const activeGroup = useMemo(() => {
+    return groups.find(g => g.id === activeGroupId) || groups[0];
+  }, [groups, activeGroupId]);
+
+  const friends = activeGroup.friends;
+
   const toggleAccordion = (key: string) => {
     setOpenAccordions(prev => ({ ...prev, [key]: !prev[key] }));
   };
@@ -65,19 +115,69 @@ const Compare: React.FC = () => {
     if (!friendInput.trim()) return;
     const deserialized = deserializePlaces(friendInput.trim());
     if (deserialized) {
-      setFriends([...friends, {
-        id: Math.random().toString(36).substring(7),
-        name: `Friend ${friends.length + 1}`,
-        places: deserialized
-      }]);
+      setGroups(prev => prev.map(g => {
+        if (g.id === activeGroup.id) {
+          return {
+            ...g,
+            friends: [...g.friends, {
+              id: Math.random().toString(36).substring(7),
+              name: `Friend ${g.friends.length + 1}`,
+              places: deserialized
+            }]
+          };
+        }
+        return g;
+      }));
       setFriendInput('');
     } else {
       alert("Invalid share code. Please check and try again.");
     }
   };
 
-  const removeFriend = (id: string) => {
-    setFriends(friends.filter(f => f.id !== id));
+  const removeFriend = (friendId: string) => {
+    setGroups(prev => prev.map(g => {
+      if (g.id === activeGroup.id) {
+        return {
+          ...g,
+          friends: g.friends.filter(f => f.id !== friendId)
+        };
+      }
+      return g;
+    }));
+  };
+
+  const renameFriend = (friendId: string, newName: string) => {
+    setGroups(prev => prev.map(g => {
+      if (g.id === activeGroup.id) {
+        return {
+          ...g,
+          friends: g.friends.map(f => f.id === friendId ? { ...f, name: newName } : f)
+        };
+      }
+      return g;
+    }));
+  };
+
+  const handleCreateGroup = () => {
+    const name = prompt("Enter new group name:");
+    if (!name || !name.trim()) return;
+    const newId = Math.random().toString(36).substring(7);
+    const newGroup: CompareGroup = {
+      id: newId,
+      name: name.trim(),
+      friends: []
+    };
+    setGroups([...groups, newGroup]);
+    setActiveGroupId(newId);
+  };
+
+  const handleDeleteGroup = () => {
+    if (groups.length <= 1) return;
+    if (confirm(`Are you sure you want to delete group "${activeGroup.name}"?`)) {
+      const remaining = groups.filter(g => g.id !== activeGroup.id);
+      setGroups(remaining);
+      setActiveGroupId(remaining[0].id);
+    }
   };
 
   const mergedData = useMemo(() => {
@@ -85,10 +185,16 @@ const Compare: React.FC = () => {
     const totalUsers = allUsers.length;
     const result: Record<string, MapCompareResult> = {};
 
-    // Gather all uniquely mentioned countries
+    // Gather all uniquely mentioned countries, microstates, and territories
     const allCountryCodes = new Set<string>();
     allUsers.forEach(u => Object.keys(u.places).forEach(code => {
-      if (!code.includes('-')) allCountryCodes.add(code);
+      const isMicrostateOrTerritory = 
+        MICROSTATES.some(m => m.id === code) || 
+        UK_TERRITORIES.some(t => t.id === code) || 
+        USA_TERRITORIES.some(t => t.id === code);
+      if (!code.includes('-') || isMicrostateOrTerritory) {
+        allCountryCodes.add(code);
+      }
     }));
 
     allCountryCodes.forEach(code => {
@@ -152,10 +258,38 @@ const Compare: React.FC = () => {
     return result;
   }, [myPlaces, friends]);
 
+  // Redefined countryData lookup map to also support territories and microstates!
   const countryData = useMemo(() => {
     const map: Record<string, {name: string, flag: string}> = {};
     COUNTRIES.forEach(c => {
       map[c.id] = { name: c.name, flag: c.flag };
+    });
+    // Add microstates
+    MICROSTATES.forEach(m => {
+      if (!map[m.id]) {
+        map[m.id] = {
+          name: m.name,
+          flag: m.flagCode ? `https://flagcdn.com/${m.flagCode}.svg` : ''
+        };
+      }
+    });
+    // Add UK territories
+    UK_TERRITORIES.forEach(t => {
+      if (!map[t.id]) {
+        map[t.id] = {
+          name: t.name,
+          flag: t.flagCode ? `https://flagcdn.com/${t.flagCode}.svg` : ''
+        };
+      }
+    });
+    // Add US territories
+    USA_TERRITORIES.forEach(t => {
+      if (!map[t.id]) {
+        map[t.id] = {
+          name: t.name,
+          flag: t.flagCode ? `https://flagcdn.com/${t.flagCode}.svg` : ''
+        };
+      }
     });
     return map;
   }, []);
@@ -180,7 +314,7 @@ const Compare: React.FC = () => {
         });
         return { code, visited, wishlist: wlist };
       })
-      .filter(item => item.visited === 0 && item.wishlist > 1) // strictly unvisited by all, but wanted by >1
+      .filter(item => item.visited === 0 && item.wishlist > 1)
       .sort((a, b) => b.wishlist - a.wishlist)
       .slice(0, 5);
   }, [mergedData, myPlaces, friends]);
@@ -221,15 +355,17 @@ const Compare: React.FC = () => {
   }, [mergedData, myPlaces, friends]);
 
   const renderCountryItem = (code: string, data: { name: string, flag: string } | undefined) => (
-    <li key={code} className="compare-list-item" style={{ padding: '0.4rem 0.6rem', fontSize: '0.8rem', borderRadius: '6px' }}>
+    <li key={code} className="compare-list-item">
       {data?.flag ? (
-        <img src={data?.flag} alt="" className="country-flag" style={{ width: '1.25rem', height: '0.95rem', borderRadius: '2px' }} />
+        <img src={data.flag} alt="" className="country-flag" style={{ width: '1.25rem', height: '0.95rem', borderRadius: '2px', objectFit: 'cover', flexShrink: 0 }} />
       ) : (
-        <div className="country-flag-placeholder" style={{ width: '1.25rem', height: '0.95rem', borderRadius: '2px' }} />
+        <div className="country-flag-placeholder" style={{ width: '1.25rem', height: '0.95rem', borderRadius: '2px', flexShrink: 0 }} />
       )}
-      <span>{data?.name || code}</span>
+      <span style={{ textOverflow: 'ellipsis', overflow: 'hidden', whiteSpace: 'nowrap' }}>{data?.name || code}</span>
     </li>
   );
+
+  const hasImportedFriend = friends.length > 0;
 
   return (
     <div className="dashboard-layout">
@@ -237,7 +373,7 @@ const Compare: React.FC = () => {
       <aside className={`dashboard-sidebar glass-panel ${isSidebarCollapsed ? 'dashboard-sidebar--collapsed' : ''}`}>
         {/* Header */}
         <div className="dashboard-sidebar-header">
-          <span className="dashboard-sidebar-title">Comparison Config</span>
+          <span className="dashboard-sidebar-title">Comparison Panel</span>
           <button 
             className="glass-button" 
             style={{ border: 'none', background: 'transparent', padding: '0.25rem' }} 
@@ -250,8 +386,45 @@ const Compare: React.FC = () => {
 
         {/* Scrollable controls */}
         <div className="dashboard-sidebar-scroll">
+          {/* Group Management Selector */}
+          <div style={{ display: 'flex', flexDirection: 'column', gap: '0.5rem', background: 'rgba(0,0,0,0.1)', padding: '0.75rem', borderRadius: '12px', border: '1px solid var(--glass-border)' }}>
+            <span style={{ fontSize: '0.75rem', fontWeight: 800, color: 'var(--text-secondary)', textTransform: 'uppercase', letterSpacing: '0.05em' }}>
+              Comparison Group
+            </span>
+            <div style={{ display: 'flex', gap: '0.35rem' }}>
+              <select
+                value={activeGroupId}
+                onChange={(e) => setActiveGroupId(e.target.value)}
+                className="glass-input"
+                style={{ flex: 1, padding: '0.4rem 0.6rem', fontSize: '0.8rem', background: 'rgba(0,0,0,0.25)', cursor: 'pointer' }}
+              >
+                {groups.map(g => (
+                  <option key={g.id} value={g.id} style={{ background: 'var(--bg-dark)' }}>
+                    {g.name} ({g.friends.length + 1} users)
+                  </option>
+                ))}
+              </select>
+              <button 
+                onClick={handleDeleteGroup}
+                className="glass-button"
+                title="Delete Group"
+                disabled={groups.length <= 1}
+                style={{ padding: '0.4rem', opacity: groups.length <= 1 ? 0.35 : 1, cursor: groups.length <= 1 ? 'not-allowed' : 'pointer' }}
+              >
+                <Trash2 size={14} />
+              </button>
+            </div>
+            <button 
+              onClick={handleCreateGroup} 
+              className="glass-button glass-button--primary"
+              style={{ fontSize: '0.75rem', padding: '0.4rem 0.6rem', width: '100%' }}
+            >
+              <Plus size={14} /> Create New Group
+            </button>
+          </div>
+
           {/* Share Code Accordion */}
-          <div style={{ display: 'flex', flexDirection: 'column' }}>
+          <div style={{ display: 'flex', flexDirection: 'column', marginTop: '0.5rem' }}>
             <h4 
               onClick={() => toggleAccordion('share')}
               style={{ fontSize: '0.75rem', fontWeight: 800, color: 'var(--text-secondary)', textTransform: 'uppercase', letterSpacing: '0.05em', cursor: 'pointer', display: 'flex', alignItems: 'center', gap: '0.35rem', marginBottom: '0.5rem' }}
@@ -286,7 +459,7 @@ const Compare: React.FC = () => {
               style={{ fontSize: '0.75rem', fontWeight: 800, color: 'var(--text-secondary)', textTransform: 'uppercase', letterSpacing: '0.05em', cursor: 'pointer', display: 'flex', alignItems: 'center', gap: '0.35rem', marginBottom: '0.5rem' }}
             >
               {openAccordions.group ? <ChevronDown size={14} /> : <ChevronRight size={14} />}
-              Group ({friends.length + 1})
+              Group Members ({friends.length + 1})
             </h4>
             {openAccordions.group && (
               <div style={{ display: 'flex', flexDirection: 'column', gap: '0.5rem' }}>
@@ -305,14 +478,21 @@ const Compare: React.FC = () => {
                   </button>
                 </div>
 
-                <div className="friends-list" style={{ maxHeight: '150px', overflowY: 'auto' }}>
-                  <div className="friend-card friend-card--me" style={{ padding: '0.4rem 0.75rem', borderRadius: '8px', fontSize: '0.75rem' }}>
+                <div className="friends-list" style={{ maxHeight: '180px', overflowY: 'auto' }}>
+                  <div className="friend-card friend-card--me" style={{ padding: '0.5rem 0.75rem', borderRadius: '8px', fontSize: '0.75rem', fontWeight: 600 }}>
                     Me (Base Profile)
                   </div>
                   {friends.map(f => (
-                    <div key={f.id} className="friend-card" style={{ padding: '0.4rem 0.75rem', borderRadius: '8px', fontSize: '0.75rem' }}>
-                      <span>{f.name}</span>
-                      <button onClick={() => removeFriend(f.id)} className="friend-remove-btn" style={{ padding: 0 }}>
+                    <div key={f.id} className="friend-card" style={{ padding: '0.4rem 0.75rem', borderRadius: '8px', fontSize: '0.75rem', display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
+                      <input
+                        type="text"
+                        value={f.name}
+                        onChange={(e) => renameFriend(f.id, e.target.value)}
+                        className="glass-input"
+                        style={{ padding: '0.15rem 0.35rem', fontSize: '0.75rem', background: 'rgba(0,0,0,0.1)', border: '1px solid transparent', flex: 1, borderRadius: '4px' }}
+                        title="Click to rename"
+                      />
+                      <button onClick={() => removeFriend(f.id)} className="friend-remove-btn" style={{ padding: 0, border: 'none', background: 'transparent', cursor: 'pointer' }}>
                         <Trash2 size={12} />
                       </button>
                     </div>
@@ -322,165 +502,170 @@ const Compare: React.FC = () => {
             )}
           </div>
 
-          {/* Map Legend Accordion */}
-          <div style={{ display: 'flex', flexDirection: 'column' }}>
-            <h4 
-              onClick={() => toggleAccordion('legend')}
-              style={{ fontSize: '0.75rem', fontWeight: 800, color: 'var(--text-secondary)', textTransform: 'uppercase', letterSpacing: '0.05em', cursor: 'pointer', display: 'flex', alignItems: 'center', gap: '0.35rem', marginBottom: '0.5rem' }}
-            >
-              {openAccordions.legend ? <ChevronDown size={14} /> : <ChevronRight size={14} />}
-              Map Legend
-            </h4>
-            {openAccordions.legend && (
-              <div className="legend-grid" style={{ background: 'rgba(0,0,0,0.1)', padding: '0.75rem', borderRadius: '10px', border: '1px solid var(--glass-border)' }}>
-                <div className="legend-item"><div className="legend-circle" style={{ background: 'var(--color-both)' }}></div> Both Visited</div>
-                <div className="legend-item"><div className="legend-circle" style={{ background: 'var(--accent-visited)' }}></div> Most Visited</div>
-                <div className="legend-item"><div className="legend-circle" style={{ background: 'var(--color-me-only)' }}></div> Me Only</div>
-                <div className="legend-item"><div className="legend-circle" style={{ background: 'var(--color-they-only)' }}></div> Others Only</div>
-                <div className="legend-item"><div className="legend-circle" style={{ background: 'var(--color-revisit-both)' }}></div> Both Revisit</div>
-                <div className="legend-item"><div className="legend-circle" style={{ background: 'var(--color-revisit-mixed)' }}></div> Some Revisit</div>
-                <div className="legend-item"><div className="legend-circle" style={{ background: 'var(--color-wishlist-both)' }}></div> Both Wishlist</div>
-                <div className="legend-item"><div className="legend-circle" style={{ background: 'var(--accent-wishlist)' }}></div> Some Wishlist</div>
-                <div className="legend-item" style={{ gridColumn: 'span 2' }}><div className="legend-circle" style={{ background: 'var(--color-avoid)' }}></div> Everyone Avoids</div>
+          {/* Redesigned comparison layout flow: Hide Map Legend and Analytics lists until friend code is loaded */}
+          {hasImportedFriend && (
+            <>
+              {/* Map Legend Accordion */}
+              <div style={{ display: 'flex', flexDirection: 'column' }}>
+                <h4 
+                  onClick={() => toggleAccordion('legend')}
+                  style={{ fontSize: '0.75rem', fontWeight: 800, color: 'var(--text-secondary)', textTransform: 'uppercase', letterSpacing: '0.05em', cursor: 'pointer', display: 'flex', alignItems: 'center', gap: '0.35rem', marginBottom: '0.5rem' }}
+                >
+                  {openAccordions.legend ? <ChevronDown size={14} /> : <ChevronRight size={14} />}
+                  Map Legend
+                </h4>
+                {openAccordions.legend && (
+                  <div className="legend-grid" style={{ background: 'rgba(0,0,0,0.1)', padding: '0.75rem', borderRadius: '10px', border: '1px solid var(--glass-border)' }}>
+                    <div className="legend-item"><div className="legend-circle" style={{ background: 'var(--color-both)' }}></div> Both Visited</div>
+                    <div className="legend-item"><div className="legend-circle" style={{ background: 'var(--accent-visited)' }}></div> Most Visited</div>
+                    <div className="legend-item"><div className="legend-circle" style={{ background: 'var(--color-me-only)' }}></div> Me Only</div>
+                    <div className="legend-item"><div className="legend-circle" style={{ background: 'var(--color-they-only)' }}></div> Others Only</div>
+                    <div className="legend-item"><div className="legend-circle" style={{ background: 'var(--color-revisit-both)' }}></div> Both Revisit</div>
+                    <div className="legend-item"><div className="legend-circle" style={{ background: 'var(--color-revisit-mixed)' }}></div> Some Revisit</div>
+                    <div className="legend-item"><div className="legend-circle" style={{ background: 'var(--color-wishlist-both)' }}></div> Both Wishlist</div>
+                    <div className="legend-item"><div className="legend-circle" style={{ background: 'var(--accent-wishlist)' }}></div> Some Wishlist</div>
+                    <div className="legend-item" style={{ gridColumn: 'span 2' }}><div className="legend-circle" style={{ background: 'var(--color-avoid)' }}></div> Everyone Avoids</div>
+                  </div>
+                )}
               </div>
-            )}
-          </div>
 
-          {/* Comparison Mutual Lists */}
-          <div style={{ display: 'flex', flexDirection: 'column', gap: '0.75rem', borderTop: '1px solid var(--glass-border)', paddingTop: '1rem' }}>
-            <span style={{ fontSize: '0.7rem', fontWeight: 700, color: 'var(--text-secondary)', textTransform: 'uppercase', letterSpacing: '0.05em' }}>
-              Comparison Analytics
-            </span>
-            
-            {/* Mutual Visited Accordion */}
-            <div style={{ display: 'flex', flexDirection: 'column' }}>
-              <h4 
-                onClick={() => toggleAccordion('visited')}
-                style={{ fontSize: '0.75rem', fontWeight: 700, color: 'var(--color-both)', cursor: 'pointer', display: 'flex', alignItems: 'center', gap: '0.35rem' }}
-              >
-                {openAccordions.visited ? <ChevronDown size={14} /> : <ChevronRight size={14} />}
-                We've All Visited ({commonVisited.length})
-              </h4>
-              {openAccordions.visited && (
-                <ul className="compare-list" style={{ marginTop: '0.5rem', maxHeight: '140px', overflowY: 'auto' }}>
-                  {commonVisited.map(([code]) => renderCountryItem(code, countryData[code]))}
-                  {commonVisited.length === 0 && <li style={{ fontSize: '0.75rem', color: 'var(--text-secondary)', paddingLeft: '0.5rem' }}>No mutually visited places.</li>}
-                </ul>
-              )}
-            </div>
-
-            {/* Mutual Wishlisted Accordion */}
-            <div style={{ display: 'flex', flexDirection: 'column' }}>
-              <h4 
-                onClick={() => toggleAccordion('wishlist')}
-                style={{ fontSize: '0.75rem', fontWeight: 700, color: 'var(--color-wishlist-both)', cursor: 'pointer', display: 'flex', alignItems: 'center', gap: '0.35rem' }}
-              >
-                {openAccordions.wishlist ? <ChevronDown size={14} /> : <ChevronRight size={14} />}
-                Mutual Wishlists ({commonWishlist.length})
-              </h4>
-              {openAccordions.wishlist && (
-                <ul className="compare-list" style={{ marginTop: '0.5rem', maxHeight: '140px', overflowY: 'auto' }}>
-                  {commonWishlist.map(([code]) => renderCountryItem(code, countryData[code]))}
-                  {commonWishlist.length === 0 && <li style={{ fontSize: '0.75rem', color: 'var(--text-secondary)', paddingLeft: '0.5rem' }}>No mutually wishlisted places.</li>}
-                </ul>
-              )}
-            </div>
-
-            {/* Mutual Revisit Accordion */}
-            <div style={{ display: 'flex', flexDirection: 'column' }}>
-              <h4 
-                onClick={() => toggleAccordion('revisit')}
-                style={{ fontSize: '0.75rem', fontWeight: 700, color: 'var(--accent-revisit)', cursor: 'pointer', display: 'flex', alignItems: 'center', gap: '0.35rem' }}
-              >
-                {openAccordions.revisit ? <ChevronDown size={14} /> : <ChevronRight size={14} />}
-                Mutual Revisit ({commonRevisit.length})
-              </h4>
-              {openAccordions.revisit && (
-                <ul className="compare-list" style={{ marginTop: '0.5rem', maxHeight: '140px', overflowY: 'auto' }}>
-                  {commonRevisit.map(([code]) => renderCountryItem(code, countryData[code]))}
-                  {commonRevisit.length === 0 && <li style={{ fontSize: '0.75rem', color: 'var(--text-secondary)', paddingLeft: '0.5rem' }}>No mutually revisited places.</li>}
-                </ul>
-              )}
-            </div>
-
-            {/* Mutual Avoids Accordion */}
-            <div style={{ display: 'flex', flexDirection: 'column' }}>
-              <h4 
-                onClick={() => toggleAccordion('avoid')}
-                style={{ fontSize: '0.75rem', fontWeight: 700, color: 'var(--accent-avoid)', cursor: 'pointer', display: 'flex', alignItems: 'center', gap: '0.35rem' }}
-              >
-                {openAccordions.avoid ? <ChevronDown size={14} /> : <ChevronRight size={14} />}
-                Mutual Avoids ({commonAvoid.length})
-              </h4>
-              {openAccordions.avoid && (
-                <ul className="compare-list" style={{ marginTop: '0.5rem', maxHeight: '140px', overflowY: 'auto' }}>
-                  {commonAvoid.map(([code]) => renderCountryItem(code, countryData[code]))}
-                  {commonAvoid.length === 0 && <li style={{ fontSize: '0.75rem', color: 'var(--text-secondary)', paddingLeft: '0.5rem' }}>No mutually avoided places.</li>}
-                </ul>
-              )}
-            </div>
-
-            {/* Most Wanted Accordion */}
-            <div style={{ display: 'flex', flexDirection: 'column' }}>
-              <h4 
-                onClick={() => toggleAccordion('mostWanted')}
-                style={{ fontSize: '0.75rem', fontWeight: 700, color: 'var(--accent-primary)', cursor: 'pointer', display: 'flex', alignItems: 'center', gap: '0.35rem' }}
-              >
-                {openAccordions.mostWanted ? <ChevronDown size={14} /> : <ChevronRight size={14} />}
-                Most Wanted ({topWantedUnvisited.length})
-              </h4>
-              {openAccordions.mostWanted && (
-                <ul className="compare-list" style={{ marginTop: '0.5rem', maxHeight: '140px', overflowY: 'auto' }}>
-                  {topWantedUnvisited.map(({code, wishlist}) => (
-                    <li key={code} className="compare-list-item compare-list-item--flex" style={{ padding: '0.4rem 0.6rem', fontSize: '0.8rem', borderRadius: '6px' }}>
-                      <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
-                        {countryData[code]?.flag ? (
-                          <img src={countryData[code]?.flag} alt="" className="country-flag" style={{ width: '1.25rem', height: '0.95rem', borderRadius: '2px' }} />
-                        ) : (
-                          <div className="country-flag-placeholder" style={{ width: '1.25rem', height: '0.95rem', borderRadius: '2px' }} />
-                        )}
-                        <span>{countryData[code]?.name || code}</span>
-                      </div>
-                      <span style={{ color: 'var(--accent-wishlist)' }}>{wishlist} ❤️</span>
-                    </li>
-                  ))}
-                  {topWantedUnvisited.length === 0 && <li style={{ fontSize: '0.75rem', color: 'var(--text-secondary)', paddingLeft: '0.5rem' }}>Not enough data.</li>}
-                </ul>
-              )}
-            </div>
-
-            {/* Travel Mentorships Accordion */}
-            <div style={{ display: 'flex', flexDirection: 'column' }}>
-              <h4 
-                onClick={() => toggleAccordion('mentorship')}
-                style={{ fontSize: '0.75rem', fontWeight: 700, color: 'var(--color-me-only)', cursor: 'pointer', display: 'flex', alignItems: 'center', gap: '0.35rem' }}
-              >
-                {openAccordions.mentorship ? <ChevronDown size={14} /> : <ChevronRight size={14} />}
-                Travel Mentorships ({wantedButVisited.length})
-              </h4>
-              {openAccordions.mentorship && (
-                <div style={{ display: 'flex', flexDirection: 'column', gap: '0.5rem', marginTop: '0.5rem', maxHeight: '180px', overflowY: 'auto', paddingRight: '0.25rem' }}>
-                  {wantedButVisited.map(({code, whoVisited, whoWants}) => (
-                    <div key={code} className="mentorship-card" style={{ padding: '0.5rem', borderRadius: '8px' }}>
-                      <div className="mentorship-card-header" style={{ gap: '0.35rem' }}>
-                        {countryData[code]?.flag ? (
-                          <img src={countryData[code]?.flag} alt="" className="country-flag" style={{ width: '1.25rem', height: '0.95rem', borderRadius: '2px' }} />
-                        ) : (
-                          <div className="country-flag-placeholder" style={{ width: '1.25rem', height: '0.95rem', borderRadius: '2px' }} />
-                        )}
-                        <span className="mentorship-card-title" style={{ fontSize: '0.75rem' }}>{countryData[code]?.name || code}</span>
-                      </div>
-                      <div className="mentorship-card-body" style={{ fontSize: '0.7rem', marginTop: '0.25rem', lineHeight: 1.3 }}>
-                        Visited: <span style={{ color: 'var(--accent-visited)' }}>{whoVisited.join(', ')}</span><br/>
-                        Wants: <span style={{ color: 'var(--accent-wishlist)' }}>{whoWants.join(', ')}</span>
-                      </div>
-                    </div>
-                  ))}
-                  {wantedButVisited.length === 0 && <span style={{ fontSize: '0.75rem', color: 'var(--text-secondary)', paddingLeft: '0.5rem' }}>No mentorship combinations found.</span>}
+              {/* Comparison Mutual Lists */}
+              <div style={{ display: 'flex', flexDirection: 'column', gap: '0.75rem', borderTop: '1px solid var(--glass-border)', paddingTop: '1rem' }}>
+                <span style={{ fontSize: '0.7rem', fontWeight: 700, color: 'var(--text-secondary)', textTransform: 'uppercase', letterSpacing: '0.05em' }}>
+                  Comparison Analytics
+                </span>
+                
+                {/* Mutual Visited Accordion */}
+                <div style={{ display: 'flex', flexDirection: 'column' }}>
+                  <h4 
+                    onClick={() => toggleAccordion('visited')}
+                    style={{ fontSize: '0.75rem', fontWeight: 700, color: 'var(--color-both)', cursor: 'pointer', display: 'flex', alignItems: 'center', gap: '0.35rem' }}
+                  >
+                    {openAccordions.visited ? <ChevronDown size={14} /> : <ChevronRight size={14} />}
+                    We've All Visited ({commonVisited.length})
+                  </h4>
+                  {openAccordions.visited && (
+                    <ul className="compare-list" style={{ marginTop: '0.5rem', maxHeight: '140px', overflowY: 'auto' }}>
+                      {commonVisited.map(([code]) => renderCountryItem(code, countryData[code]))}
+                      {commonVisited.length === 0 && <li style={{ fontSize: '0.75rem', color: 'var(--text-secondary)', paddingLeft: '0.5rem' }}>No mutually visited places.</li>}
+                    </ul>
+                  )}
                 </div>
-              )}
-            </div>
-          </div>
+
+                {/* Mutual Wishlisted Accordion */}
+                <div style={{ display: 'flex', flexDirection: 'column' }}>
+                  <h4 
+                    onClick={() => toggleAccordion('wishlist')}
+                    style={{ fontSize: '0.75rem', fontWeight: 700, color: 'var(--color-wishlist-both)', cursor: 'pointer', display: 'flex', alignItems: 'center', gap: '0.35rem' }}
+                  >
+                    {openAccordions.wishlist ? <ChevronDown size={14} /> : <ChevronRight size={14} />}
+                    Mutual Wishlists ({commonWishlist.length})
+                  </h4>
+                  {openAccordions.wishlist && (
+                    <ul className="compare-list" style={{ marginTop: '0.5rem', maxHeight: '140px', overflowY: 'auto' }}>
+                      {commonWishlist.map(([code]) => renderCountryItem(code, countryData[code]))}
+                      {commonWishlist.length === 0 && <li style={{ fontSize: '0.75rem', color: 'var(--text-secondary)', paddingLeft: '0.5rem' }}>No mutually wishlisted places.</li>}
+                    </ul>
+                  )}
+                </div>
+
+                {/* Mutual Revisit Accordion */}
+                <div style={{ display: 'flex', flexDirection: 'column' }}>
+                  <h4 
+                    onClick={() => toggleAccordion('revisit')}
+                    style={{ fontSize: '0.75rem', fontWeight: 700, color: 'var(--accent-revisit)', cursor: 'pointer', display: 'flex', alignItems: 'center', gap: '0.35rem' }}
+                  >
+                    {openAccordions.revisit ? <ChevronDown size={14} /> : <ChevronRight size={14} />}
+                    Mutual Revisit ({commonRevisit.length})
+                  </h4>
+                  {openAccordions.revisit && (
+                    <ul className="compare-list" style={{ marginTop: '0.5rem', maxHeight: '140px', overflowY: 'auto' }}>
+                      {commonRevisit.map(([code]) => renderCountryItem(code, countryData[code]))}
+                      {commonRevisit.length === 0 && <li style={{ fontSize: '0.75rem', color: 'var(--text-secondary)', paddingLeft: '0.5rem' }}>No mutually revisited places.</li>}
+                    </ul>
+                  )}
+                </div>
+
+                {/* Mutual Avoids Accordion */}
+                <div style={{ display: 'flex', flexDirection: 'column' }}>
+                  <h4 
+                    onClick={() => toggleAccordion('avoid')}
+                    style={{ fontSize: '0.75rem', fontWeight: 700, color: 'var(--accent-avoid)', cursor: 'pointer', display: 'flex', alignItems: 'center', gap: '0.35rem' }}
+                  >
+                    {openAccordions.avoid ? <ChevronDown size={14} /> : <ChevronRight size={14} />}
+                    Mutual Avoids ({commonAvoid.length})
+                  </h4>
+                  {openAccordions.avoid && (
+                    <ul className="compare-list" style={{ marginTop: '0.5rem', maxHeight: '140px', overflowY: 'auto' }}>
+                      {commonAvoid.map(([code]) => renderCountryItem(code, countryData[code]))}
+                      {commonAvoid.length === 0 && <li style={{ fontSize: '0.75rem', color: 'var(--text-secondary)', paddingLeft: '0.5rem' }}>No mutually avoided places.</li>}
+                    </ul>
+                  )}
+                </div>
+
+                {/* Most Wanted Accordion */}
+                <div style={{ display: 'flex', flexDirection: 'column' }}>
+                  <h4 
+                    onClick={() => toggleAccordion('mostWanted')}
+                    style={{ fontSize: '0.75rem', fontWeight: 700, color: 'var(--accent-primary)', cursor: 'pointer', display: 'flex', alignItems: 'center', gap: '0.35rem' }}
+                  >
+                    {openAccordions.mostWanted ? <ChevronDown size={14} /> : <ChevronRight size={14} />}
+                    Most Wanted ({topWantedUnvisited.length})
+                  </h4>
+                  {openAccordions.mostWanted && (
+                    <ul className="compare-list" style={{ marginTop: '0.5rem', maxHeight: '140px', overflowY: 'auto' }}>
+                      {topWantedUnvisited.map(({code, wishlist}) => (
+                        <li key={code} className="compare-list-item compare-list-item--flex">
+                          <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', minWidth: 0 }}>
+                            {countryData[code]?.flag ? (
+                              <img src={countryData[code]?.flag} alt="" className="country-flag" style={{ width: '1.25rem', height: '0.95rem', borderRadius: '2px', objectFit: 'cover', flexShrink: 0 }} />
+                            ) : (
+                              <div className="country-flag-placeholder" style={{ width: '1.25rem', height: '0.95rem', borderRadius: '2px', flexShrink: 0 }} />
+                            )}
+                            <span style={{ textOverflow: 'ellipsis', overflow: 'hidden', whiteSpace: 'nowrap' }}>{countryData[code]?.name || code}</span>
+                          </div>
+                          <span style={{ color: 'var(--accent-wishlist)', flexShrink: 0 }}>{wishlist} ❤️</span>
+                        </li>
+                      ))}
+                      {topWantedUnvisited.length === 0 && <li style={{ fontSize: '0.75rem', color: 'var(--text-secondary)', paddingLeft: '0.5rem' }}>Not enough data.</li>}
+                    </ul>
+                  )}
+                </div>
+
+                {/* Travel Mentorships Accordion */}
+                <div style={{ display: 'flex', flexDirection: 'column' }}>
+                  <h4 
+                    onClick={() => toggleAccordion('mentorship')}
+                    style={{ fontSize: '0.75rem', fontWeight: 700, color: 'var(--color-me-only)', cursor: 'pointer', display: 'flex', alignItems: 'center', gap: '0.35rem' }}
+                  >
+                    {openAccordions.mentorship ? <ChevronDown size={14} /> : <ChevronRight size={14} />}
+                    Travel Mentorships ({wantedButVisited.length})
+                  </h4>
+                  {openAccordions.mentorship && (
+                    <div style={{ display: 'flex', flexDirection: 'column', gap: '0.5rem', marginTop: '0.5rem', maxHeight: '180px', overflowY: 'auto', paddingRight: '0.25rem' }}>
+                      {wantedButVisited.map(({code, whoVisited, whoWants}) => (
+                        <div key={code} className="mentorship-card">
+                          <div className="mentorship-card-header">
+                            {countryData[code]?.flag ? (
+                              <img src={countryData[code]?.flag} alt="" className="country-flag" style={{ width: '1.25rem', height: '0.95rem', borderRadius: '2px', objectFit: 'cover', flexShrink: 0 }} />
+                            ) : (
+                              <div className="country-flag-placeholder" style={{ width: '1.25rem', height: '0.95rem', borderRadius: '2px', flexShrink: 0 }} />
+                            )}
+                            <span className="mentorship-card-title">{countryData[code]?.name || code}</span>
+                          </div>
+                          <div className="mentorship-card-body">
+                            Visited: <span style={{ color: 'var(--accent-visited)' }}>{whoVisited.join(', ')}</span><br/>
+                            Wants: <span style={{ color: 'var(--accent-wishlist)' }}>{whoWants.join(', ')}</span>
+                          </div>
+                        </div>
+                      ))}
+                      {wantedButVisited.length === 0 && <span style={{ fontSize: '0.75rem', color: 'var(--text-secondary)', paddingLeft: '0.5rem' }}>No mentorship combinations found.</span>}
+                    </div>
+                  )}
+                </div>
+              </div>
+            </>
+          )}
         </div>
       </aside>
 
@@ -498,10 +683,40 @@ const Compare: React.FC = () => {
         )}
 
         <div className="compare-map-wrapper">
-          <CompareMap mergedData={mergedData} setTooltipContent={setTooltipContent} numericToA3={NUMERIC_TO_A3} />
-          {tooltipContent && (
-            <div className="compare-tooltip">
-              {tooltipContent}
+          {hasImportedFriend ? (
+            <>
+              <CompareMap mergedData={mergedData} setTooltipContent={setTooltipContent} numericToA3={NUMERIC_TO_A3} />
+              {tooltipContent && (
+                <div className="compare-tooltip">
+                  {tooltipContent}
+                </div>
+              )}
+            </>
+          ) : (
+            <div className="compare-empty-state glass-panel">
+              <div className="compare-empty-state__icon-wrapper">
+                <Users className="compare-empty-state__icon" size={40} />
+              </div>
+              <h3 className="compare-empty-state__title">Compare Travel Maps</h3>
+              <p className="compare-empty-state__description">
+                Visualize intersecting travel paths, mutual dream destinations, and travel compatibility stats by grouping with friends.
+              </p>
+              
+              <div className="compare-empty-state__action-box">
+                <h4>How to get started:</h4>
+                <ol>
+                  <li>Copy your own share code below (or inside the sidebar) and send it to your friend.</li>
+                  <li>Collect your friend's travel share code.</li>
+                  <li>Paste their code into the **Group Members** input box on the left, then click <strong>Add (+)</strong> to begin comparing.</li>
+                </ol>
+                
+                <div style={{ display: 'flex', gap: '0.5rem', marginTop: '1.25rem', justifyContent: 'center' }}>
+                  <button onClick={handleCopyCode} className="glass-button glass-button--primary" style={{ fontSize: '0.8rem', padding: '0.5rem 1rem' }}>
+                    {copied ? <Check size={14} /> : <Copy size={14} />}
+                    {copied ? 'Copied Share Code!' : 'Copy My Share Code'}
+                  </button>
+                </div>
+              </div>
             </div>
           )}
         </div>
