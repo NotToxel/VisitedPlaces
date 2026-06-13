@@ -135,10 +135,10 @@ export const MapContainer: React.FC = () => {
         </div>
 
         {/* Sidebar Content */}
-        <div className="flex-1 overflow-y-auto p-4 flex flex-col gap-5">
+        <div className="flex-1 overflow-y-auto p-4 flex flex-col gap-3">
           {activeCountry ? (
             /* Sub-region Explorer Panel */
-            <div className="flex flex-col gap-4">
+            <div className="flex flex-col gap-3">
               {/* Back Button */}
               <button 
                 onClick={() => setActiveCountry(null)}
@@ -148,7 +148,7 @@ export const MapContainer: React.FC = () => {
               </button>
 
               {/* Active Country Metadata */}
-              <div className="flex items-center gap-2.5 mt-1">
+              <div className="flex items-center gap-2 mt-1">
                 {activeCountryData?.flag ? (
                   <img src={activeCountryData.flag} alt="" className="w-6 h-4.5 object-cover rounded-sm border border-base-300/40 shrink-0" />
                 ) : (
@@ -157,12 +157,12 @@ export const MapContainer: React.FC = () => {
                 <h3 className="text-md font-extrabold text-base-content truncate">{activeCountryName}</h3>
               </div>
 
-              {/* Selection Mode Indicator */}
-              <div className="flex flex-col gap-1.5">
-                <span className="text-[10px] font-bold tracking-wider text-base-content/50 uppercase">
+              {/* Selection Mode Details Collapse */}
+              <details className="collapse collapse-arrow bg-base-200/40 border border-base-300/40 rounded-xl shrink-0" open>
+                <summary className="collapse-title text-[10px] font-bold tracking-wider text-base-content/50 uppercase select-none cursor-pointer py-3 min-h-0">
                   Select Mode
-                </span>
-                <div className="grid grid-cols-2 gap-1.5">
+                </summary>
+                <div className="collapse-content grid grid-cols-2 gap-1.5 text-xs">
                   {(['VISITED', 'WISHLIST', 'REVISIT', 'AVOID'] as const).map((mode) => {
                     const label = mode === 'VISITED' ? 'Visited' : mode === 'WISHLIST' ? 'Wishlist' : mode === 'REVISIT' ? 'Revisit' : 'Avoid';
                     const activeColor = 
@@ -175,7 +175,7 @@ export const MapContainer: React.FC = () => {
                       <button
                         key={mode}
                         className={`btn btn-outline btn-xs font-medium justify-center transition-all ${
-                          isActive ? 'btn-active text-primary bg-primary/10' : 'text-base-content/70 border-base-300'
+                          isActive ? 'btn-active text-primary bg-primary/10' : 'text-base-content/70 border-base-300/30'
                         }`}
                         onClick={() => setActiveMode(mode)}
                         style={{ 
@@ -188,24 +188,24 @@ export const MapContainer: React.FC = () => {
                     );
                   })}
                 </div>
-              </div>
+              </details>
 
               {/* List of sub-region territories */}
               {currentConfig?.territories && currentConfig.territories.length > 0 && (
-                <div className="flex flex-col gap-1.5 flex-1 overflow-hidden mt-1">
-                  <span className="text-[10px] font-bold tracking-wider text-base-content/50 uppercase">
+                <details className="collapse collapse-arrow bg-base-200/40 border border-base-300/40 rounded-xl shrink-0" open>
+                  <summary className="collapse-title text-[10px] font-bold tracking-wider text-base-content/50 uppercase select-none cursor-pointer py-3 min-h-0">
                     {currentConfig.territoryLabel || 'Territories'}
-                  </span>
-                  <div className="flex flex-col gap-1.5 overflow-y-auto max-h-[30vh] border border-base-300 rounded-xl p-2 bg-base-300/10">
+                  </summary>
+                  <div className="collapse-content flex flex-col gap-1.5 max-h-[30vh] overflow-y-auto p-2">
                     {currentConfig.territories.map((territory) => {
                       const status = places[territory.id]?.status || 'NONE';
                       
                       const activeCardClass = 
-                        status === 'VISITED' ? 'bg-accent-visited/10 border-accent-visited/30 text-accent-visited' : 
-                        status === 'WISHLIST' ? 'bg-accent-wishlist/10 border-accent-wishlist/30 text-accent-wishlist' : 
-                        status === 'REVISIT' ? 'bg-accent-revisit/10 border-accent-revisit/30 text-accent-revisit' : 
-                        status === 'AVOID' ? 'bg-accent-avoid/10 border-accent-avoid/30 text-accent-avoid' : 
-                        'bg-base-200/40 border-base-300/40 text-base-content/85';
+                        status === 'VISITED' ? 'bg-accent-visited/10 border-accent-visited/25 text-accent-visited' : 
+                        status === 'WISHLIST' ? 'bg-accent-wishlist/10 border-accent-wishlist/25 text-accent-wishlist' : 
+                        status === 'REVISIT' ? 'bg-accent-revisit/10 border-accent-revisit/25 text-accent-revisit' : 
+                        status === 'AVOID' ? 'bg-accent-avoid/10 border-accent-avoid/25 text-accent-avoid' : 
+                        'bg-base-200/40 border-base-300/45 text-base-content/85';
 
                       return (
                         <div key={territory.id} className={`flex items-center justify-between p-1.5 rounded-lg border text-xs gap-2 transition-all ${activeCardClass}`}>
@@ -261,7 +261,7 @@ export const MapContainer: React.FC = () => {
                       );
                     })}
                   </div>
-                </div>
+                </details>
               )}
             </div>
           ) : (
@@ -270,7 +270,7 @@ export const MapContainer: React.FC = () => {
               {/* Search Control */}
               <div 
                 ref={searchContainerRef} 
-                className="relative flex flex-col gap-1.5"
+                className="card bg-base-200/40 border border-base-300/40 p-3 rounded-xl relative flex flex-col gap-1.5 shrink-0"
               >
                 <span className="text-[10px] font-bold tracking-wider text-base-content/50 uppercase">
                   Search Countries
@@ -334,12 +334,12 @@ export const MapContainer: React.FC = () => {
                 )}
               </div>
 
-              {/* Selector mode */}
-              <div className="flex flex-col gap-1.5">
-                <span className="text-[10px] font-bold tracking-wider text-base-content/50 uppercase">
+              {/* Marking Tool Details Collapse */}
+              <details className="collapse collapse-arrow bg-base-200/40 border border-base-300/40 rounded-xl shrink-0" open>
+                <summary className="collapse-title text-[10px] font-bold tracking-wider text-base-content/50 uppercase select-none cursor-pointer py-3 min-h-0">
                   Marking Tool
-                </span>
-                <div className="flex flex-col gap-1">
+                </summary>
+                <div className="collapse-content flex flex-col gap-1 text-xs">
                   {(['VISITED', 'WISHLIST', 'REVISIT', 'AVOID'] as const).map((mode) => {
                     const label = mode === 'VISITED' ? 'Mark Visited' : mode === 'WISHLIST' ? 'Mark Wishlist' : mode === 'REVISIT' ? 'Mark Revisit' : 'Mark Avoid';
                     const activeColor = 
@@ -351,8 +351,8 @@ export const MapContainer: React.FC = () => {
                     return (
                       <button 
                         key={mode}
-                        className={`btn btn-outline btn-sm font-medium justify-start gap-2.5 w-full transition-all ${
-                          isActive ? 'btn-active text-primary bg-primary/10' : 'text-base-content/80 border-base-300 hover:text-primary'
+                        className={`btn btn-outline btn-xs font-medium justify-start gap-2.5 w-full transition-all ${
+                          isActive ? 'btn-active text-primary bg-primary/10' : 'text-base-content/80 border-base-300/30 hover:text-primary'
                         }`}
                         onClick={() => setActiveMode(mode)}
                         style={{
@@ -360,20 +360,20 @@ export const MapContainer: React.FC = () => {
                           color: isActive ? activeColor : undefined
                         }}
                       >
-                        <div className="w-2 h-2 rounded-full shrink-0" style={{ background: activeColor }} />
+                        <div className="w-1.5 h-1.5 rounded-full shrink-0" style={{ background: activeColor }} />
                         <span>{label}</span>
                       </button>
                     );
                   })}
                 </div>
-              </div>
+              </details>
 
-              {/* Map Visibility filters */}
-              <div className="flex flex-col gap-1.5">
-                <span className="text-[10px] font-bold tracking-wider text-base-content/50 uppercase">
-                  Map Visibility Filters
-                </span>
-                <div className="flex flex-col gap-1">
+              {/* Map Visibility filters Details Collapse */}
+              <details className="collapse collapse-arrow bg-base-200/40 border border-base-300/40 rounded-xl shrink-0" open>
+                <summary className="collapse-title text-[10px] font-bold tracking-wider text-base-content/50 uppercase select-none cursor-pointer py-3 min-h-0">
+                  Visibility Filters
+                </summary>
+                <div className="collapse-content flex flex-col gap-1 text-xs">
                   {(
                     [
                       ['Visited', showVisited, setShowVisited, 'var(--accent-visited)'],
@@ -384,8 +384,8 @@ export const MapContainer: React.FC = () => {
                   ).map(([label, shown, setter, color]) => (
                     <button
                       key={label}
-                      className={`btn btn-outline btn-sm font-medium justify-start gap-2.5 w-full transition-all ${
-                        shown ? 'btn-active' : 'opacity-40 text-base-content/60 border-base-300 hover:text-base-content'
+                      className={`btn btn-outline btn-xs font-medium justify-start gap-2.5 w-full transition-all ${
+                        shown ? 'btn-active' : 'opacity-40 text-base-content/60 border-base-300/30 hover:text-base-content'
                       }`}
                       onClick={() => setter(!shown)}
                       style={{ 
@@ -394,44 +394,46 @@ export const MapContainer: React.FC = () => {
                         background: shown ? `${color}15` : undefined
                       }}
                     >
-                      {shown ? <Eye size={14} /> : <EyeOff size={14} />}
+                      {shown ? <Eye size={12} /> : <EyeOff size={12} />}
                       <span>{label}</span>
                     </button>
                   ))}
                 </div>
-              </div>
+              </details>
 
-              {/* Map Type Config */}
-              <div className="flex flex-col gap-1.5">
-                <span className="text-[10px] font-bold tracking-wider text-base-content/50 uppercase">
-                  Map Presentation Style
-                </span>
-                <div className="grid grid-cols-2 gap-1.5">
-                  <button 
-                    className={`btn btn-sm ${mapStyle === 'STANDARD' ? 'btn-primary' : 'btn-outline border-base-300 text-base-content/80 hover:text-primary'}`}
-                    onClick={() => setMapStyle('STANDARD')}
-                  >
-                    Standard
-                  </button>
-                  <button 
-                    className={`btn btn-sm ${mapStyle === 'HEXAGON' ? 'btn-primary' : 'btn-outline border-base-300 text-base-content/80 hover:text-primary'}`}
-                    onClick={() => setMapStyle('HEXAGON')}
-                  >
-                    Hexagon
-                  </button>
+              {/* Map Type Config Details Collapse */}
+              <details className="collapse collapse-arrow bg-base-200/40 border border-base-300/40 rounded-xl shrink-0" open>
+                <summary className="collapse-title text-[10px] font-bold tracking-wider text-base-content/50 uppercase select-none cursor-pointer py-3 min-h-0">
+                  Presentation Style
+                </summary>
+                <div className="collapse-content flex flex-col gap-2 text-xs">
+                  <div className="grid grid-cols-2 gap-1.5">
+                    <button 
+                      className={`btn btn-xs ${mapStyle === 'STANDARD' ? 'btn-primary' : 'btn-outline border-base-300/30 text-base-content/80 hover:text-primary'}`}
+                      onClick={() => setMapStyle('STANDARD')}
+                    >
+                      Standard
+                    </button>
+                    <button 
+                      className={`btn btn-xs ${mapStyle === 'HEXAGON' ? 'btn-primary' : 'btn-outline border-base-300/30 text-base-content/80 hover:text-primary'}`}
+                      onClick={() => setMapStyle('HEXAGON')}
+                    >
+                      Hexagon
+                    </button>
+                  </div>
+                  {mapStyle === 'HEXAGON' && (
+                    <label className="flex items-center gap-2 cursor-pointer mt-1 text-[10px] text-base-content/70 select-none p-1 rounded hover:bg-base-300/10">
+                      <input 
+                        type="checkbox" 
+                        className="checkbox checkbox-primary checkbox-xs"
+                        checked={showHexLabels} 
+                        onChange={e => setShowHexLabels(e.target.checked)} 
+                      />
+                      <span>Display country labels</span>
+                    </label>
+                  )}
                 </div>
-                {mapStyle === 'HEXAGON' && (
-                  <label className="flex items-center gap-2 cursor-pointer mt-1 text-xs text-base-content/70 select-none p-1 rounded hover:bg-base-300/10">
-                    <input 
-                      type="checkbox" 
-                      className="checkbox checkbox-primary checkbox-xs"
-                      checked={showHexLabels} 
-                      onChange={e => setShowHexLabels(e.target.checked)} 
-                    />
-                    <span>Display country labels</span>
-                  </label>
-                )}
-              </div>
+              </details>
             </>
           )}
         </div>
