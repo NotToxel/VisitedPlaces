@@ -103,7 +103,7 @@ const Analytics: React.FC = () => {
   const percentVisited = totalCountries > 0 ? ((totalVisitedAndRevisit / totalCountries) * 100).toFixed(1) : '0';
 
   return (
-    <div className="p-4 md:p-6 h-full flex flex-col gap-4 overflow-hidden bg-transparent max-w-6xl mx-auto w-full">
+    <div className="p-3 md:p-6 h-full flex flex-col gap-4 overflow-hidden bg-transparent max-w-6xl mx-auto w-full">
       {/* Header */}
       <div className="glass-panel border border-base-300/50 p-4 rounded-2xl shrink-0 flex items-center gap-2 select-none">
         <PieIcon size={18} className="text-primary" />
@@ -113,7 +113,7 @@ const Analytics: React.FC = () => {
       {/* Scrollable Container */}
       <div className="flex-1 overflow-y-auto flex flex-col gap-5 pr-1">
         {/* KPI Dashboard Row */}
-        <div className="stats shadow border border-base-300/40 rounded-2xl bg-base-200/20 backdrop-blur-md grid grid-cols-1 md:grid-cols-3 shrink-0 select-none">
+        <div className="stats stats-vertical md:stats-horizontal shadow border border-base-300/40 rounded-2xl bg-base-200/20 backdrop-blur-md shrink-0 select-none w-full">
           <div className="stat py-3">
             <div className="stat-figure text-primary">
               <Globe className="w-7 h-7" />
@@ -132,16 +132,16 @@ const Analytics: React.FC = () => {
             <div className="stat-desc text-[10px] mt-0.5 text-base-content/60">Unlocked ranking profile</div>
           </div>
           
-          <div className="stat py-3 border-t md:border-t-0 md:border-l border-base-300/50 flex flex-row items-center px-4 gap-2">
-            <div className="flex-1 text-center border-r border-base-300/50 py-1">
+          <div className="stat py-3 border-t md:border-t-0 md:border-l border-base-300/50 grid grid-cols-3 items-center text-center px-2 sm:px-4 gap-1">
+            <div className="border-r border-base-300/50 py-1">
               <div className="text-[10px] font-semibold text-base-content/60 uppercase">Visited</div>
               <div className="text-lg font-extrabold text-accent-visited mt-0.5">{stats.visited}</div>
             </div>
-            <div className="flex-1 text-center border-r border-base-300/50 py-1">
+            <div className="border-r border-base-300/50 py-1">
               <div className="text-[10px] font-semibold text-base-content/60 uppercase">Revisit</div>
               <div className="text-lg font-extrabold text-accent-revisit mt-0.5">{stats.revisit}</div>
             </div>
-            <div className="flex-1 text-center py-1">
+            <div className="py-1">
               <div className="text-[10px] font-semibold text-base-content/60 uppercase">Wishlist</div>
               <div className="text-lg font-extrabold text-accent-wishlist mt-0.5">{stats.wishlist}</div>
             </div>
@@ -157,7 +157,7 @@ const Analytics: React.FC = () => {
           <div className="flex-1 min-h-0">
             <ResponsiveContainer width="100%" height="100%">
               <PieChart>
-                <Pie data={pieData} cx="50%" cy="50%" innerRadius={55} outerRadius={88} paddingAngle={4} dataKey="value" stroke="none">
+                <Pie data={pieData} cx="50%" cy="50%" innerRadius={45} outerRadius={72} paddingAngle={4} dataKey="value" stroke="none">
                   {pieData.map((entry, index) => <Cell key={`cell-${index}`} fill={entry.color} />)}
                 </Pie>
                 <RechartsTooltip 

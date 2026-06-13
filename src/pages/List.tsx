@@ -596,27 +596,49 @@ const List: React.FC = () => {
                               )}
                               <div className="flex flex-col min-w-0 flex-1">
                                 <span className="truncate font-extrabold text-[12px] leading-snug">{country.name}</span>
-                                <div className="flex items-center gap-1.5 mt-0.5">
-                                  <span className="text-[9px] opacity-40 font-mono tracking-wider font-semibold uppercase">{country.id}</span>
-                                  {status !== 'NONE' && (
-                                    <span className={`text-[8px] font-bold tracking-wide uppercase px-1 py-0.5 rounded-sm border leading-none shrink-0
-                                      ${status === 'VISITED' ? 'text-accent-visited bg-accent-visited/10 border-accent-visited/20' : ''}
-                                      ${status === 'WISHLIST' ? 'text-accent-wishlist bg-accent-wishlist/10 border-accent-wishlist/20' : ''}
-                                      ${status === 'REVISIT' ? 'text-accent-revisit bg-accent-revisit/10 border-accent-revisit/20' : ''}
-                                      ${status === 'AVOID' ? 'text-accent-avoid bg-accent-avoid/10 border-accent-avoid/20' : ''}
-                                    `}>
-                                      {status.toLowerCase()}
-                                    </span>
-                                  )}
-                                </div>
+                                <span className="text-[9px] opacity-40 font-mono tracking-wider font-semibold uppercase">{country.id}</span>
                               </div>
                             </div>
-                            {hasDrill && (
-                              <div className="flex items-center gap-0.5 bg-primary/10 border border-primary/20 text-primary rounded px-1 text-[9px] font-bold py-0.5 shrink-0 select-none ml-2">
-                                <Map size={9} />
-                                <span>{getSubregionsProgressString(country.id)}</span>
+
+                            <div className="flex items-center gap-1.5 shrink-0" onClick={e => e.stopPropagation()}>
+                              <div className="flex gap-0.5">
+                                <button 
+                                  onClick={() => handleStatusChange(country.id, 'VISITED')}
+                                  title="Visited"
+                                  className={`btn btn-square btn-circle btn-xs h-5.5 w-5.5 transition-all ${status === 'VISITED' ? 'btn-success text-white border-none' : 'btn-ghost text-base-content/30 hover:text-accent-visited hover:bg-accent-visited/10'}`}
+                                >
+                                  <Check size={10} />
+                                </button>
+                                <button 
+                                  onClick={() => handleStatusChange(country.id, 'WISHLIST')}
+                                  title="Wishlist"
+                                  className={`btn btn-square btn-circle btn-xs h-5.5 w-5.5 transition-all ${status === 'WISHLIST' ? 'btn-secondary text-white border-none' : 'btn-ghost text-base-content/30 hover:text-accent-wishlist hover:bg-accent-wishlist/10'}`}
+                                >
+                                  <Heart size={10} />
+                                </button>
+                                <button 
+                                  onClick={() => handleStatusChange(country.id, 'REVISIT')}
+                                  title="Revisit"
+                                  className={`btn btn-square btn-circle btn-xs h-5.5 w-5.5 transition-all ${status === 'REVISIT' ? 'btn-warning text-white border-none' : 'btn-ghost text-base-content/30 hover:text-accent-revisit hover:bg-accent-revisit/10'}`}
+                                >
+                                  <RotateCcw size={10} />
+                                </button>
+                                <button 
+                                  onClick={() => handleStatusChange(country.id, 'AVOID')}
+                                  title="Avoid"
+                                  className={`btn btn-square btn-circle btn-xs h-5.5 w-5.5 transition-all ${status === 'AVOID' ? 'btn-error text-white border-none' : 'btn-ghost text-base-content/30 hover:text-accent-avoid hover:bg-accent-avoid/10'}`}
+                                >
+                                  <Ban size={10} />
+                                </button>
                               </div>
-                            )}
+
+                              {hasDrill && (
+                                <div className="flex items-center gap-0.5 bg-primary/10 border border-primary/20 text-primary rounded px-1 text-[9px] font-bold py-0.5 shrink-0 select-none ml-1">
+                                  <Map size={9} />
+                                  <span>{getSubregionsProgressString(country.id)}</span>
+                                </div>
+                              )}
+                            </div>
                           </div>
                         );
                       })}
