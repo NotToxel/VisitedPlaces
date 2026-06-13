@@ -12,7 +12,7 @@ import { useMapAnimation } from '../../hooks/useMapAnimation';
 import { useDrilldownGeography } from '../../hooks/useDrilldownGeography';
 import { DrilldownControls } from './DrilldownControls';
 import { MapGeographies } from './MapGeographies';
-import { getSubRegionUrl } from '../../utils/topojsonCache';
+import { getSubRegionUrl, fetchRawTopology } from '../../utils/topojsonCache';
 
 interface StandardMapProps {
   setTooltipContent: (content: string) => void;
@@ -44,8 +44,7 @@ const StandardMapBase: React.FC<StandardMapProps> = ({
   // Pre-fetch and cache the world topology so we can compute centroids for search pan
   useEffect(() => {
     if (worldTopoRef.current) return;
-    fetch(WORLD_GEO_URL)
-      .then(r => r.json())
+    fetchRawTopology(WORLD_GEO_URL)
       .then(topo => { worldTopoRef.current = topo; })
       .catch(() => {});
   }, []);
@@ -200,7 +199,7 @@ const StandardMapBase: React.FC<StandardMapProps> = ({
             handleRightClick={handleRightClick}
           />
 
-          {!activeCountry && MICROSTATES.map((marker) => {
+          {!activeCountry && !isLoading && MICROSTATES.map((marker) => {
             const status = places[marker.id]?.status || 'NONE';
             const isHighlighted = highlightedCountry === marker.id;
             return (

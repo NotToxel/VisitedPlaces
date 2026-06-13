@@ -88,3 +88,32 @@ export const fetchSubRegions = async (countryA3: string): Promise<TopoRegion[]> 
   pendingRequests[countryA3] = fetchPromise;
   return await fetchPromise;
 };
+
+// Global in-memory cache for raw topology JSON datasets
+const rawTopologyCache: Record<string, unknown> = {};
+const pendingTopologyRequests: Record<string, Promise<unknown>> = {};
+
+export const fetchRawTopology = async (url: string): Promise<unknown> => {
+  if (rawTopologyCache[url]) return rawTopologyCache[url];
+  if (pendingTopologyRequests[url] !== undefined) return pendingTopologyRequests[url];
+
+  const promise = fetch(url)
+    .then(res => {
+      if (!res.ok) throw new Error(`Failed to fetch raw topology from ${url}`);
+      return res.json();
+    })
+    .then(data => {
+      rawTopologyCache[url] = data;
+      return data;
+    })
+    .catch(err => {
+      console.error(err);
+      return null;
+    })
+    .finally(() => {
+      delete pendingTopologyRequests[url];
+    });
+
+  pendingTopologyRequests[url] = promise;
+  return promise;
+};

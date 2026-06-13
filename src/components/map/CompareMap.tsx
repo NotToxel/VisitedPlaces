@@ -1,9 +1,9 @@
-import React, { memo } from 'react';
+import React, { memo, useState, useEffect } from 'react';
 import { ComposableMap, Geographies, Geography, ZoomableGroup, Marker } from 'react-simple-maps';
 import type { MapCompareResult } from '../../pages/Compare';
 import { MICROSTATES } from '../../data/mapData';
 import { WORLD_GEO_URL } from '../../config/constants';
-
+import { fetchRawTopology } from '../../utils/topojsonCache';
 
 interface CompareMapProps {
   mergedData: Record<string, MapCompareResult>;
@@ -26,78 +26,105 @@ const getCompareColor = (result: MapCompareResult | undefined) => {
     default: return 'var(--map-fill-unselected)';
   }
 };
-
 const CompareMapBase: React.FC<CompareMapProps> = ({ mergedData, setTooltipContent, numericToA3 }) => {
-  return (
-    <ComposableMap
-      projection="geoMercator"
-      projectionConfig={{ scale: 147, center: [0, 0] }}
-      width={800}
-      height={500}
-      style={{ width: '100%', height: '100%', outline: 'none' }}
-    >
-      <ZoomableGroup center={[0, 0]} zoom={1} minZoom={0.5} maxZoom={24}>
-        <Geographies geography={WORLD_GEO_URL}>
-          {({ geographies }) =>
-            geographies.map((geo) => {
-              const rawId = geo.properties?.ISO_A3 || geo.id;
-              const countryId = numericToA3[rawId] || rawId;
-              const result = mergedData[countryId];
-              const countryName = geo.properties.name || 'Unknown Region';
+  const [worldData, setWorldData] = useState<object | string | null>(null);
+  const [isLoading, setIsLoading] = useState(true);
 
-              return (
-                <Geography
-                  key={geo.rsmKey}
-                  geography={geo}
-                  onMouseEnter={() => {
-                    const label = result ? `${countryName} - ${result.label} (${result.count}/${result.totalUsers})` : countryName;
-                    setTooltipContent(label);
-                  }}
-                  onMouseLeave={() => setTooltipContent('')}
-                  fill={getCompareColor(result)}
+  useEffect(() => {
+    let active = true;
+    fetchRawTopology(WORLD_GEO_URL)
+      .then(data => {
+        if (active && data) {
+          setWorldData(data as object);
+          setIsLoading(false);
+        }
+      })
+      .catch(() => {
+        if (active) setIsLoading(false);
+      });
+    return () => { active = false; };
+  }, []);
+
+  return (
+    <div style={{ position: 'relative', width: '100%', height: '100%' }}>
+      {isLoading && (
+        <div style={{ position: 'absolute', top: '50%', left: '50%', transform: 'translate(-50%, -50%)', zIndex: 60, color: 'var(--text-secondary)' }}>
+          Loading Map...
+        </div>
+      )}
+
+      <ComposableMap
+        projection="geoMercator"
+        projectionConfig={{ scale: 147, center: [0, 0] }}
+        width={800}
+        height={500}
+        style={{ width: '100%', height: '100%', outline: 'none' }}
+      >
+        <ZoomableGroup center={[0, 0]} zoom={1} minZoom={0.5} maxZoom={24}>
+          {worldData && (
+            <Geographies geography={worldData}>
+              {({ geographies }) =>
+                geographies.map((geo) => {
+                  const rawId = geo.properties?.ISO_A3 || geo.id;
+                  const countryId = numericToA3[rawId] || rawId;
+                  const result = mergedData[countryId];
+                  const countryName = geo.properties.name || 'Unknown Region';
+
+                  return (
+                    <Geography
+                      key={geo.rsmKey}
+                      geography={geo}
+                      onMouseEnter={() => {
+                        const label = result ? `${countryName} - ${result.label} (${result.count}/${result.totalUsers})` : countryName;
+                        setTooltipContent(label);
+                      }}
+                      onMouseLeave={() => setTooltipContent('')}
+                      fill={getCompareColor(result)}
+                      stroke="var(--map-stroke)"
+                      strokeWidth={0.5}
+                      style={{
+                        default: { outline: 'none', transition: 'all 0.2s ease', fill: getCompareColor(result), opacity: 1 },
+                        hover: { fill: result && result.type !== 'NONE' ? getCompareColor(result) : 'var(--map-fill-hover)', opacity: 0.85, outline: 'none', cursor: 'pointer', transition: 'all 0.2s ease' },
+                        pressed: { outline: 'none' },
+                      }}
+                    />
+                  );
+                })
+              }
+            </Geographies>
+          )}
+
+          {/* Microstate markers — identical placement to StandardMap */}
+          {!isLoading && MICROSTATES.map((marker) => {
+            const result = mergedData[marker.id];
+            const color = getCompareColor(result);
+            const hasResult = !!result;
+
+            return (
+              <Marker
+                key={marker.id}
+                coordinates={marker.coordinates as [number, number]}
+                onMouseEnter={() => {
+                  const label = result ? `${marker.name} - ${result.label} (${result.count}/${result.totalUsers})` : marker.name;
+                  setTooltipContent(label);
+                }}
+                onMouseLeave={() => setTooltipContent('')}
+              >
+                <circle
+                  cx={0}
+                  cy={0}
+                  r={hasResult ? 4 : 2.5}
+                  fill={color}
                   stroke="var(--map-stroke)"
                   strokeWidth={0.5}
-                  style={{
-                    default: { outline: 'none', transition: 'all 0.2s ease', fill: getCompareColor(result), opacity: 1 },
-                    hover: { fill: result && result.type !== 'NONE' ? getCompareColor(result) : 'var(--map-fill-hover)', opacity: 0.85, outline: 'none', cursor: 'pointer', transition: 'all 0.2s ease' },
-                    pressed: { outline: 'none' },
-                  }}
+                  style={{ cursor: 'default', transition: 'all 0.2s ease' }}
                 />
-              );
-            })
-          }
-        </Geographies>
-
-        {/* Microstate markers — identical placement to StandardMap */}
-        {MICROSTATES.map((marker) => {
-          const result = mergedData[marker.id];
-          const color = getCompareColor(result);
-          const hasResult = !!result;
-
-          return (
-            <Marker
-              key={marker.id}
-              coordinates={marker.coordinates as [number, number]}
-              onMouseEnter={() => {
-                const label = result ? `${marker.name} - ${result.label} (${result.count}/${result.totalUsers})` : marker.name;
-                setTooltipContent(label);
-              }}
-              onMouseLeave={() => setTooltipContent('')}
-            >
-              <circle
-                cx={0}
-                cy={0}
-                r={hasResult ? 4 : 2.5}
-                fill={color}
-                stroke="var(--map-stroke)"
-                strokeWidth={0.5}
-                style={{ cursor: 'default', transition: 'all 0.2s ease' }}
-              />
-            </Marker>
-          );
-        })}
-      </ZoomableGroup>
-    </ComposableMap>
+              </Marker>
+            );
+          })}
+        </ZoomableGroup>
+      </ComposableMap>
+    </div>
   );
 };
 
