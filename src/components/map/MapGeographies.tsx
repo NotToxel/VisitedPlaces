@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { memo } from 'react';
 import { Geographies, Geography } from 'react-simple-maps';
 import { getFillColor, getRegionId } from '../../utils/mapUtils';
 import type { GeoFeature, GeoProperties } from '../../utils/mapUtils';
@@ -25,7 +25,14 @@ interface RsmGeography {
   rsmKey: string;
 }
 
-export const MapGeographies: React.FC<MapGeographiesProps> = ({
+// Static styling object to prevent recreation and deep-diffing overhead in react-simple-maps
+const GEOGRAPHY_STYLE = {
+  default: { outline: 'none' },
+  hover: { outline: 'none' },
+  pressed: { outline: 'none' }
+};
+
+const MapGeographiesBase: React.FC<MapGeographiesProps> = ({
   geoData,
   activeCountry,
   highlightedCountry,
@@ -76,11 +83,7 @@ export const MapGeographies: React.FC<MapGeographiesProps> = ({
               fill={fill}
               stroke={isHighlighted ? "var(--accent-highlight)" : 'var(--map-stroke)'}
               strokeWidth={isHighlighted ? 1.5 : (activeCountry ? 0.7 : 0.5)}
-              style={{
-                default: { fill, outline: 'none' },
-                hover: { fill, opacity: 0.75, outline: 'none', cursor: 'pointer' },
-                pressed: { fill: 'var(--accent-primary)', outline: 'none' }
-              }}
+              style={GEOGRAPHY_STYLE}
             />
           );
         })
@@ -88,3 +91,5 @@ export const MapGeographies: React.FC<MapGeographiesProps> = ({
     </Geographies>
   );
 };
+
+export const MapGeographies = memo(MapGeographiesBase);

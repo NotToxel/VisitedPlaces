@@ -98,7 +98,7 @@ const StandardMapBase: React.FC<StandardMapProps> = ({
     if (!highlightedCountry) animateTo(0, 0, 1);
   }, [highlightedCountry, animateTo]);
 
-  const handleCountryClick = (geo: GeoFeature) => {
+  const handleCountryClick = useCallback((geo: GeoFeature) => {
     const countryId = getRegionId(geo, numericToA3, activeCountry);
     if (!countryId) return;
 
@@ -112,9 +112,9 @@ const StandardMapBase: React.FC<StandardMapProps> = ({
     } else {
       setCountryStatus(placeIdForStore, selectionMode);
     }
-  };
+  }, [numericToA3, activeCountry, places, selectionMode, setCountryStatus]);
 
-  const handleRightClick = (e: React.MouseEvent, geo: GeoFeature) => {
+  const handleRightClick = useCallback((e: React.MouseEvent, geo: GeoFeature) => {
     e.preventDefault();
     const countryId = getRegionId(geo, numericToA3, activeCountry);
     
@@ -132,7 +132,7 @@ const StandardMapBase: React.FC<StandardMapProps> = ({
         setTooltipContent(`No sub-regions available for ${geo.properties?.name || 'this country'}`);
         setTimeout(() => setTooltipContent(''), 2000);
     }
-  };
+  }, [numericToA3, activeCountry, setActiveCountry, setSubRegionCenter, setSubRegionZoom, setTooltipContent]);
 
   const currentConfig = activeCountry ? drilldownRegistry[activeCountry] : null;
 

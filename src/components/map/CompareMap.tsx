@@ -26,6 +26,60 @@ const getCompareColor = (result: MapCompareResult | undefined) => {
     default: return 'var(--map-fill-unselected)';
   }
 };
+
+// Static styling configuration to bypass react-simple-maps deep styles comparisons
+const GEOGRAPHY_STYLE = {
+  default: { outline: 'none' },
+  hover: { outline: 'none' },
+  pressed: { outline: 'none' }
+};
+
+interface CompareMapGeographiesProps {
+  worldData: string | object;
+  mergedData: Record<string, MapCompareResult>;
+  numericToA3: Record<string, string>;
+  setTooltipContent: (content: string) => void;
+}
+
+// Memoized Geographies component to prevent re-rendering paths during tooltip status updates
+const CompareMapGeographiesBase: React.FC<CompareMapGeographiesProps> = ({
+  worldData,
+  mergedData,
+  numericToA3,
+  setTooltipContent
+}) => {
+  return (
+    <Geographies geography={worldData}>
+      {({ geographies }) =>
+        geographies.map((geo) => {
+          const rawId = geo.properties?.ISO_A3 || geo.id;
+          const countryId = numericToA3[rawId] || rawId;
+          const result = mergedData[countryId];
+          const countryName = geo.properties.name || 'Unknown Region';
+
+          return (
+            <Geography
+              key={geo.rsmKey}
+              geography={geo}
+              onMouseEnter={() => {
+                const label = result ? `${countryName} - ${result.label} (${result.count}/${result.totalUsers})` : countryName;
+                setTooltipContent(label);
+              }}
+              onMouseLeave={() => setTooltipContent('')}
+              fill={getCompareColor(result)}
+              stroke="var(--map-stroke)"
+              strokeWidth={0.5}
+              style={GEOGRAPHY_STYLE}
+            />
+          );
+        })
+      }
+    </Geographies>
+  );
+};
+
+const CompareMapGeographies = memo(CompareMapGeographiesBase);
+
 const CompareMapBase: React.FC<CompareMapProps> = ({ mergedData, setTooltipContent, numericToA3 }) => {
   const [worldData, setWorldData] = useState<object | string | null>(null);
   const [isLoading, setIsLoading] = useState(true);
@@ -63,36 +117,12 @@ const CompareMapBase: React.FC<CompareMapProps> = ({ mergedData, setTooltipConte
       >
         <ZoomableGroup center={[0, 0]} zoom={1} minZoom={0.5} maxZoom={24}>
           {worldData && (
-            <Geographies geography={worldData}>
-              {({ geographies }) =>
-                geographies.map((geo) => {
-                  const rawId = geo.properties?.ISO_A3 || geo.id;
-                  const countryId = numericToA3[rawId] || rawId;
-                  const result = mergedData[countryId];
-                  const countryName = geo.properties.name || 'Unknown Region';
-
-                  return (
-                    <Geography
-                      key={geo.rsmKey}
-                      geography={geo}
-                      onMouseEnter={() => {
-                        const label = result ? `${countryName} - ${result.label} (${result.count}/${result.totalUsers})` : countryName;
-                        setTooltipContent(label);
-                      }}
-                      onMouseLeave={() => setTooltipContent('')}
-                      fill={getCompareColor(result)}
-                      stroke="var(--map-stroke)"
-                      strokeWidth={0.5}
-                      style={{
-                        default: { outline: 'none', transition: 'all 0.2s ease', fill: getCompareColor(result), opacity: 1 },
-                        hover: { fill: result && result.type !== 'NONE' ? getCompareColor(result) : 'var(--map-fill-hover)', opacity: 0.85, outline: 'none', cursor: 'pointer', transition: 'all 0.2s ease' },
-                        pressed: { outline: 'none' },
-                      }}
-                    />
-                  );
-                })
-              }
-            </Geographies>
+            <CompareMapGeographies 
+              worldData={worldData}
+              mergedData={mergedData}
+              numericToA3={numericToA3}
+              setTooltipContent={setTooltipContent}
+            />
           )}
 
           {/* Microstate markers — identical placement to StandardMap */}
