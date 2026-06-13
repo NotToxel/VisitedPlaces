@@ -9,7 +9,9 @@ export function useDrilldownGeography(activeCountry: string | null, setActiveCou
 
   useEffect(() => {
     if (!activeCountry) {
-        setGeoData(WORLD_GEO_URL);
+        Promise.resolve().then(() => {
+            setGeoData(WORLD_GEO_URL);
+        });
         return;
     }
 
@@ -17,7 +19,9 @@ export function useDrilldownGeography(activeCountry: string | null, setActiveCou
     if (!subRegionUrl) return;
 
     const controller = new AbortController();
-    setIsLoading(true);
+    Promise.resolve().then(() => {
+        setIsLoading(true);
+    });
     fetch(subRegionUrl, { signal: controller.signal })
        .then(res => res.json())
        .then(data => {

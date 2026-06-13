@@ -1,12 +1,13 @@
-import React, { useState, useMemo, useEffect } from 'react';
+import React, { useState, useMemo } from 'react';
 import { useStore } from '../store/useStore';
 import type { UserPlacesMap } from '../store/useStore';
+import { COUNTRIES, NUMERIC_TO_A3 } from '../data/countries';
 import { deserializePlaces, serializePlaces } from '../utils/serialization';
 import { CompareMap } from '../components/map/CompareMap';
-import { Share2, Users, Plus, Trash2, Copy, Check, Ban } from 'lucide-react';
+import { Share2, Users, Plus, Trash2, Copy, Check, Ban, RotateCcw } from 'lucide-react';
 
 export interface MapCompareResult {
-  type: 'EVERYONE_VISITED' | 'MOST_VISITED' | 'ONLY_ME_VISITED' | 'THEY_VISITED' | 'EVERYONE_WISHLIST' | 'MIXED_WISHLIST' | 'EVERYONE_AVOID' | 'NONE';
+  type: 'EVERYONE_VISITED' | 'MOST_VISITED' | 'ONLY_ME_VISITED' | 'THEY_VISITED' | 'EVERYONE_WISHLIST' | 'MIXED_WISHLIST' | 'EVERYONE_AVOID' | 'EVERYONE_REVISIT' | 'MIXED_REVISIT' | 'NONE';
   label: string;
   count: number;
   totalUsers: number;
@@ -67,15 +68,19 @@ const Compare: React.FC = () => {
       let visitedCount = 0;
       let wishlistCount = 0;
       let avoidCount = 0;
-      let iVisited = myPlaces[code]?.status === 'VISITED';
+      let revisitCount = 0;
+      const iVisited = myPlaces[code]?.status === 'VISITED';
+      const iRevisit = myPlaces[code]?.status === 'REVISIT';
 
       allUsers.forEach(u => {
-        if (u.places[code]?.status === 'VISITED') visitedCount++;
-        if (u.places[code]?.status === 'WISHLIST') wishlistCount++;
-        if (u.places[code]?.status === 'AVOID') avoidCount++;
+        const status = u.places[code]?.status;
+        if (status === 'VISITED') visitedCount++;
+        if (status === 'WISHLIST') wishlistCount++;
+        if (status === 'AVOID') avoidCount++;
+        if (status === 'REVISIT') revisitCount++;
       });
 
-      if (visitedCount === 0 && wishlistCount === 0 && avoidCount === 0) return;
+      if (visitedCount === 0 && wishlistCount === 0 && avoidCount === 0 && revisitCount === 0) return;
 
       let type: MapCompareResult['type'] = 'NONE';
       let label = '';
@@ -83,12 +88,21 @@ const Compare: React.FC = () => {
       if (visitedCount === totalUsers) {
         type = 'EVERYONE_VISITED';
         label = 'Everyone Visited';
+      } else if (revisitCount === totalUsers) {
+        type = 'EVERYONE_REVISIT';
+        label = 'Everyone Revisit';
+      } else if (visitedCount + revisitCount === totalUsers) {
+        type = 'MOST_VISITED';
+        label = 'Visited & Revisit';
+      } else if (revisitCount > 0) {
+        type = 'MIXED_REVISIT';
+        label = 'Revisit by Some';
       } else if (visitedCount > 1) {
         type = 'MOST_VISITED';
         label = 'Most Visited';
       } else if (visitedCount === 1) {
-        type = iVisited ? 'ONLY_ME_VISITED' : 'THEY_VISITED';
-        label = iVisited ? 'Only I Visited' : 'Someone Visited';
+        type = (iVisited || iRevisit) ? 'ONLY_ME_VISITED' : 'THEY_VISITED';
+        label = (iVisited || iRevisit) ? 'Only I Visited' : 'Someone Visited';
       } else if (wishlistCount === totalUsers) {
         type = 'EVERYONE_WISHLIST';
         label = 'Everyone Wishlisted';
@@ -103,7 +117,7 @@ const Compare: React.FC = () => {
       result[code] = {
         type,
         label,
-        count: visitedCount > 0 ? visitedCount : (wishlistCount > 0 ? wishlistCount : avoidCount),
+        count: (visitedCount > 0 || revisitCount > 0) ? (visitedCount + revisitCount) : (wishlistCount > 0 ? wishlistCount : avoidCount),
         totalUsers
       };
     });
@@ -111,32 +125,17 @@ const Compare: React.FC = () => {
     return result;
   }, [myPlaces, friends]);
 
-  const [countryData, setCountryData] = useState<Record<string, {name: string, flag: string}>>({});
-  const [numericToA3, setNumericToA3] = useState<Record<string, string>>({});
-
-  useEffect(() => {
-    fetch('https://restcountries.com/v3.1/all?fields=name,cca3,ccn3,flags,independent')
-      .then(res => res.json())
-      .then((data: any[]) => {
-        const map: Record<string, {name: string, flag: string}> = {};
-        const numMap: Record<string, string> = {};
-        data.forEach(c => {
-          if (c.ccn3) {
-            numMap[c.ccn3] = c.cca3;
-          }
-          if (c.independent === true || c.cca3) {
-            map[c.cca3] = { name: c.name.common, flag: c.flags?.svg || '' };
-          }
-        });
-        setCountryData(map);
-        setNumericToA3(numMap);
-      })
-      .catch(err => console.error("Could not load country list", err));
+  const countryData = useMemo(() => {
+    const map: Record<string, {name: string, flag: string}> = {};
+    COUNTRIES.forEach(c => {
+      map[c.id] = { name: c.name, flag: c.flag };
+    });
+    return map;
   }, []);
-
 
   // Aggregate Analytics
   const commonVisited = Object.entries(mergedData).filter(([, r]) => r.type === 'EVERYONE_VISITED');
+  const commonRevisit = Object.entries(mergedData).filter(([, r]) => r.type === 'EVERYONE_REVISIT');
   const commonWishlist = Object.entries(mergedData).filter(([, r]) => r.type === 'EVERYONE_WISHLIST');
   const commonAvoid = Object.entries(mergedData).filter(([, r]) => r.type === 'EVERYONE_AVOID');
 
@@ -144,15 +143,15 @@ const Compare: React.FC = () => {
   const topWantedUnvisited = useMemo(() => {
     return Object.keys(mergedData)
       .map((code) => {
-         let visited = 0;
-         let wlist = 0;
-         if (myPlaces[code]?.status === 'VISITED') visited++;
-         if (myPlaces[code]?.status === 'WISHLIST') wlist++;
-         friends.forEach(f => {
-            if (f.places[code]?.status === 'VISITED') visited++;
-            if (f.places[code]?.status === 'WISHLIST') wlist++;
-         });
-         return { code, visited, wishlist: wlist };
+        let visited = 0;
+        let wlist = 0;
+        if (myPlaces[code]?.status === 'VISITED' || myPlaces[code]?.status === 'REVISIT') visited++;
+        if (myPlaces[code]?.status === 'WISHLIST') wlist++;
+        friends.forEach(f => {
+          if (f.places[code]?.status === 'VISITED' || f.places[code]?.status === 'REVISIT') visited++;
+          if (f.places[code]?.status === 'WISHLIST') wlist++;
+        });
+        return { code, visited, wishlist: wlist };
       })
       .filter(item => item.visited === 0 && item.wishlist > 1) // strictly unvisited by all, but wanted by >1
       .sort((a, b) => b.wishlist - a.wishlist)
@@ -162,20 +161,32 @@ const Compare: React.FC = () => {
   const wantedButVisited = useMemo(() => {
     return Object.keys(mergedData)
       .map((code) => {
-         let visited = 0;
-         let wlist = 0;
-         let whoVisited: string[] = [];
-         let whoWants: string[] = [];
+        let visited = 0;
+        let wlist = 0;
+        const whoVisited: string[] = [];
+        const whoWants: string[] = [];
 
-         if (myPlaces[code]?.status === 'VISITED') { visited++; whoVisited.push('Me'); }
-         if (myPlaces[code]?.status === 'WISHLIST') { wlist++; whoWants.push('Me'); }
+        if (myPlaces[code]?.status === 'VISITED' || myPlaces[code]?.status === 'REVISIT') { 
+          visited++; 
+          whoVisited.push('Me'); 
+        }
+        if (myPlaces[code]?.status === 'WISHLIST') { 
+          wlist++; 
+          whoWants.push('Me'); 
+        }
 
-         friends.forEach(f => {
-            if (f.places[code]?.status === 'VISITED') { visited++; whoVisited.push(f.name); }
-            if (f.places[code]?.status === 'WISHLIST') { wlist++; whoWants.push(f.name); }
-         });
+        friends.forEach(f => {
+          if (f.places[code]?.status === 'VISITED' || f.places[code]?.status === 'REVISIT') { 
+            visited++; 
+            whoVisited.push(f.name); 
+          }
+          if (f.places[code]?.status === 'WISHLIST') { 
+            wlist++; 
+            whoWants.push(f.name); 
+          }
+        });
 
-         return { code, visited, wishlist: wlist, whoVisited, whoWants };
+        return { code, visited, wishlist: wlist, whoVisited, whoWants };
       })
       .filter(item => item.visited > 0 && item.wishlist > 0)
       .sort((a, b) => b.wishlist - a.wishlist)
@@ -183,20 +194,20 @@ const Compare: React.FC = () => {
   }, [mergedData, myPlaces, friends]);
 
   const renderCountryItem = (code: string, data: { name: string, flag: string } | undefined) => (
-    <li key={code} style={{ background: 'var(--map-fill-unselected)', padding: '0.5rem 1rem', borderRadius: '4px', display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
+    <li key={code} className="compare-list-item">
       {data?.flag ? (
-         <img src={data?.flag} alt={`${data?.name} flag`} style={{ width: '1.5rem', height: '1.2rem', objectFit: 'cover', borderRadius: '2px' }} />
+        <img src={data?.flag} alt={`${data?.name} flag`} className="country-flag" />
       ) : (
-         <div style={{ width: '1.5rem', height: '1.2rem', background: 'var(--map-fill-hover)', borderRadius: '2px' }} />
+        <div className="country-flag-placeholder" />
       )}
       <span>{data?.name || code}</span>
     </li>
   );
 
   return (
-    <div className="page-transition" style={{ display: 'flex', flexDirection: 'column', gap: '1.5rem', height: '100%', minHeight: 'calc(100vh - 120px)' }}>
+    <div className="page-container page-transition">
       {/* Top Header / Share Code */}
-      <div className="glass-panel" style={{ padding: '1.5rem', display: 'flex', flexWrap: 'wrap', gap: '1.5rem', justifyContent: 'space-between', alignItems: 'center' }}>
+      <div className="glass-panel compare-share-row">
         <div>
           <h2 style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', marginBottom: '0.5rem' }}>
             <Share2 size={24} color="var(--accent-primary)" />
@@ -205,13 +216,12 @@ const Compare: React.FC = () => {
           <p style={{ color: 'var(--text-secondary)' }}>Share your code and merge maps to find common destinations!</p>
         </div>
         
-        <div style={{ display: 'flex', gap: '0.5rem', alignItems: 'center', background: 'var(--map-fill-unselected)', padding: '0.5rem', borderRadius: '8px' }}>
-          <div style={{ fontSize: '0.875rem', color: 'var(--text-muted)' }}>Your Share Code :</div>
+        <div className="share-code-box">
+          <div className="share-code-label">Your Share Code:</div>
           <input 
             readOnly 
             value={myShareCode} 
-            className="glass-input" 
-            style={{ width: '150px', padding: '0.5rem', textOverflow: 'ellipsis' }}
+            className="glass-input share-code-input"
           />
           <button className="glass-button glass-button--primary" onClick={handleCopyCode}>
             {copied ? <Check size={16} /> : <Copy size={16} />}
@@ -219,13 +229,13 @@ const Compare: React.FC = () => {
         </div>
       </div>
 
-      <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(300px, 1fr))', gap: '1.5rem' }}>
+      <div className="compare-grid-three">
         
         {/* Friend Input List */}
-        <div className="glass-panel" style={{ padding: '1.5rem', display: 'flex', flexDirection: 'column', gap: '1rem' }}>
+        <div className="glass-panel compare-group-panel">
           <h3 style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}><Users size={20} /> Group ({friends.length + 1})</h3>
           
-          <div style={{ display: 'flex', gap: '0.5rem' }}>
+          <div className="friend-input-row">
             <input 
               type="text" 
               className="glass-input" 
@@ -239,14 +249,14 @@ const Compare: React.FC = () => {
             </button>
           </div>
 
-          <div style={{ marginTop: '1rem', display: 'flex', flexDirection: 'column', gap: '0.5rem' }}>
-            <div style={{ padding: '0.75rem', background: 'var(--map-fill-unselected)', borderRadius: '8px', border: '1px solid var(--accent-primary)' }}>
+          <div className="friends-list">
+            <div className="friend-card friend-card--me">
               Me (Base)
             </div>
             {friends.map(f => (
-              <div key={f.id} style={{ padding: '0.75rem', background: 'var(--map-fill-unselected)', borderRadius: '8px', border: '1px solid var(--glass-border)', display: 'flex', justifyContent: 'space-between' }}>
-                {f.name}
-                <button onClick={() => removeFriend(f.id)} style={{ background: 'transparent', border: 'none', color: 'var(--text-muted)', cursor: 'pointer' }}>
+              <div key={f.id} className="friend-card">
+                <span>{f.name}</span>
+                <button onClick={() => removeFriend(f.id)} className="friend-remove-btn">
                   <Trash2 size={16} />
                 </button>
               </div>
@@ -255,71 +265,83 @@ const Compare: React.FC = () => {
         </div>
 
         {/* Legend */}
-        <div className="glass-panel" style={{ padding: '1.5rem', display: 'flex', flexDirection: 'column', gap: '1rem' }}>
+        <div className="glass-panel legend-panel">
           <h3>Map Legend</h3>
-          <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '0.75rem', fontSize: '0.875rem' }}>
-            <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}><div style={{ width: 12, height: 12, borderRadius: '50%', background: 'var(--color-both)' }}></div> Everyone Visited</div>
-            <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}><div style={{ width: 12, height: 12, borderRadius: '50%', background: 'var(--accent-visited)' }}></div> Most Visited</div>
-            <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}><div style={{ width: 12, height: 12, borderRadius: '50%', background: 'var(--color-me-only)' }}></div> Only I Visited</div>
-            <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}><div style={{ width: 12, height: 12, borderRadius: '50%', background: 'var(--color-they-only)' }}></div> Someone Else Visited</div>
-            <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}><div style={{ width: 12, height: 12, borderRadius: '50%', background: 'var(--color-wishlist-both)' }}></div> Everyone Wishlisted</div>
-            <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}><div style={{ width: 12, height: 12, borderRadius: '50%', background: 'var(--accent-wishlist)' }}></div> Wishlisted by Some</div>
-            <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}><div style={{ width: 12, height: 12, borderRadius: '50%', background: 'var(--color-avoid)' }}></div> Everyone Avoids</div>
+          <div className="legend-grid">
+            <div className="legend-item"><div className="legend-circle" style={{ background: 'var(--color-both)' }}></div> Everyone Visited</div>
+            <div className="legend-item"><div className="legend-circle" style={{ background: 'var(--accent-visited)' }}></div> Most Visited</div>
+            <div className="legend-item"><div className="legend-circle" style={{ background: 'var(--color-me-only)' }}></div> Only I Visited</div>
+            <div className="legend-item"><div className="legend-circle" style={{ background: 'var(--color-they-only)' }}></div> Someone Else Visited</div>
+            <div className="legend-item"><div className="legend-circle" style={{ background: 'var(--color-revisit-both)' }}></div> Everyone Revisit</div>
+            <div className="legend-item"><div className="legend-circle" style={{ background: 'var(--color-revisit-mixed)' }}></div> Revisit by Some</div>
+            <div className="legend-item"><div className="legend-circle" style={{ background: 'var(--color-wishlist-both)' }}></div> Everyone Wishlisted</div>
+            <div className="legend-item"><div className="legend-circle" style={{ background: 'var(--accent-wishlist)' }}></div> Wishlisted by Some</div>
+            <div className="legend-item"><div className="legend-circle" style={{ background: 'var(--color-avoid)' }}></div> Everyone Avoids</div>
           </div>
         </div>
       </div>
 
       {/* Compare Map */}
-      <div className="glass-panel" style={{ padding: '1.5rem', height: '500px', position: 'relative', overflow: 'hidden' }}>
-        <CompareMap mergedData={mergedData} setTooltipContent={setTooltipContent} numericToA3={numericToA3} />
+      <div className="glass-panel compare-map-wrapper">
+        <CompareMap mergedData={mergedData} setTooltipContent={setTooltipContent} numericToA3={NUMERIC_TO_A3} />
         {tooltipContent && (
-          <div style={{ position: 'absolute', bottom: '2rem', left: '50%', transform: 'translateX(-50%)', background: 'var(--glass-bg)', color: 'var(--text-primary)', border: '1px solid var(--glass-border)', padding: '0.5rem 1rem', borderRadius: '8px', zIndex: 100,  }}>
+          <div className="compare-tooltip">
             {tooltipContent}
           </div>
         )}
       </div>
 
       {/* Common Lists & Complex Analytics */}
-      <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(300px, 1fr))', gap: '1.5rem', marginBottom: '2rem' }}>
-        <div className="glass-panel" style={{ padding: '1.5rem' }}>
-          <h3 style={{ color: 'var(--color-both)', marginBottom: '1rem' }}>We've All Been To ({commonVisited.length})</h3>
-          <ul style={{ listStyle: 'none', padding: 0, margin: 0, display: 'flex', flexDirection: 'column', gap: '0.5rem' }}>
+      <div className="compare-lists-grid">
+        <div className="glass-panel compare-list-panel">
+          <h3 className="compare-list-title" style={{ color: 'var(--color-both)' }}>We've All Been To ({commonVisited.length})</h3>
+          <ul className="compare-list">
             {commonVisited.map(([code]) => renderCountryItem(code, countryData[code]))}
             {commonVisited.length === 0 && <li style={{ color: 'var(--text-muted)' }}>No common visited places.</li>}
           </ul>
         </div>
+
+        <div className="glass-panel compare-list-panel">
+          <h3 className="compare-list-title" style={{ color: 'var(--color-revisit-both)', display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
+            <RotateCcw size={20} /> We All Want to Revisit ({commonRevisit.length})
+          </h3>
+          <ul className="compare-list">
+            {commonRevisit.map(([code]) => renderCountryItem(code, countryData[code]))}
+            {commonRevisit.length === 0 && <li style={{ color: 'var(--text-muted)' }}>No common revisit places.</li>}
+          </ul>
+        </div>
         
-        <div className="glass-panel" style={{ padding: '1.5rem' }}>
-          <h3 style={{ color: 'var(--color-wishlist-both)', marginBottom: '1rem' }}>We All Want To Go To ({commonWishlist.length})</h3>
-          <ul style={{ listStyle: 'none', padding: 0, margin: 0, display: 'flex', flexDirection: 'column', gap: '0.5rem' }}>
+        <div className="glass-panel compare-list-panel">
+          <h3 className="compare-list-title" style={{ color: 'var(--color-wishlist-both)' }}>We All Want To Go To ({commonWishlist.length})</h3>
+          <ul className="compare-list">
             {commonWishlist.map(([code]) => renderCountryItem(code, countryData[code]))}
             {commonWishlist.length === 0 && <li style={{ color: 'var(--text-muted)' }}>No common wishlist places.</li>}
           </ul>
         </div>
         
-        <div className="glass-panel" style={{ padding: '1.5rem' }}>
-          <h3 style={{ color: '#ef4444', marginBottom: '1rem', display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
+        <div className="glass-panel compare-list-panel">
+          <h3 className="compare-list-title" style={{ color: 'var(--color-avoid)', display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
             <Ban size={20} /> We All Avoid ({commonAvoid.length})
           </h3>
-          <ul style={{ listStyle: 'none', padding: 0, margin: 0, display: 'flex', flexDirection: 'column', gap: '0.5rem' }}>
+          <ul className="compare-list">
             {commonAvoid.map(([code]) => renderCountryItem(code, countryData[code]))}
             {commonAvoid.length === 0 && <li style={{ color: 'var(--text-muted)' }}>No common avoided places.</li>}
           </ul>
         </div>
 
-        <div className="glass-panel" style={{ padding: '1.5rem' }}>
-          <h3 style={{ color: 'var(--accent-primary)', marginBottom: '1rem', display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
+        <div className="glass-panel compare-list-panel">
+          <h3 className="compare-list-title" style={{ color: 'var(--accent-primary)', display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
             Most Wanted (Unvisited)
           </h3>
           <p style={{ fontSize: '0.8rem', color: 'var(--text-muted)', marginBottom: '1rem' }}>Top destinations no one in the group has visited yet, but multiple people want to go to.</p>
-          <ul style={{ listStyle: 'none', padding: 0, margin: 0, display: 'flex', flexDirection: 'column', gap: '0.5rem' }}>
+          <ul className="compare-list">
             {topWantedUnvisited.map(({code, wishlist}) => (
-              <li key={code} style={{ background: 'var(--map-fill-unselected)', padding: '0.5rem 1rem', borderRadius: '4px', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+              <li key={code} className="compare-list-item compare-list-item--flex">
                 <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
                   {countryData[code]?.flag ? (
-                     <img src={countryData[code]?.flag} alt={`${countryData[code]?.name} flag`} style={{ width: '1.5rem', height: '1.2rem', objectFit: 'cover', borderRadius: '2px' }} />
+                    <img src={countryData[code]?.flag} alt={`${countryData[code]?.name} flag`} className="country-flag" />
                   ) : (
-                     <div style={{ width: '1.5rem', height: '1.2rem', background: 'var(--map-fill-hover)', borderRadius: '2px' }} />
+                    <div className="country-flag-placeholder" />
                   )}
                   <span>{countryData[code]?.name || code}</span>
                 </div>
@@ -330,23 +352,23 @@ const Compare: React.FC = () => {
           </ul>
         </div>
 
-        <div className="glass-panel" style={{ padding: '1.5rem' }}>
-          <h3 style={{ color: 'var(--color-me-only)', marginBottom: '1rem', display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
+        <div className="glass-panel compare-list-panel">
+          <h3 className="compare-list-title" style={{ color: 'var(--color-me-only)', display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
             Travel Mentorship
           </h3>
           <p style={{ fontSize: '0.8rem', color: 'var(--text-muted)', marginBottom: '1rem' }}>Destinations someone wants to visit, but someone else has already been to.</p>
-          <ul style={{ listStyle: 'none', padding: 0, margin: 0, display: 'flex', flexDirection: 'column', gap: '0.5rem' }}>
+          <ul className="compare-list">
             {wantedButVisited.map(({code, whoVisited, whoWants}) => (
-              <li key={code} style={{ background: 'var(--map-fill-unselected)', padding: '0.5rem 1rem', borderRadius: '4px', display: 'flex', flexDirection: 'column', gap: '0.25rem' }}>
-                <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
+              <li key={code} className="mentorship-card">
+                <div className="mentorship-card-header">
                   {countryData[code]?.flag ? (
-                     <img src={countryData[code]?.flag} alt={`${countryData[code]?.name} flag`} style={{ width: '1.5rem', height: '1.2rem', objectFit: 'cover', borderRadius: '2px' }} />
+                    <img src={countryData[code]?.flag} alt={`${countryData[code]?.name} flag`} className="country-flag" />
                   ) : (
-                     <div style={{ width: '1.5rem', height: '1.2rem', background: 'var(--map-fill-hover)', borderRadius: '2px' }} />
+                    <div className="country-flag-placeholder" />
                   )}
-                  <span style={{ fontWeight: 600 }}>{countryData[code]?.name || code}</span>
+                  <span className="mentorship-card-title">{countryData[code]?.name || code}</span>
                 </div>
-                <div style={{ fontSize: '0.8rem', color: 'var(--text-secondary)' }}>
+                <div className="mentorship-card-body">
                   Visited by: <span style={{ color: 'var(--accent-visited)' }}>{whoVisited.join(', ')}</span><br/>
                   Wanted by: <span style={{ color: 'var(--accent-wishlist)' }}>{whoWants.join(', ')}</span>
                 </div>

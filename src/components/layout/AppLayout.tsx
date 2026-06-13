@@ -9,6 +9,9 @@ export const AppLayout: React.FC = () => {
       <main className="main-content">
         <Outlet />
       </main>
+      <footer className="app-footer">
+        <span className="app-footer__version">v{__APP_VERSION__}</span>
+      </footer>
     </div>
   );
 };

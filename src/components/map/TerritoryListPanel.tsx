@@ -1,5 +1,5 @@
 import React, { memo } from 'react';
-import { X as XIcon, Check, Heart, Ban } from 'lucide-react';
+import { X as XIcon, Check, Heart, Ban, RotateCcw } from 'lucide-react';
 import type { MapMarker } from '../../data/mapData';
 import type { PlaceStatus } from '../../store/useStore';
 
@@ -9,7 +9,7 @@ interface TerritoryListPanelProps {
   places: Record<string, { status: PlaceStatus }>;
   setCountryStatus: (id: string, status: PlaceStatus) => void;
   onClose: () => void;
-  getFillColor: (status: PlaceStatus, isHighlighted: boolean, isSubRegion: boolean) => string;
+  getFillColor: (status: PlaceStatus, isHighlighted: boolean, isSubRegion: boolean, showVis: boolean, showWish: boolean, showAv: boolean) => string;
 }
 
 export const TerritoryListPanel: React.FC<TerritoryListPanelProps> = memo(({
@@ -47,13 +47,28 @@ export const TerritoryListPanel: React.FC<TerritoryListPanelProps> = memo(({
       }}>
         {territories.map((territory) => {
           const status = places[territory.id]?.status || 'NONE';
+          
+          const cardBorderColor = 
+            status === 'VISITED' ? 'var(--accent-visited)' : 
+            status === 'WISHLIST' ? 'var(--accent-wishlist)' : 
+            status === 'AVOID' ? 'var(--color-avoid)' : 
+            status === 'REVISIT' ? 'var(--accent-revisit)' : 
+            'var(--glass-border)';
+
+          const cardBg = 
+            status === 'VISITED' ? 'rgba(34,197,94,0.05)' : 
+            status === 'WISHLIST' ? 'rgba(187,154,247,0.05)' : 
+            status === 'AVOID' ? 'rgba(239,68,68,0.05)' : 
+            status === 'REVISIT' ? 'rgba(249,115,22,0.05)' : 
+            'rgba(255,255,255,0.02)';
+
           return (
             <div key={territory.id} className="glass-panel" style={{
               display: 'flex', alignItems: 'center', gap: '0.75rem', padding: '1rem',
               borderStyle: 'solid', borderWidth: '1px',
               transition: 'transform 0.2s, border-color 0.2s, background-color 0.2s',
-              borderColor: status === 'VISITED' ? 'var(--accent-visited)' : status === 'WISHLIST' ? 'var(--accent-wishlist)' : status === 'AVOID' ? 'var(--color-avoid)' : 'var(--glass-border)',
-              background: status !== 'NONE' ? (status === 'VISITED' ? 'rgba(34,197,94,0.05)' : status === 'WISHLIST' ? 'rgba(187,154,247,0.05)' : 'rgba(239,68,68,0.05)') : 'rgba(255,255,255,0.02)'
+              borderColor: cardBorderColor,
+              background: cardBg
             }}>
               {territory.flagCode ? (
                 <img 
@@ -64,7 +79,7 @@ export const TerritoryListPanel: React.FC<TerritoryListPanelProps> = memo(({
               ) : (
                 <div style={{ 
                   width: '10px', height: '10px', borderRadius: '50%', flexShrink: 0,
-                  background: getFillColor(status, false, true),
+                  background: getFillColor(status, false, true, true, true, true),
                   border: '1px solid var(--glass-border)'
                 }} />
               )}
@@ -94,6 +109,17 @@ export const TerritoryListPanel: React.FC<TerritoryListPanelProps> = memo(({
                     transition: 'all 0.2s', padding: 0
                   }}
                 ><Heart size={16} strokeWidth={status === 'WISHLIST' ? 3 : 2} /></button>
+                <button 
+                  title="Mark Revisit"
+                  onClick={() => setCountryStatus(territory.id, status === 'REVISIT' ? 'NONE' : 'REVISIT')}
+                  style={{ 
+                    width: '30px', height: '30px', display: 'flex', alignItems: 'center', justifyContent: 'center',
+                    borderRadius: '6px', border: '1px solid var(--glass-border)', cursor: 'pointer',
+                    background: status === 'REVISIT' ? 'var(--accent-revisit)' : 'var(--glass-bg)',
+                    color: status === 'REVISIT' ? '#0b0c14' : 'var(--text-muted)',
+                    transition: 'all 0.2s', padding: 0
+                  }}
+                ><RotateCcw size={16} strokeWidth={status === 'REVISIT' ? 3 : 2} /></button>
                 <button 
                   title="Mark Avoid"
                   onClick={() => setCountryStatus(territory.id, status === 'AVOID' ? 'NONE' : 'AVOID')}

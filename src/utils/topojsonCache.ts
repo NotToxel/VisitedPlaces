@@ -1,6 +1,7 @@
 // Supported: USA, GBR (United Kingdom)
 
 import { OBSOLETE_UK_REGIONS, UK_TERRITORIES, USA_TERRITORIES } from '../data/mapData';
+import type { TopologyData, TopologyGeometry } from '../config/drilldownConfig';
 
 export interface TopoRegion {
   id: string; // The canonical ID (e.g. E06000001 or 01)
@@ -26,7 +27,7 @@ export const fetchSubRegions = async (countryA3: string): Promise<TopoRegion[]> 
   const fetchPromise = fetch(url)
     .then(res => {
       if (!res.ok) throw new Error(`Failed to fetch topology for ${countryA3}`);
-      return res.json();
+      return res.json() as Promise<TopologyData>;
     })
     .then(data => {
       if (!data.objects) throw new Error('Invalid topojson structure');
@@ -35,23 +36,24 @@ export const fetchSubRegions = async (countryA3: string): Promise<TopoRegion[]> 
       
       // Handle USA
       if (countryA3 === 'USA' && data.objects.states) {
-        regions = data.objects.states.geometries.map((g: any) => ({
+        regions = (data.objects.states.geometries as TopologyGeometry[]).map((g) => ({
           id: `USA-${g.id}`,
-          name: g.properties.name
+          name: (g.properties?.name || '').toString()
         }));
       } 
       // Handle UK (utla layer)
       else if (countryA3 === 'GBR' && data.objects.utla) {
-        regions = data.objects.utla.geometries
-          .filter((g: any) => {
-             const id = g.properties.AREACD || g.properties.areacd || g.id;
+        regions = (data.objects.utla.geometries as TopologyGeometry[])
+          .filter((g) => {
+             const id = (g.properties?.AREACD || g.properties?.areacd || g.id || '').toString();
              return !OBSOLETE_UK_REGIONS.has(id);
           })
-          .map((g: any) => {
-            const rawId = g.properties.AREACD || g.properties.areacd || g.id;
+          .map((g) => {
+            const rawId = (g.properties?.AREACD || g.properties?.areacd || g.id || '').toString();
+            const name = (g.properties?.AREANM || g.properties?.areanm || g.properties?.name || rawId).toString();
             return {
               id: `GBR-${rawId}`,
-              name: g.properties.AREANM || g.properties.areanm || g.properties.name
+              name
             };
           });
       }

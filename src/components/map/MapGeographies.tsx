@@ -1,6 +1,7 @@
 import React from 'react';
 import { Geographies, Geography } from 'react-simple-maps';
 import { getFillColor, getRegionId } from '../../utils/mapUtils';
+import type { GeoFeature, GeoProperties } from '../../utils/mapUtils';
 import type { PlaceStatus } from '../../store/useStore';
 
 interface MapGeographiesProps {
@@ -9,13 +10,19 @@ interface MapGeographiesProps {
   highlightedCountry: string | null;
   numericToA3: Record<string, string>;
   places: Record<string, { status: PlaceStatus }>;
-  selectionMode: 'VISITED' | 'WISHLIST' | 'AVOID';
   showVisited: boolean;
   showWishlist: boolean;
   showAvoid: boolean;
+  showRevisit: boolean;
   setTooltipContent: (content: string) => void;
-  handleCountryClick: (geo: any) => void;
-  handleRightClick: (e: React.MouseEvent, geo: any) => void;
+  handleCountryClick: (geo: GeoFeature) => void;
+  handleRightClick: (e: React.MouseEvent, geo: GeoFeature) => void;
+}
+
+interface RsmGeography {
+  id: string | number;
+  properties?: GeoProperties;
+  rsmKey: string;
 }
 
 export const MapGeographies: React.FC<MapGeographiesProps> = ({
@@ -27,6 +34,7 @@ export const MapGeographies: React.FC<MapGeographiesProps> = ({
   showVisited,
   showWishlist,
   showAvoid,
+  showRevisit,
   setTooltipContent,
   handleCountryClick,
   handleRightClick
@@ -34,8 +42,12 @@ export const MapGeographies: React.FC<MapGeographiesProps> = ({
   return (
     <Geographies geography={geoData}>
       {({ geographies }) =>
-        geographies.map((geo) => {
-          const countryId = getRegionId(geo, numericToA3, activeCountry);
+        (geographies as RsmGeography[]).map((geo) => {
+          const feature: GeoFeature = {
+            id: geo.id,
+            properties: geo.properties
+          };
+          const countryId = getRegionId(feature, numericToA3, activeCountry);
           // Standardize ID format for the datastore (e.g. USA-72)
           const placeIdForStore = (activeCountry && countryId && !countryId.toString().startsWith(`${activeCountry}-`)) 
              ? `${activeCountry}-${countryId}` 
@@ -48,10 +60,10 @@ export const MapGeographies: React.FC<MapGeographiesProps> = ({
           const isHighlighted = !!highlightedCountry && (
             highlightedCountry === (geo.properties?.ISO_A3 || geo.properties?.iso_a3 || geo.properties?.cca3) 
             || highlightedCountry === countryId
-            || (geo.id && numericToA3[geo.id] && highlightedCountry === numericToA3[geo.id])
+            || !!(geo.id && numericToA3[geo.id] && highlightedCountry === numericToA3[geo.id])
           );
 
-          const fill = getFillColor(status, isHighlighted, !!activeCountry, showVisited, showWishlist, showAvoid);
+          const fill = getFillColor(status, isHighlighted, !!activeCountry, showVisited, showWishlist, showAvoid, showRevisit);
           
           return (
             <Geography
@@ -59,8 +71,8 @@ export const MapGeographies: React.FC<MapGeographiesProps> = ({
               geography={geo}
               onMouseEnter={() => setTooltipContent(`${countryName}${isSelected ? ` - ${status}` : ''}`)}
               onMouseLeave={() => setTooltipContent('')}
-              onClick={() => handleCountryClick(geo)}
-              onContextMenu={(e) => handleRightClick(e, geo)}
+              onClick={() => handleCountryClick(feature)}
+              onContextMenu={(e) => handleRightClick(e, feature)}
               fill={fill}
               stroke={isHighlighted ? "var(--accent-highlight)" : 'var(--map-stroke)'}
               strokeWidth={isHighlighted ? 1.5 : (activeCountry ? 0.7 : 0.5)}

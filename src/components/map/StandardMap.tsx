@@ -1,4 +1,4 @@
-import React, { memo, useState, useEffect, useRef } from 'react';
+import React, { memo, useState, useEffect, useRef, useCallback } from 'react';
 import { ComposableMap, ZoomableGroup, Marker } from 'react-simple-maps';
 import { useStore } from '../../store/useStore';
 import { MICROSTATES } from '../../data/mapData';
@@ -6,6 +6,7 @@ import { TerritoryListPanel } from './TerritoryListPanel';
 import * as topojson from 'topojson-client';
 import { geoCentroid } from 'd3-geo';
 import { getFillColor, getRegionId } from '../../utils/mapUtils';
+import type { GeoFeature } from '../../utils/mapUtils';
 import { WORLD_GEO_URL } from '../../config/constants';
 import { drilldownRegistry } from '../../config/drilldownConfig';
 import { useMapAnimation } from '../../hooks/useMapAnimation';
@@ -14,10 +15,9 @@ import { DrilldownControls } from './DrilldownControls';
 import { MapGeographies } from './MapGeographies';
 import { getSubRegionUrl } from '../../utils/topojsonCache';
 
-
 interface StandardMapProps {
   setTooltipContent: (content: string) => void;
-  selectionMode: 'VISITED' | 'WISHLIST' | 'AVOID';
+  selectionMode: 'VISITED' | 'WISHLIST' | 'AVOID' | 'REVISIT';
   activeCountry: string | null;
   setActiveCountry: (id: string | null) => void;
   highlightedCountry?: string | null;
@@ -25,15 +25,16 @@ interface StandardMapProps {
   showVisited: boolean;
   showWishlist: boolean;
   showAvoid: boolean;
+  showRevisit: boolean;
 }
 
 const StandardMapBase: React.FC<StandardMapProps> = ({ 
   setTooltipContent, selectionMode, activeCountry, setActiveCountry, highlightedCountry, 
-  numericToA3, showVisited, showWishlist, showAvoid 
+  numericToA3, showVisited, showWishlist, showAvoid, showRevisit
 }) => {
   const { places, setCountryStatus } = useStore();
   const [showTerritories, setShowTerritories] = useState(false);
-  const worldTopoRef = useRef<any>(null);
+  const worldTopoRef = useRef<unknown>(null);
 
   const { 
     mapCenter, setMapCenter, mapZoom, setMapZoom, 
@@ -50,6 +51,31 @@ const StandardMapBase: React.FC<StandardMapProps> = ({
       .then(topo => { worldTopoRef.current = topo; })
       .catch(() => {});
   }, []);
+
+  const tryPanToCountry = useCallback((topo: unknown, cca3: string) => {
+    try {
+      const topoData = topo as { objects?: { countries?: unknown } };
+      if (!topoData || !topoData.objects || !topoData.objects.countries) return;
+      const featureCollection = topojson.feature(
+        topoData as unknown as Parameters<typeof topojson.feature>[0],
+        topoData.objects.countries as unknown as Parameters<typeof topojson.feature>[1]
+      ) as unknown as { features: { id?: string | number; [key: string]: unknown }[] };
+      const features = featureCollection.features;
+      const found = features.find((f) => {
+        const idStr = f.id?.toString() || '';
+        const a3 = numericToA3[idStr] || idStr;
+        return a3 === cca3;
+      });
+      if (found) {
+        const center = geoCentroid(found as unknown as Parameters<typeof geoCentroid>[0]);
+        if (center && isFinite(center[0]) && isFinite(center[1])) {
+          animateTo(center[0], center[1], 4);
+        }
+      }
+    } catch (err) {
+      console.warn('Could not pan to country', err);
+    }
+  }, [numericToA3, animateTo]);
 
   // Pan to searched country when highlightedCountry changes
   useEffect(() => {
@@ -69,33 +95,21 @@ const StandardMapBase: React.FC<StandardMapProps> = ({
       return () => clearTimeout(t);
     }
     tryPanToCountry(worldTopoRef.current, highlightedCountry);
-  }, [highlightedCountry, activeCountry, numericToA3, animateTo]);
-
-  const tryPanToCountry = (topo: any, cca3: string) => {
-    try {
-      const features = (topojson.feature(topo, topo.objects.countries) as any).features;
-      const found = features.find((f: any) => {
-        const a3 = numericToA3[f.id] || f.id;
-        return a3 === cca3;
-      });
-      if (found) {
-        const center = geoCentroid(found);
-        if (center && isFinite(center[0]) && isFinite(center[1])) {
-          animateTo(center[0], center[1], 4);
-        }
-      }
-    } catch {}
-  };
+  }, [highlightedCountry, activeCountry, tryPanToCountry, animateTo]);
 
   useEffect(() => {
-    if (!activeCountry) setShowTerritories(false);
-  }, [activeCountry]);
+    if (!activeCountry && showTerritories) {
+      Promise.resolve().then(() => {
+        setShowTerritories(false);
+      });
+    }
+  }, [activeCountry, showTerritories]);
 
   useEffect(() => {
     if (!highlightedCountry) animateTo(0, 0, 1);
   }, [highlightedCountry, animateTo]);
 
-  const handleCountryClick = (geo: any) => {
+  const handleCountryClick = (geo: GeoFeature) => {
     const countryId = getRegionId(geo, numericToA3, activeCountry);
     if (!countryId) return;
 
@@ -111,7 +125,7 @@ const StandardMapBase: React.FC<StandardMapProps> = ({
     }
   };
 
-  const handleRightClick = (e: React.MouseEvent, geo: any) => {
+  const handleRightClick = (e: React.MouseEvent, geo: GeoFeature) => {
     e.preventDefault();
     const countryId = getRegionId(geo, numericToA3, activeCountry);
     
@@ -126,7 +140,7 @@ const StandardMapBase: React.FC<StandardMapProps> = ({
             setSubRegionZoom(config.defaultView.zoom);
         }
     } else {
-        setTooltipContent(`No sub-regions available for ${geo.properties.name}`);
+        setTooltipContent(`No sub-regions available for ${geo.properties?.name || 'this country'}`);
         setTimeout(() => setTooltipContent(''), 2000);
     }
   };
@@ -187,10 +201,10 @@ const StandardMapBase: React.FC<StandardMapProps> = ({
             highlightedCountry={highlightedCountry || null}
             numericToA3={numericToA3}
             places={places}
-            selectionMode={selectionMode}
             showVisited={showVisited}
             showWishlist={showWishlist}
             showAvoid={showAvoid}
+            showRevisit={showRevisit}
             setTooltipContent={setTooltipContent}
             handleCountryClick={handleCountryClick}
             handleRightClick={handleRightClick}
@@ -207,7 +221,15 @@ const StandardMapBase: React.FC<StandardMapProps> = ({
                 onMouseEnter={() => setTooltipContent(`${marker.name}${status !== 'NONE' ? ` - ${status}` : ''}`)}
                 onMouseLeave={() => setTooltipContent('')}
               >
-                <circle cx={0} cy={0} r={isHighlighted ? 4 : 2.5} fill={getFillColor(status, isHighlighted, false, showVisited, showWishlist, showAvoid)} stroke={isHighlighted ? "var(--accent-highlight)" : "var(--map-stroke)"} strokeWidth={0.5} style={{ cursor: 'pointer' }} />
+                <circle 
+                  cx={0} 
+                  cy={0} 
+                  r={isHighlighted ? 4 : 2.5} 
+                  fill={getFillColor(status, isHighlighted, false, showVisited, showWishlist, showAvoid, showRevisit)} 
+                  stroke={isHighlighted ? "var(--accent-highlight)" : "var(--map-stroke)"} 
+                  strokeWidth={0.5} 
+                  style={{ cursor: 'pointer' }} 
+                />
               </Marker>
             );
           })}
@@ -221,7 +243,9 @@ const StandardMapBase: React.FC<StandardMapProps> = ({
           places={places}
           setCountryStatus={setCountryStatus}
           onClose={() => setShowTerritories(false)}
-          getFillColor={getFillColor}
+          getFillColor={(status, isHighlighted, isSub, showVis, showWish, showAv) => 
+            getFillColor(status, isHighlighted, isSub, showVis, showWish, showAv, showRevisit)
+          }
         />
       )}
     </>

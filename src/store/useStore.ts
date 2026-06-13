@@ -2,7 +2,7 @@ import { create } from 'zustand';
 import { persist } from 'zustand/middleware';
 
 // Enums and Types
-export type PlaceStatus = 'VISITED' | 'WISHLIST' | 'AVOID' | 'NONE';
+export type PlaceStatus = 'VISITED' | 'WISHLIST' | 'AVOID' | 'REVISIT' | 'NONE';
 
 export interface RegionData {
   [regionCode: string]: PlaceStatus;
@@ -65,6 +65,10 @@ export const useStore = create<AppState>()(
                if (currentParentStatus === 'NONE') {
                    updatedPlaces[parentCode] = { status: 'AVOID', regions: {} };
                }
+            } else if (status === 'REVISIT') {
+               if (currentParentStatus !== 'VISITED') {
+                   updatedPlaces[parentCode] = { status: 'REVISIT', regions: {} };
+               }
             }
           }
         }
@@ -84,7 +88,18 @@ export const useStore = create<AppState>()(
           regions[regionCode] = status;
         }
         
-        updatedPlaces[countryCode] = { ...country, regions };
+        let parentStatus = country.status;
+        if (status === 'VISITED') {
+          parentStatus = 'VISITED';
+        } else if (status === 'WISHLIST' && parentStatus !== 'VISITED') {
+          parentStatus = 'WISHLIST';
+        } else if (status === 'AVOID' && parentStatus === 'NONE') {
+          parentStatus = 'AVOID';
+        } else if (status === 'REVISIT' && parentStatus !== 'VISITED') {
+          parentStatus = 'REVISIT';
+        }
+
+        updatedPlaces[countryCode] = { status: parentStatus, regions };
         
         // Cleanup if empty
         if (updatedPlaces[countryCode].status === 'NONE' && Object.keys(regions).length === 0) {

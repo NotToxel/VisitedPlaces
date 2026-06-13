@@ -5,9 +5,13 @@ import { getFillColor } from '../../utils/mapUtils';
 
 interface HexagonMapProps {
   setTooltipContent: (content: string) => void;
-  selectionMode: 'VISITED' | 'WISHLIST' | 'AVOID';
+  selectionMode: 'VISITED' | 'WISHLIST' | 'AVOID' | 'REVISIT';
   highlightedCountry?: string | null;
   showLabels?: boolean;
+  showVisited: boolean;
+  showWishlist: boolean;
+  showAvoid: boolean;
+  showRevisit: boolean;
 }
 
 const RADIUS = 11;
@@ -52,9 +56,14 @@ const HexagonMapBase: React.FC<HexagonMapProps> = ({
   selectionMode,
   highlightedCountry,
   showLabels,
+  showVisited,
+  showWishlist,
+  showAvoid,
+  showRevisit
 }) => {
   const { places, setCountryStatus } = useStore();
   const [hoveredId, setHoveredId] = useState<string | null>(null);
+  const [isDragging, setIsDragging] = useState(false);
 
   // Viewport transform: the SVG group gets  scale(zoom) translate(tx, ty)
   // A group coord (gx, gy) → screen viewbox (zoom*(gx+tx), zoom*(gy+ty))
@@ -105,7 +114,7 @@ const HexagonMapBase: React.FC<HexagonMapProps> = ({
       animateTo(INITIAL_TX, INITIAL_TY, INITIAL_ZOOM);
       return;
     }
-    const dot = (hexGridData as any)[highlightedCountry];
+    const dot = (hexGridData as Record<string, { x: number; y: number; name: string }>)[highlightedCountry];
     if (!dot) return;
     const { cx, cy } = hexCenter(dot);
     const targetZoom = 3.5;
@@ -150,6 +159,7 @@ const HexagonMapBase: React.FC<HexagonMapProps> = ({
   // --- Drag pan ---
   const handleMouseDown = useCallback((e: React.MouseEvent<SVGSVGElement>) => {
     if (e.button !== 0) return;
+    setIsDragging(true);
     dragRef.current = {
       startX: e.clientX,
       startY: e.clientY,
@@ -175,7 +185,10 @@ const HexagonMapBase: React.FC<HexagonMapProps> = ({
     setTy(newTy);
   }, []);
 
-  const handleMouseUp = useCallback(() => { dragRef.current = null; }, []);
+  const handleMouseUp = useCallback(() => { 
+    setIsDragging(false);
+    dragRef.current = null; 
+  }, []);
 
   const handleCountryClick = useCallback((countryId: string) => {
     // Ignore if we were dragging
@@ -195,7 +208,7 @@ const HexagonMapBase: React.FC<HexagonMapProps> = ({
     <svg
       ref={svgRef}
       viewBox={`0 0 ${SVG_W} ${SVG_H}`}
-      style={{ width: '100%', height: '100%', outline: 'none', cursor: dragRef.current ? 'grabbing' : 'grab' }}
+      style={{ width: '100%', height: '100%', outline: 'none', cursor: isDragging ? 'grabbing' : 'grab' }}
       onWheel={handleWheel}
       onMouseDown={handleMouseDown}
       onMouseMove={handleMouseMove}
@@ -215,7 +228,7 @@ const HexagonMapBase: React.FC<HexagonMapProps> = ({
               <path
                 d={HEX_PATH}
                 transform={`translate(${cx}, ${cy}) ${isHighlighted ? 'scale(1.15)' : isHovered ? 'scale(1.05)' : 'scale(1)'}`}
-                fill={getFillColor(status, isHovered || isHighlighted)}
+                fill={getFillColor(status, isHovered || isHighlighted, false, showVisited, showWishlist, showAvoid, showRevisit)}
                 stroke="var(--map-stroke)"
                 strokeWidth={0.8}
                 style={{ cursor: 'pointer', outline: 'none', transition: 'fill 0.2s ease, transform 0.2s ease' }}
