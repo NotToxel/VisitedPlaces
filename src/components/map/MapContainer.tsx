@@ -1,4 +1,3 @@
-
 import React, { useState, useMemo, useRef, useEffect } from 'react';
 import { COUNTRIES, NUMERIC_TO_A3 } from '../../data/countries';
 import type { Country } from '../../data/countries';
@@ -114,56 +113,56 @@ export const MapContainer: React.FC = () => {
   const currentConfig = activeCountry ? drilldownRegistry[activeCountry] : null;
 
   return (
-    <div className="dashboard-layout">
+    <div className="flex flex-col md:flex-row h-full w-full relative overflow-hidden bg-base-100 select-none">
       {/* Sidebar Controls */}
-      <aside className={`dashboard-sidebar glass-panel ${isSidebarCollapsed ? 'dashboard-sidebar--collapsed' : ''}`}>
+      <aside className={`glass-panel border-r border-base-300 flex flex-col transition-all duration-300 shrink-0 z-30 
+        ${isSidebarCollapsed 
+          ? 'w-0 h-0 overflow-hidden opacity-0 border-r-0' 
+          : 'w-full md:w-80 h-[45vh] md:h-full opacity-100'
+        }`}>
         {/* Sidebar Header */}
-        <div className="dashboard-sidebar-header">
-          <span className="dashboard-sidebar-title">
+        <div className="flex justify-between items-center p-4 border-b border-base-300/50 shrink-0">
+          <span className="font-bold text-sm text-base-content tracking-wide">
             {activeCountry ? 'Country Explorer' : 'World Travel Tracker'}
           </span>
           <button 
-            className="glass-button" 
-            style={{ border: 'none', background: 'transparent', padding: '0.25rem' }} 
+            className="btn btn-ghost btn-xs btn-circle text-base-content/60 hover:text-base-content" 
             onClick={() => setIsSidebarCollapsed(true)}
             title="Collapse Sidebar"
           >
-            <ChevronLeft size={18} />
+            <ChevronLeft size={16} />
           </button>
         </div>
 
         {/* Sidebar Content */}
-        <div className="dashboard-sidebar-scroll">
+        <div className="flex-1 overflow-y-auto p-4 flex flex-col gap-5">
           {activeCountry ? (
             /* Sub-region Explorer Panel */
-            <div className="sidebar-territory-panel">
+            <div className="flex flex-col gap-4">
               {/* Back Button */}
-              <div style={{ display: 'flex', gap: '0.5rem', marginBottom: '1.25rem' }}>
-                <button 
-                  onClick={() => setActiveCountry(null)}
-                  className="glass-button glass-button--primary"
-                  style={{ flex: 1 }}
-                >
-                  <ArrowLeft size={16} /> Back to World
-                </button>
-              </div>
+              <button 
+                onClick={() => setActiveCountry(null)}
+                className="btn btn-primary btn-sm w-full gap-1.5"
+              >
+                <ArrowLeft size={14} /> Back to World
+              </button>
 
               {/* Active Country Metadata */}
-              <div style={{ display: 'flex', alignItems: 'center', gap: '0.75rem', marginBottom: '1rem' }}>
+              <div className="flex items-center gap-2.5 mt-1">
                 {activeCountryData?.flag ? (
-                  <img src={activeCountryData.flag} alt="" className="country-flag" style={{ width: '2rem', height: '1.5rem' }} />
+                  <img src={activeCountryData.flag} alt="" className="w-6 h-4.5 object-cover rounded-sm border border-base-300/40 shrink-0" />
                 ) : (
-                  <div className="country-flag-placeholder" style={{ width: '2rem', height: '1.5rem' }} />
+                  <div className="w-6 h-4.5 bg-base-300 rounded-sm shrink-0" />
                 )}
-                <h3 style={{ margin: 0, fontSize: '1.2rem', fontWeight: 800 }}>{activeCountryName}</h3>
+                <h3 className="text-md font-extrabold text-base-content truncate">{activeCountryName}</h3>
               </div>
 
               {/* Selection Mode Indicator */}
-              <div style={{ display: 'flex', flexDirection: 'column', gap: '0.4rem', marginBottom: '1.25rem' }}>
-                <span style={{ fontSize: '0.7rem', fontWeight: 700, color: 'var(--text-secondary)', textTransform: 'uppercase', letterSpacing: '0.05em' }}>
+              <div className="flex flex-col gap-1.5">
+                <span className="text-[10px] font-bold tracking-wider text-base-content/50 uppercase">
                   Select Mode
                 </span>
-                <div style={{ display: 'grid', gridTemplateColumns: 'repeat(2, 1fr)', gap: '0.35rem' }}>
+                <div className="grid grid-cols-2 gap-1.5">
                   {(['VISITED', 'WISHLIST', 'REVISIT', 'AVOID'] as const).map((mode) => {
                     const label = mode === 'VISITED' ? 'Visited' : mode === 'WISHLIST' ? 'Wishlist' : mode === 'REVISIT' ? 'Revisit' : 'Avoid';
                     const activeColor = 
@@ -175,13 +174,13 @@ export const MapContainer: React.FC = () => {
                     return (
                       <button
                         key={mode}
-                        className={`glass-button ${isActive ? 'glass-button--primary' : ''}`}
+                        className={`btn btn-outline btn-xs font-medium justify-center transition-all ${
+                          isActive ? 'btn-active text-primary bg-primary/10' : 'text-base-content/70 border-base-300'
+                        }`}
                         onClick={() => setActiveMode(mode)}
                         style={{ 
-                          fontSize: '0.75rem', 
-                          padding: '0.4rem 0.5rem',
-                          borderColor: isActive ? activeColor : 'var(--glass-border)',
-                          color: isActive ? activeColor : 'var(--text-secondary)'
+                          borderColor: isActive ? activeColor : undefined,
+                          color: isActive ? activeColor : undefined
                         }}
                       >
                         {label}
@@ -193,66 +192,69 @@ export const MapContainer: React.FC = () => {
 
               {/* List of sub-region territories */}
               {currentConfig?.territories && currentConfig.territories.length > 0 && (
-                <div style={{ display: 'flex', flexDirection: 'column', gap: '0.5rem', flex: 1, overflow: 'hidden' }}>
-                  <span style={{ fontSize: '0.7rem', fontWeight: 700, color: 'var(--text-secondary)', textTransform: 'uppercase', letterSpacing: '0.05em' }}>
+                <div className="flex flex-col gap-1.5 flex-1 overflow-hidden mt-1">
+                  <span className="text-[10px] font-bold tracking-wider text-base-content/50 uppercase">
                     {currentConfig.territoryLabel || 'Territories'}
                   </span>
-                  <div className="sidebar-territory-scroll">
+                  <div className="flex flex-col gap-1.5 overflow-y-auto max-h-[30vh] border border-base-300 rounded-xl p-2 bg-base-300/10">
                     {currentConfig.territories.map((territory) => {
                       const status = places[territory.id]?.status || 'NONE';
                       
                       const activeCardClass = 
-                        status === 'VISITED' ? 'sidebar-territory-card--visited' : 
-                        status === 'WISHLIST' ? 'sidebar-territory-card--wishlist' : 
-                        status === 'REVISIT' ? 'sidebar-territory-card--revisit' : 
-                        status === 'AVOID' ? 'sidebar-territory-card--avoid' : '';
+                        status === 'VISITED' ? 'bg-accent-visited/10 border-accent-visited/30 text-accent-visited' : 
+                        status === 'WISHLIST' ? 'bg-accent-wishlist/10 border-accent-wishlist/30 text-accent-wishlist' : 
+                        status === 'REVISIT' ? 'bg-accent-revisit/10 border-accent-revisit/30 text-accent-revisit' : 
+                        status === 'AVOID' ? 'bg-accent-avoid/10 border-accent-avoid/30 text-accent-avoid' : 
+                        'bg-base-200/40 border-base-300/40 text-base-content/85';
 
                       return (
-                        <div key={territory.id} className={`sidebar-territory-card ${activeCardClass}`}>
-                          {territory.flagCode ? (
-                            <img 
-                              src={`https://flagcdn.com/24x18/${territory.flagCode}.png`} 
-                              alt=""
-                              className="sidebar-territory-card-flag"
-                            />
-                          ) : (
-                            <div 
-                              className="sidebar-territory-card-circle" 
-                              style={{ background: getFillColor(status, false, true, true, true, true, showRevisit) }}
-                            />
-                          )}
-                          <span className="sidebar-territory-card-name">
-                            {territory.name}
-                          </span>
+                        <div key={territory.id} className={`flex items-center justify-between p-1.5 rounded-lg border text-xs gap-2 transition-all ${activeCardClass}`}>
+                          <div className="flex items-center gap-2 min-width-0">
+                            {territory.flagCode ? (
+                              <img 
+                                src={`https://flagcdn.com/24x18/${territory.flagCode}.png`} 
+                                alt=""
+                                className="w-5 h-3.5 object-cover rounded-sm border border-base-300/20 shrink-0"
+                              />
+                            ) : (
+                              <div 
+                                className="w-4 h-4 rounded-full border border-base-300/20 shrink-0" 
+                                style={{ background: getFillColor(status, false, true, true, true, true, showRevisit) }}
+                              />
+                            )}
+                            <span className="truncate font-medium">
+                              {territory.name}
+                            </span>
+                          </div>
                           
-                          <div className="country-actions">
+                          <div className="flex gap-0.5 shrink-0">
                             <button
                               onClick={() => setCountryStatus(territory.id, status === 'VISITED' ? 'NONE' : 'VISITED')}
-                              className={`action-btn ${status === 'VISITED' ? 'action-btn--visited' : ''}`}
+                              className={`btn btn-square btn-xs ${status === 'VISITED' ? 'btn-success text-white' : 'btn-ghost text-base-content/40 hover:text-base-content'}`}
                               title="Visited"
                             >
-                              <Check size={12} />
+                              <Check size={11} />
                             </button>
                             <button
                               onClick={() => setCountryStatus(territory.id, status === 'WISHLIST' ? 'NONE' : 'WISHLIST')}
-                              className={`action-btn ${status === 'WISHLIST' ? 'action-btn--wishlist' : ''}`}
+                              className={`btn btn-square btn-xs ${status === 'WISHLIST' ? 'btn-secondary text-white' : 'btn-ghost text-base-content/40 hover:text-base-content'}`}
                               title="Wishlist"
                             >
-                              <Heart size={12} />
+                              <Heart size={11} />
                             </button>
                             <button
                               onClick={() => setCountryStatus(territory.id, status === 'REVISIT' ? 'NONE' : 'REVISIT')}
-                              className={`action-btn ${status === 'REVISIT' ? 'action-btn--revisit' : ''}`}
+                              className={`btn btn-square btn-xs ${status === 'REVISIT' ? 'btn-warning text-white' : 'btn-ghost text-base-content/40 hover:text-base-content'}`}
                               title="Revisit"
                             >
-                              <RotateCcw size={12} />
+                              <RotateCcw size={11} />
                             </button>
                             <button
                               onClick={() => setCountryStatus(territory.id, status === 'AVOID' ? 'NONE' : 'AVOID')}
-                              className={`action-btn ${status === 'AVOID' ? 'action-btn--avoid' : ''}`}
+                              className={`btn btn-square btn-xs ${status === 'AVOID' ? 'btn-error text-white' : 'btn-ghost text-base-content/40 hover:text-base-content'}`}
                               title="Avoid"
                             >
-                              <Ban size={12} />
+                              <Ban size={11} />
                             </button>
                           </div>
                         </div>
@@ -268,16 +270,16 @@ export const MapContainer: React.FC = () => {
               {/* Search Control */}
               <div 
                 ref={searchContainerRef} 
-                className="autocomplete-search-container"
+                className="relative flex flex-col gap-1.5"
               >
-                <span className="autocomplete-search-label">
+                <span className="text-[10px] font-bold tracking-wider text-base-content/50 uppercase">
                   Search Countries
                 </span>
-                <div className="autocomplete-input-wrapper">
-                  <Search size={16} className="autocomplete-search-icon" />
+                <div className="relative w-full">
+                  <Search size={14} className="absolute left-2.5 top-1/2 -translate-y-1/2 text-base-content/40" />
                   <input 
                     type="text"
-                    className="glass-input autocomplete-input" 
+                    className="input input-bordered input-sm pl-8 pr-8 w-full text-xs" 
                     placeholder="Find Country..."
                     value={searchVal} 
                     onChange={(e) => {
@@ -285,7 +287,6 @@ export const MapContainer: React.FC = () => {
                       setSearchVal(val);
                       setIsDropdownOpen(true);
                       setKbIndex(-1);
-                      // Proactively find exact match to highlight immediately on typing
                       const found = COUNTRIES.find(c => c.name.toLowerCase() === val.toLowerCase());
                       setHighlightedCountryA3(found ? found.id : null);
                     }}
@@ -296,16 +297,16 @@ export const MapContainer: React.FC = () => {
                     <button 
                       type="button" 
                       onClick={clearSearch} 
-                      className="autocomplete-clear-btn"
+                      className="absolute right-2.5 top-1/2 -translate-y-1/2 text-base-content/40 hover:text-base-content p-0.5"
                       title="Clear Search"
                     >
-                      <RotateCcw size={14} />
+                      <RotateCcw size={12} />
                     </button>
                   )}
                 </div>
                 
                 {isDropdownOpen && filteredSuggestions.length > 0 && (
-                  <ul className="autocomplete-dropdown glass-panel">
+                  <ul className="absolute left-0 right-0 top-full mt-1 bg-base-200 border border-base-300 rounded-xl shadow-2xl max-h-56 overflow-y-auto z-[60] list-none p-1 flex flex-col gap-0.5">
                     {filteredSuggestions.map((country, idx) => {
                       const isHighlighted = idx === kbIndex;
                       const isSelected = country.id === highlightedCountryA3;
@@ -313,17 +314,19 @@ export const MapContainer: React.FC = () => {
                       return (
                         <li 
                           key={country.id}
-                          className={`autocomplete-dropdown-item ${isHighlighted ? 'autocomplete-dropdown-item--highlighted' : ''} ${isSelected ? 'autocomplete-dropdown-item--selected' : ''}`}
+                          className={`flex items-center gap-2.5 px-3 py-1.5 rounded-lg text-xs cursor-pointer transition-colors text-base-content
+                            ${isHighlighted ? 'bg-base-300' : ''} 
+                            ${isSelected ? 'bg-primary/20 text-primary font-semibold' : 'hover:bg-primary/10'}`}
                           onClick={() => selectCountry(country)}
                           onMouseEnter={() => setKbIndex(idx)}
                         >
                           {country.flag ? (
-                            <img src={country.flag} alt="" className="autocomplete-item-flag" />
+                            <img src={country.flag} alt="" className="w-5 h-3.5 object-cover rounded-sm border border-base-300/40 shrink-0" />
                           ) : (
-                            <div className="country-flag-placeholder autocomplete-item-flag" />
+                            <div className="w-5 h-3.5 bg-base-300 rounded-sm border border-base-300/40 shrink-0" />
                           )}
-                          <span className="autocomplete-item-name">{country.name}</span>
-                          <span className="autocomplete-item-code">{country.id}</span>
+                          <span className="truncate flex-1">{country.name}</span>
+                          <span className="text-[10px] opacity-40 font-mono">{country.id}</span>
                         </li>
                       );
                     })}
@@ -332,11 +335,11 @@ export const MapContainer: React.FC = () => {
               </div>
 
               {/* Selector mode */}
-              <div style={{ display: 'flex', flexDirection: 'column', gap: '0.4rem' }}>
-                <span style={{ fontSize: '0.7rem', fontWeight: 700, color: 'var(--text-secondary)', textTransform: 'uppercase', letterSpacing: '0.05em' }}>
+              <div className="flex flex-col gap-1.5">
+                <span className="text-[10px] font-bold tracking-wider text-base-content/50 uppercase">
                   Marking Tool
                 </span>
-                <div style={{ display: 'flex', flexDirection: 'column', gap: '0.35rem' }}>
+                <div className="flex flex-col gap-1">
                   {(['VISITED', 'WISHLIST', 'REVISIT', 'AVOID'] as const).map((mode) => {
                     const label = mode === 'VISITED' ? 'Mark Visited' : mode === 'WISHLIST' ? 'Mark Wishlist' : mode === 'REVISIT' ? 'Mark Revisit' : 'Mark Avoid';
                     const activeColor = 
@@ -348,16 +351,17 @@ export const MapContainer: React.FC = () => {
                     return (
                       <button 
                         key={mode}
-                        className={`glass-button ${isActive ? 'glass-button--primary' : ''}`}
+                        className={`btn btn-outline btn-sm font-medium justify-start gap-2.5 w-full transition-all ${
+                          isActive ? 'btn-active text-primary bg-primary/10' : 'text-base-content/80 border-base-300 hover:text-primary'
+                        }`}
                         onClick={() => setActiveMode(mode)}
                         style={{
-                          justifyContent: 'flex-start',
-                          borderColor: isActive ? activeColor : 'var(--glass-border)',
-                          color: isActive ? activeColor : 'var(--text-primary)'
+                          borderColor: isActive ? activeColor : undefined,
+                          color: isActive ? activeColor : undefined
                         }}
                       >
-                        <div style={{ width: '8px', height: '8px', borderRadius: '50%', background: activeColor }} />
-                        {label}
+                        <div className="w-2 h-2 rounded-full shrink-0" style={{ background: activeColor }} />
+                        <span>{label}</span>
                       </button>
                     );
                   })}
@@ -365,11 +369,11 @@ export const MapContainer: React.FC = () => {
               </div>
 
               {/* Map Visibility filters */}
-              <div style={{ display: 'flex', flexDirection: 'column', gap: '0.4rem' }}>
-                <span style={{ fontSize: '0.7rem', fontWeight: 700, color: 'var(--text-secondary)', textTransform: 'uppercase', letterSpacing: '0.05em' }}>
+              <div className="flex flex-col gap-1.5">
+                <span className="text-[10px] font-bold tracking-wider text-base-content/50 uppercase">
                   Map Visibility Filters
                 </span>
-                <div style={{ display: 'flex', flexDirection: 'column', gap: '0.35rem' }}>
+                <div className="flex flex-col gap-1">
                   {(
                     [
                       ['Visited', showVisited, setShowVisited, 'var(--accent-visited)'],
@@ -380,52 +384,51 @@ export const MapContainer: React.FC = () => {
                   ).map(([label, shown, setter, color]) => (
                     <button
                       key={label}
-                      className="glass-button"
+                      className={`btn btn-outline btn-sm font-medium justify-start gap-2.5 w-full transition-all ${
+                        shown ? 'btn-active' : 'opacity-40 text-base-content/60 border-base-300 hover:text-base-content'
+                      }`}
                       onClick={() => setter(!shown)}
                       style={{ 
-                        justifyContent: 'flex-start', 
-                        opacity: shown ? 1 : 0.45, 
-                        borderColor: shown ? color : 'var(--glass-border)', 
-                        color: shown ? color : 'var(--text-secondary)'
+                        borderColor: shown ? color : undefined, 
+                        color: shown ? color : undefined,
+                        background: shown ? `${color}15` : undefined
                       }}
                     >
                       {shown ? <Eye size={14} /> : <EyeOff size={14} />}
-                      {label}
+                      <span>{label}</span>
                     </button>
                   ))}
                 </div>
               </div>
 
               {/* Map Type Config */}
-              <div style={{ display: 'flex', flexDirection: 'column', gap: '0.4rem' }}>
-                <span style={{ fontSize: '0.7rem', fontWeight: 700, color: 'var(--text-secondary)', textTransform: 'uppercase', letterSpacing: '0.05em' }}>
+              <div className="flex flex-col gap-1.5">
+                <span className="text-[10px] font-bold tracking-wider text-base-content/50 uppercase">
                   Map Presentation Style
                 </span>
-                <div style={{ display: 'flex', gap: '0.35rem' }}>
+                <div className="grid grid-cols-2 gap-1.5">
                   <button 
-                    className={`glass-button ${mapStyle === 'STANDARD' ? 'glass-button--primary' : ''}`}
+                    className={`btn btn-sm ${mapStyle === 'STANDARD' ? 'btn-primary' : 'btn-outline border-base-300 text-base-content/80 hover:text-primary'}`}
                     onClick={() => setMapStyle('STANDARD')}
-                    style={{ flex: 1 }}
                   >
-                    Standard Map
+                    Standard
                   </button>
                   <button 
-                    className={`glass-button ${mapStyle === 'HEXAGON' ? 'glass-button--primary' : ''}`}
+                    className={`btn btn-sm ${mapStyle === 'HEXAGON' ? 'btn-primary' : 'btn-outline border-base-300 text-base-content/80 hover:text-primary'}`}
                     onClick={() => setMapStyle('HEXAGON')}
-                    style={{ flex: 1 }}
                   >
-                    Hexagon Map
+                    Hexagon
                   </button>
                 </div>
                 {mapStyle === 'HEXAGON' && (
-                  <label className="checkbox-label" style={{ marginTop: '0.25rem', padding: '0.25rem 0.5rem' }}>
+                  <label className="flex items-center gap-2 cursor-pointer mt-1 text-xs text-base-content/70 select-none p-1 rounded hover:bg-base-300/10">
                     <input 
                       type="checkbox" 
-                      className="checkbox-input"
+                      className="checkbox checkbox-primary checkbox-xs"
                       checked={showHexLabels} 
                       onChange={e => setShowHexLabels(e.target.checked)} 
                     />
-                    Display country labels in hexagons
+                    <span>Display country labels</span>
                   </label>
                 )}
               </div>
@@ -435,19 +438,20 @@ export const MapContainer: React.FC = () => {
       </aside>
 
       {/* Map Viewport Area */}
-      <main className="dashboard-viewport">
+      <main className="flex-1 h-full w-full relative overflow-hidden flex flex-col">
         {/* Toggle Sidebar Trigger if Collapsed */}
         {isSidebarCollapsed && (
           <button 
-            className="glass-button sidebar-toggle-btn"
+            className="absolute top-4 left-4 btn btn-neutral btn-sm shadow-lg gap-1.5 z-40"
             onClick={() => setIsSidebarCollapsed(false)}
             title="Expand Controls"
           >
-            <Menu size={16} /> <span className="hide-mobile-text">Controls</span>
+            <Menu size={14} /> 
+            <span className="hidden sm:inline text-xs font-semibold">Controls</span>
           </button>
         )}
 
-        <div className="glass-panel" style={{ flex: 1, border: 'none', borderRadius: 0, position: 'relative', overflow: 'hidden' }}>
+        <div className="flex-1 w-full h-full relative overflow-hidden">
           {mapStyle === 'STANDARD' ? (
             <StandardMap 
               selectionMode={activeMode} 
@@ -476,7 +480,7 @@ export const MapContainer: React.FC = () => {
           
           {/* Elegant Tooltip overlay */}
           {tooltipContent && (
-            <div className="compare-tooltip">
+            <div className="absolute bottom-6 left-1/2 -translate-x-1/2 px-3 py-1.5 bg-base-300/95 backdrop-blur-md border border-base-300 rounded-lg shadow-xl text-xs font-bold text-base-content select-none pointer-events-none z-40 transition-opacity">
               {tooltipContent}
             </div>
           )}

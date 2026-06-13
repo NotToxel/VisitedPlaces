@@ -361,139 +361,139 @@ const Compare: React.FC = () => {
       ) : (
         <div className="country-flag-placeholder" style={{ width: '1.25rem', height: '0.95rem', borderRadius: '2px', flexShrink: 0 }} />
       )}
-      <span style={{ textOverflow: 'ellipsis', overflow: 'hidden', whiteSpace: 'nowrap' }}>{data?.name || code}</span>
+      <span className="truncate flex-1 font-semibold">{data?.name || code}</span>
     </li>
   );
 
   const hasImportedFriend = friends.length > 0;
 
   return (
-    <div className="dashboard-layout">
+    <div className="flex flex-col md:flex-row h-full w-full relative overflow-hidden bg-base-100 select-none">
       {/* Sidebar Controls */}
-      <aside className={`dashboard-sidebar glass-panel ${isSidebarCollapsed ? 'dashboard-sidebar--collapsed' : ''}`}>
+      <aside className={`glass-panel border-r border-base-300 flex flex-col transition-all duration-300 shrink-0 z-30 
+        ${isSidebarCollapsed 
+          ? 'w-0 h-0 overflow-hidden opacity-0 border-r-0' 
+          : 'w-full md:w-80 h-[45vh] md:h-full opacity-100'
+        }`}>
         {/* Header */}
-        <div className="dashboard-sidebar-header">
-          <span className="dashboard-sidebar-title">Comparison Panel</span>
+        <div className="flex justify-between items-center p-4 border-b border-base-300/50 shrink-0">
+          <span className="font-bold text-sm text-base-content tracking-wide">Comparison Panel</span>
           <button 
-            className="glass-button" 
-            style={{ border: 'none', background: 'transparent', padding: '0.25rem' }} 
+            className="btn btn-ghost btn-xs btn-circle text-base-content/60 hover:text-base-content" 
             onClick={() => setIsSidebarCollapsed(true)}
             title="Collapse Sidebar"
           >
-            <ChevronLeft size={18} />
+            <ChevronLeft size={16} />
           </button>
         </div>
 
         {/* Scrollable controls */}
-        <div className="dashboard-sidebar-scroll">
+        <div className="flex-1 overflow-y-auto p-4 flex flex-col gap-5">
           {/* Group Management Selector */}
-          <div style={{ display: 'flex', flexDirection: 'column', gap: '0.5rem', background: 'rgba(0,0,0,0.1)', padding: '0.75rem', borderRadius: '12px', border: '1px solid var(--glass-border)' }}>
-            <span style={{ fontSize: '0.75rem', fontWeight: 800, color: 'var(--text-secondary)', textTransform: 'uppercase', letterSpacing: '0.05em' }}>
+          <div className="card card-compact bg-base-200/40 border border-base-300/40 p-3.5 rounded-xl flex flex-col gap-2 shrink-0">
+            <span className="text-[10px] font-bold tracking-wider text-base-content/50 uppercase">
               Comparison Group
             </span>
-            <div style={{ display: 'flex', gap: '0.35rem' }}>
+            <div className="flex gap-1.5 w-full">
               <select
                 value={activeGroupId}
                 onChange={(e) => setActiveGroupId(e.target.value)}
-                className="glass-input"
-                style={{ flex: 1, padding: '0.4rem 0.6rem', fontSize: '0.8rem', background: 'rgba(0,0,0,0.25)', cursor: 'pointer' }}
+                className="select select-bordered select-xs flex-1 text-xs font-semibold cursor-pointer"
               >
                 {groups.map(g => (
-                  <option key={g.id} value={g.id} style={{ background: 'var(--bg-dark)' }}>
+                  <option key={g.id} value={g.id}>
                     {g.name} ({g.friends.length + 1} users)
                   </option>
                 ))}
               </select>
               <button 
                 onClick={handleDeleteGroup}
-                className="glass-button"
+                className="btn btn-square btn-outline btn-error btn-xs"
                 title="Delete Group"
                 disabled={groups.length <= 1}
-                style={{ padding: '0.4rem', opacity: groups.length <= 1 ? 0.35 : 1, cursor: groups.length <= 1 ? 'not-allowed' : 'pointer' }}
               >
-                <Trash2 size={14} />
+                <Trash2 size={13} />
               </button>
             </div>
             <button 
               onClick={handleCreateGroup} 
-              className="glass-button glass-button--primary"
-              style={{ fontSize: '0.75rem', padding: '0.4rem 0.6rem', width: '100%' }}
+              className="btn btn-primary btn-xs w-full gap-1 mt-0.5"
             >
-              <Plus size={14} /> Create New Group
+              <Plus size={12} /> Create New Group
             </button>
           </div>
 
-          {/* Share Code Accordion */}
-          <div style={{ display: 'flex', flexDirection: 'column', marginTop: '0.5rem' }}>
+          {/* Share Code Section */}
+          <div className="flex flex-col gap-1.5">
             <h4 
               onClick={() => toggleAccordion('share')}
-              style={{ fontSize: '0.75rem', fontWeight: 800, color: 'var(--text-secondary)', textTransform: 'uppercase', letterSpacing: '0.05em', cursor: 'pointer', display: 'flex', alignItems: 'center', gap: '0.35rem', marginBottom: '0.5rem' }}
+              className="flex items-center gap-1.5 font-bold text-xs text-base-content uppercase tracking-wider select-none cursor-pointer hover:text-primary transition-colors"
             >
               {openAccordions.share ? <ChevronDown size={14} /> : <ChevronRight size={14} />}
               Your Share Code
             </h4>
             {openAccordions.share && (
-              <div style={{ display: 'flex', gap: '0.35rem', background: 'rgba(0,0,0,0.1)', padding: '0.5rem', borderRadius: '10px', border: '1px solid var(--glass-border)', alignItems: 'center' }}>
+              <div className="join w-full bg-base-200/20 p-2 rounded-xl border border-base-300/40 mt-0.5">
                 <input 
                   readOnly 
                   value={myShareCode} 
-                  className="glass-input share-code-input"
-                  style={{ flex: 1, padding: '0.35rem 0.5rem', fontSize: '0.75rem', background: 'transparent', border: 'none' }}
+                  className="input input-bordered input-xs join-item flex-1 font-mono text-[9px] select-all"
                 />
                 <button 
-                  className="glass-button glass-button--primary" 
+                  className="btn btn-primary btn-xs join-item px-2.5" 
                   onClick={handleCopyCode}
-                  style={{ padding: '0.35rem 0.5rem' }}
                   title="Copy share code"
                 >
-                  {copied ? <Check size={14} /> : <Copy size={14} />}
+                  {copied ? <Check size={12} /> : <Copy size={12} />}
                 </button>
               </div>
             )}
           </div>
 
-          {/* Group Members Accordion */}
-          <div style={{ display: 'flex', flexDirection: 'column' }}>
+          {/* Group Members Section */}
+          <div className="flex flex-col gap-1.5">
             <h4 
               onClick={() => toggleAccordion('group')}
-              style={{ fontSize: '0.75rem', fontWeight: 800, color: 'var(--text-secondary)', textTransform: 'uppercase', letterSpacing: '0.05em', cursor: 'pointer', display: 'flex', alignItems: 'center', gap: '0.35rem', marginBottom: '0.5rem' }}
+              className="flex items-center gap-1.5 font-bold text-xs text-base-content uppercase tracking-wider select-none cursor-pointer hover:text-primary transition-colors"
             >
               {openAccordions.group ? <ChevronDown size={14} /> : <ChevronRight size={14} />}
               Group Members ({friends.length + 1})
             </h4>
             {openAccordions.group && (
-              <div style={{ display: 'flex', flexDirection: 'column', gap: '0.5rem' }}>
-                <div className="friend-input-row">
+              <div className="flex flex-col gap-2.5 mt-0.5">
+                <div className="join w-full">
                   <input 
                     type="text" 
-                    className="glass-input" 
+                    className="input input-bordered input-xs join-item flex-1 text-xs" 
                     placeholder="Friend's share code..."
                     value={friendInput}
                     onChange={e => setFriendInput(e.target.value)}
                     onKeyDown={e => e.key === 'Enter' && handleAddFriend()}
-                    style={{ padding: '0.4rem 0.75rem', fontSize: '0.75rem' }}
                   />
-                  <button className="glass-button" onClick={handleAddFriend} style={{ padding: '0.4rem' }}>
-                    <Plus size={16} />
+                  <button className="btn btn-secondary btn-xs join-item px-2.5" onClick={handleAddFriend}>
+                    <Plus size={12} />
                   </button>
                 </div>
 
-                <div className="friends-list" style={{ maxHeight: '180px', overflowY: 'auto' }}>
-                  <div className="friend-card friend-card--me" style={{ padding: '0.5rem 0.75rem', borderRadius: '8px', fontSize: '0.75rem', fontWeight: 600 }}>
+                <div className="flex flex-col gap-1.5 overflow-y-auto max-h-36 border border-base-300 rounded-xl p-2 bg-base-300/10">
+                  <div className="p-1.5 px-2.5 rounded-lg border border-primary/20 bg-primary/5 text-primary text-xs font-semibold select-none">
                     Me (Base Profile)
                   </div>
                   {friends.map(f => (
-                    <div key={f.id} className="friend-card" style={{ padding: '0.4rem 0.75rem', borderRadius: '8px', fontSize: '0.75rem', display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
+                    <div key={f.id} className="p-1.5 px-2 rounded-lg border border-base-300/40 bg-base-200/40 text-base-content text-xs flex items-center justify-between gap-2 transition-all">
                       <input
                         type="text"
                         value={f.name}
                         onChange={(e) => renameFriend(f.id, e.target.value)}
-                        className="glass-input"
-                        style={{ padding: '0.15rem 0.35rem', fontSize: '0.75rem', background: 'rgba(0,0,0,0.1)', border: '1px solid transparent', flex: 1, borderRadius: '4px' }}
+                        className="input input-bordered input-xs flex-1 text-xs font-semibold px-2 py-0.5 bg-base-300/30"
                         title="Click to rename"
                       />
-                      <button onClick={() => removeFriend(f.id)} className="friend-remove-btn" style={{ padding: 0, border: 'none', background: 'transparent', cursor: 'pointer' }}>
-                        <Trash2 size={12} />
+                      <button 
+                        onClick={() => removeFriend(f.id)} 
+                        className="btn btn-ghost btn-xs btn-circle text-error/60 hover:text-error hover:bg-error/10"
+                        title="Remove Friend"
+                      >
+                        <Trash2 size={11} />
                       </button>
                     </div>
                   ))}
@@ -502,164 +502,164 @@ const Compare: React.FC = () => {
             )}
           </div>
 
-          {/* Redesigned comparison layout flow: Hide Map Legend and Analytics lists until friend code is loaded */}
+          {/* Map Legend and Analytics list sections */}
           {hasImportedFriend && (
             <>
               {/* Map Legend Accordion */}
-              <div style={{ display: 'flex', flexDirection: 'column' }}>
+              <div className="flex flex-col gap-1.5">
                 <h4 
                   onClick={() => toggleAccordion('legend')}
-                  style={{ fontSize: '0.75rem', fontWeight: 800, color: 'var(--text-secondary)', textTransform: 'uppercase', letterSpacing: '0.05em', cursor: 'pointer', display: 'flex', alignItems: 'center', gap: '0.35rem', marginBottom: '0.5rem' }}
+                  className="flex items-center gap-1.5 font-bold text-xs text-base-content uppercase tracking-wider select-none cursor-pointer hover:text-primary transition-colors"
                 >
                   {openAccordions.legend ? <ChevronDown size={14} /> : <ChevronRight size={14} />}
                   Map Legend
                 </h4>
                 {openAccordions.legend && (
-                  <div className="legend-grid" style={{ background: 'rgba(0,0,0,0.1)', padding: '0.75rem', borderRadius: '10px', border: '1px solid var(--glass-border)' }}>
-                    <div className="legend-item"><div className="legend-circle" style={{ background: 'var(--color-both)' }}></div> Both Visited</div>
-                    <div className="legend-item"><div className="legend-circle" style={{ background: 'var(--accent-visited)' }}></div> Most Visited</div>
-                    <div className="legend-item"><div className="legend-circle" style={{ background: 'var(--color-me-only)' }}></div> Me Only</div>
-                    <div className="legend-item"><div className="legend-circle" style={{ background: 'var(--color-they-only)' }}></div> Others Only</div>
-                    <div className="legend-item"><div className="legend-circle" style={{ background: 'var(--color-revisit-both)' }}></div> Both Revisit</div>
-                    <div className="legend-item"><div className="legend-circle" style={{ background: 'var(--color-revisit-mixed)' }}></div> Some Revisit</div>
-                    <div className="legend-item"><div className="legend-circle" style={{ background: 'var(--color-wishlist-both)' }}></div> Both Wishlist</div>
-                    <div className="legend-item"><div className="legend-circle" style={{ background: 'var(--accent-wishlist)' }}></div> Some Wishlist</div>
-                    <div className="legend-item" style={{ gridColumn: 'span 2' }}><div className="legend-circle" style={{ background: 'var(--color-avoid)' }}></div> Everyone Avoids</div>
+                  <div className="grid grid-cols-2 gap-2 text-[10px] bg-base-200/20 p-3 rounded-xl border border-base-300/40 mt-0.5 select-none font-semibold text-base-content/85">
+                    <div className="flex items-center gap-1.5"><div className="w-2.5 h-2.5 rounded-full shrink-0" style={{ background: 'var(--color-both)' }}></div> Both Visited</div>
+                    <div className="flex items-center gap-1.5"><div className="w-2.5 h-2.5 rounded-full shrink-0" style={{ background: 'var(--accent-visited)' }}></div> Most Visited</div>
+                    <div className="flex items-center gap-1.5"><div className="w-2.5 h-2.5 rounded-full shrink-0" style={{ background: 'var(--color-me-only)' }}></div> Me Only</div>
+                    <div className="flex items-center gap-1.5"><div className="w-2.5 h-2.5 rounded-full shrink-0" style={{ background: 'var(--color-they-only)' }}></div> Others Only</div>
+                    <div className="flex items-center gap-1.5"><div className="w-2.5 h-2.5 rounded-full shrink-0" style={{ background: 'var(--color-revisit-both)' }}></div> Both Revisit</div>
+                    <div className="flex items-center gap-1.5"><div className="w-2.5 h-2.5 rounded-full shrink-0" style={{ background: 'var(--color-revisit-mixed)' }}></div> Some Revisit</div>
+                    <div className="flex items-center gap-1.5"><div className="w-2.5 h-2.5 rounded-full shrink-0" style={{ background: 'var(--color-wishlist-both)' }}></div> Both Wishlist</div>
+                    <div className="flex items-center gap-1.5"><div className="w-2.5 h-2.5 rounded-full shrink-0" style={{ background: 'var(--accent-wishlist)' }}></div> Some Wishlist</div>
+                    <div className="flex items-center gap-1.5 col-span-2"><div className="w-2.5 h-2.5 rounded-full shrink-0" style={{ background: 'var(--color-avoid)' }}></div> Everyone Avoids</div>
                   </div>
                 )}
               </div>
 
               {/* Comparison Mutual Lists */}
-              <div style={{ display: 'flex', flexDirection: 'column', gap: '0.75rem', borderTop: '1px solid var(--glass-border)', paddingTop: '1rem' }}>
-                <span style={{ fontSize: '0.7rem', fontWeight: 700, color: 'var(--text-secondary)', textTransform: 'uppercase', letterSpacing: '0.05em' }}>
+              <div className="flex flex-col gap-3 border-t border-base-300/45 pt-4 mt-1 select-none">
+                <span className="text-[10px] font-bold tracking-wider text-base-content/50 uppercase select-none mb-1">
                   Comparison Analytics
                 </span>
                 
                 {/* Mutual Visited Accordion */}
-                <div style={{ display: 'flex', flexDirection: 'column' }}>
+                <div className="flex flex-col gap-1">
                   <h4 
                     onClick={() => toggleAccordion('visited')}
-                    style={{ fontSize: '0.75rem', fontWeight: 700, color: 'var(--color-both)', cursor: 'pointer', display: 'flex', alignItems: 'center', gap: '0.35rem' }}
+                    className="flex items-center gap-1.5 font-bold text-xs text-color-both uppercase tracking-wider select-none cursor-pointer hover:opacity-80 transition-opacity"
                   >
                     {openAccordions.visited ? <ChevronDown size={14} /> : <ChevronRight size={14} />}
                     We've All Visited ({commonVisited.length})
                   </h4>
                   {openAccordions.visited && (
-                    <ul className="compare-list" style={{ marginTop: '0.5rem', maxHeight: '140px', overflowY: 'auto' }}>
+                    <ul className="compare-list border border-base-300 rounded-xl p-2 bg-base-300/10 mt-1 max-h-36 overflow-y-auto">
                       {commonVisited.map(([code]) => renderCountryItem(code, countryData[code]))}
-                      {commonVisited.length === 0 && <li style={{ fontSize: '0.75rem', color: 'var(--text-secondary)', paddingLeft: '0.5rem' }}>No mutually visited places.</li>}
+                      {commonVisited.length === 0 && <li className="text-[10px] text-base-content/50 px-2 py-1 italic font-medium">No mutually visited places.</li>}
                     </ul>
                   )}
                 </div>
 
                 {/* Mutual Wishlisted Accordion */}
-                <div style={{ display: 'flex', flexDirection: 'column' }}>
+                <div className="flex flex-col gap-1">
                   <h4 
                     onClick={() => toggleAccordion('wishlist')}
-                    style={{ fontSize: '0.75rem', fontWeight: 700, color: 'var(--color-wishlist-both)', cursor: 'pointer', display: 'flex', alignItems: 'center', gap: '0.35rem' }}
+                    className="flex items-center gap-1.5 font-bold text-xs text-color-wishlist-both uppercase tracking-wider select-none cursor-pointer hover:opacity-80 transition-opacity"
                   >
                     {openAccordions.wishlist ? <ChevronDown size={14} /> : <ChevronRight size={14} />}
                     Mutual Wishlists ({commonWishlist.length})
                   </h4>
                   {openAccordions.wishlist && (
-                    <ul className="compare-list" style={{ marginTop: '0.5rem', maxHeight: '140px', overflowY: 'auto' }}>
+                    <ul className="compare-list border border-base-300 rounded-xl p-2 bg-base-300/10 mt-1 max-h-36 overflow-y-auto">
                       {commonWishlist.map(([code]) => renderCountryItem(code, countryData[code]))}
-                      {commonWishlist.length === 0 && <li style={{ fontSize: '0.75rem', color: 'var(--text-secondary)', paddingLeft: '0.5rem' }}>No mutually wishlisted places.</li>}
+                      {commonWishlist.length === 0 && <li className="text-[10px] text-base-content/50 px-2 py-1 italic font-medium">No mutually wishlisted places.</li>}
                     </ul>
                   )}
                 </div>
 
                 {/* Mutual Revisit Accordion */}
-                <div style={{ display: 'flex', flexDirection: 'column' }}>
+                <div className="flex flex-col gap-1">
                   <h4 
                     onClick={() => toggleAccordion('revisit')}
-                    style={{ fontSize: '0.75rem', fontWeight: 700, color: 'var(--accent-revisit)', cursor: 'pointer', display: 'flex', alignItems: 'center', gap: '0.35rem' }}
+                    className="flex items-center gap-1.5 font-bold text-xs text-accent-revisit uppercase tracking-wider select-none cursor-pointer hover:opacity-80 transition-opacity"
                   >
                     {openAccordions.revisit ? <ChevronDown size={14} /> : <ChevronRight size={14} />}
                     Mutual Revisit ({commonRevisit.length})
                   </h4>
                   {openAccordions.revisit && (
-                    <ul className="compare-list" style={{ marginTop: '0.5rem', maxHeight: '140px', overflowY: 'auto' }}>
+                    <ul className="compare-list border border-base-300 rounded-xl p-2 bg-base-300/10 mt-1 max-h-36 overflow-y-auto">
                       {commonRevisit.map(([code]) => renderCountryItem(code, countryData[code]))}
-                      {commonRevisit.length === 0 && <li style={{ fontSize: '0.75rem', color: 'var(--text-secondary)', paddingLeft: '0.5rem' }}>No mutually revisited places.</li>}
+                      {commonRevisit.length === 0 && <li className="text-[10px] text-base-content/50 px-2 py-1 italic font-medium">No mutually revisited places.</li>}
                     </ul>
                   )}
                 </div>
 
                 {/* Mutual Avoids Accordion */}
-                <div style={{ display: 'flex', flexDirection: 'column' }}>
+                <div className="flex flex-col gap-1">
                   <h4 
                     onClick={() => toggleAccordion('avoid')}
-                    style={{ fontSize: '0.75rem', fontWeight: 700, color: 'var(--accent-avoid)', cursor: 'pointer', display: 'flex', alignItems: 'center', gap: '0.35rem' }}
+                    className="flex items-center gap-1.5 font-bold text-xs text-accent-avoid uppercase tracking-wider select-none cursor-pointer hover:opacity-80 transition-opacity"
                   >
                     {openAccordions.avoid ? <ChevronDown size={14} /> : <ChevronRight size={14} />}
                     Mutual Avoids ({commonAvoid.length})
                   </h4>
                   {openAccordions.avoid && (
-                    <ul className="compare-list" style={{ marginTop: '0.5rem', maxHeight: '140px', overflowY: 'auto' }}>
+                    <ul className="compare-list border border-base-300 rounded-xl p-2 bg-base-300/10 mt-1 max-h-36 overflow-y-auto">
                       {commonAvoid.map(([code]) => renderCountryItem(code, countryData[code]))}
-                      {commonAvoid.length === 0 && <li style={{ fontSize: '0.75rem', color: 'var(--text-secondary)', paddingLeft: '0.5rem' }}>No mutually avoided places.</li>}
+                      {commonAvoid.length === 0 && <li className="text-[10px] text-base-content/50 px-2 py-1 italic font-medium">No mutually avoided places.</li>}
                     </ul>
                   )}
                 </div>
 
                 {/* Most Wanted Accordion */}
-                <div style={{ display: 'flex', flexDirection: 'column' }}>
+                <div className="flex flex-col gap-1">
                   <h4 
                     onClick={() => toggleAccordion('mostWanted')}
-                    style={{ fontSize: '0.75rem', fontWeight: 700, color: 'var(--accent-primary)', cursor: 'pointer', display: 'flex', alignItems: 'center', gap: '0.35rem' }}
+                    className="flex items-center gap-1.5 font-bold text-xs text-primary uppercase tracking-wider select-none cursor-pointer hover:opacity-80 transition-opacity"
                   >
                     {openAccordions.mostWanted ? <ChevronDown size={14} /> : <ChevronRight size={14} />}
                     Most Wanted ({topWantedUnvisited.length})
                   </h4>
                   {openAccordions.mostWanted && (
-                    <ul className="compare-list" style={{ marginTop: '0.5rem', maxHeight: '140px', overflowY: 'auto' }}>
+                    <ul className="compare-list border border-base-300 rounded-xl p-2 bg-base-300/10 mt-1 max-h-36 overflow-y-auto">
                       {topWantedUnvisited.map(({code, wishlist}) => (
-                        <li key={code} className="compare-list-item compare-list-item--flex">
-                          <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', minWidth: 0 }}>
+                        <li key={code} className="compare-list-item compare-list-item--flex flex items-center justify-between p-1.5 px-2.5 rounded-lg text-xs gap-2 border border-transparent hover:bg-base-200/50">
+                          <div className="flex items-center gap-2 min-width-0">
                             {countryData[code]?.flag ? (
-                              <img src={countryData[code]?.flag} alt="" className="country-flag" style={{ width: '1.25rem', height: '0.95rem', borderRadius: '2px', objectFit: 'cover', flexShrink: 0 }} />
+                              <img src={countryData[code]?.flag} alt="" className="w-5 h-3.5 object-cover rounded-sm border border-base-300/20 shrink-0" />
                             ) : (
-                              <div className="country-flag-placeholder" style={{ width: '1.25rem', height: '0.95rem', borderRadius: '2px', flexShrink: 0 }} />
+                              <div className="w-5 h-3.5 bg-base-300 rounded-sm border border-base-300/20 shrink-0" />
                             )}
-                            <span style={{ textOverflow: 'ellipsis', overflow: 'hidden', whiteSpace: 'nowrap' }}>{countryData[code]?.name || code}</span>
+                            <span className="truncate font-semibold">{countryData[code]?.name || code}</span>
                           </div>
-                          <span style={{ color: 'var(--accent-wishlist)', flexShrink: 0 }}>{wishlist} ❤️</span>
+                          <span className="text-accent-wishlist flex items-center gap-0.5 shrink-0 text-[10px] font-bold">{wishlist} ❤️</span>
                         </li>
                       ))}
-                      {topWantedUnvisited.length === 0 && <li style={{ fontSize: '0.75rem', color: 'var(--text-secondary)', paddingLeft: '0.5rem' }}>Not enough data.</li>}
+                      {topWantedUnvisited.length === 0 && <li className="text-[10px] text-base-content/50 px-2 py-1 italic font-medium">Not enough data.</li>}
                     </ul>
                   )}
                 </div>
 
                 {/* Travel Mentorships Accordion */}
-                <div style={{ display: 'flex', flexDirection: 'column' }}>
+                <div className="flex flex-col gap-1">
                   <h4 
                     onClick={() => toggleAccordion('mentorship')}
-                    style={{ fontSize: '0.75rem', fontWeight: 700, color: 'var(--color-me-only)', cursor: 'pointer', display: 'flex', alignItems: 'center', gap: '0.35rem' }}
+                    className="flex items-center gap-1.5 font-bold text-xs text-color-me-only uppercase tracking-wider select-none cursor-pointer hover:opacity-80 transition-opacity"
                   >
                     {openAccordions.mentorship ? <ChevronDown size={14} /> : <ChevronRight size={14} />}
                     Travel Mentorships ({wantedButVisited.length})
                   </h4>
                   {openAccordions.mentorship && (
-                    <div style={{ display: 'flex', flexDirection: 'column', gap: '0.5rem', marginTop: '0.5rem', maxHeight: '180px', overflowY: 'auto', paddingRight: '0.25rem' }}>
+                    <div className="flex flex-col gap-2 mt-1 max-h-44 overflow-y-auto pr-1">
                       {wantedButVisited.map(({code, whoVisited, whoWants}) => (
                         <div key={code} className="mentorship-card">
                           <div className="mentorship-card-header">
                             {countryData[code]?.flag ? (
-                              <img src={countryData[code]?.flag} alt="" className="country-flag" style={{ width: '1.25rem', height: '0.95rem', borderRadius: '2px', objectFit: 'cover', flexShrink: 0 }} />
+                              <img src={countryData[code]?.flag} alt="" className="w-5 h-3.5 object-cover rounded-sm border border-base-300/20 shrink-0" style={{ objectFit: 'cover' }} />
                             ) : (
-                              <div className="country-flag-placeholder" style={{ width: '1.25rem', height: '0.95rem', borderRadius: '2px', flexShrink: 0 }} />
+                              <div className="w-5 h-3.5 bg-base-300 rounded-sm border border-base-300/20 shrink-0" />
                             )}
                             <span className="mentorship-card-title">{countryData[code]?.name || code}</span>
                           </div>
-                          <div className="mentorship-card-body">
-                            Visited: <span style={{ color: 'var(--accent-visited)' }}>{whoVisited.join(', ')}</span><br/>
-                            Wants: <span style={{ color: 'var(--accent-wishlist)' }}>{whoWants.join(', ')}</span>
+                          <div className="mentorship-card-body text-[10px] opacity-80 leading-relaxed text-base-content/70">
+                            Visited: <span className="text-accent-visited font-semibold">{whoVisited.join(', ')}</span><br/>
+                            Wants: <span className="text-accent-wishlist font-semibold">{whoWants.join(', ')}</span>
                           </div>
                         </div>
                       ))}
-                      {wantedButVisited.length === 0 && <span style={{ fontSize: '0.75rem', color: 'var(--text-secondary)', paddingLeft: '0.5rem' }}>No mentorship combinations found.</span>}
+                      {wantedButVisited.length === 0 && <span className="text-[10px] text-base-content/50 px-2 py-1 italic font-medium">No mentorship combinations found.</span>}
                     </div>
                   )}
                 </div>
@@ -670,48 +670,49 @@ const Compare: React.FC = () => {
       </aside>
 
       {/* Map Viewport Area */}
-      <main className="dashboard-viewport">
+      <main className="flex-1 h-full w-full relative overflow-hidden flex flex-col">
         {/* Toggle Sidebar Trigger if Collapsed */}
         {isSidebarCollapsed && (
           <button 
-            className="glass-button sidebar-toggle-btn"
+            className="absolute top-4 left-4 btn btn-neutral btn-sm shadow-lg gap-1.5 z-40"
             onClick={() => setIsSidebarCollapsed(false)}
             title="Expand Controls"
           >
-            <Menu size={16} /> <span className="hide-mobile-text">Compare Panel</span>
+            <Menu size={14} /> 
+            <span className="hidden sm:inline text-xs font-semibold">Compare Panel</span>
           </button>
         )}
 
-        <div className="compare-map-wrapper">
+        <div className="flex-1 w-full h-full relative overflow-hidden">
           {hasImportedFriend ? (
             <>
               <CompareMap mergedData={mergedData} setTooltipContent={setTooltipContent} numericToA3={NUMERIC_TO_A3} />
               {tooltipContent && (
-                <div className="compare-tooltip">
+                <div className="absolute bottom-6 left-1/2 -translate-x-1/2 px-3 py-1.5 bg-base-300/95 backdrop-blur-md border border-base-300 rounded-lg shadow-xl text-xs font-bold text-base-content select-none pointer-events-none z-40 transition-opacity">
                   {tooltipContent}
                 </div>
               )}
             </>
           ) : (
-            <div className="compare-empty-state glass-panel">
-              <div className="compare-empty-state__icon-wrapper">
-                <Users className="compare-empty-state__icon" size={40} />
+            <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[90%] max-w-lg card bg-base-200/50 border border-base-300 shadow-2xl p-6 text-center select-none backdrop-blur-md flex flex-col gap-4">
+              <div className="w-16 h-16 bg-primary/10 rounded-full flex items-center justify-center mx-auto text-primary">
+                <Users size={32} />
               </div>
-              <h3 className="compare-empty-state__title">Compare Travel Maps</h3>
-              <p className="compare-empty-state__description">
+              <h3 className="text-lg font-bold text-base-content">Compare Travel Maps</h3>
+              <p className="text-xs text-base-content/60 leading-relaxed max-w-sm mx-auto">
                 Visualize intersecting travel paths, mutual dream destinations, and travel compatibility stats by grouping with friends.
               </p>
               
-              <div className="compare-empty-state__action-box">
-                <h4>How to get started:</h4>
-                <ol>
-                  <li>Copy your own share code below (or inside the sidebar) and send it to your friend.</li>
+              <div className="bg-base-300/35 border border-base-300/50 rounded-xl p-4 text-left flex flex-col gap-2 text-xs text-base-content/80 mt-2">
+                <h4 className="font-bold text-base-content">How to get started:</h4>
+                <ol className="list-decimal list-inside flex flex-col gap-1.5 pl-1 leading-relaxed text-base-content/70">
+                  <li>Copy your own share code below and send it to your friend.</li>
                   <li>Collect your friend's travel share code.</li>
                   <li>Paste their code into the **Group Members** input box on the left, then click <strong>Add (+)</strong> to begin comparing.</li>
                 </ol>
                 
-                <div style={{ display: 'flex', gap: '0.5rem', marginTop: '1.25rem', justifyContent: 'center' }}>
-                  <button onClick={handleCopyCode} className="glass-button glass-button--primary" style={{ fontSize: '0.8rem', padding: '0.5rem 1rem' }}>
+                <div className="flex justify-center mt-3">
+                  <button onClick={handleCopyCode} className="btn btn-primary btn-sm gap-1.5 px-4 font-semibold shadow-md">
                     {copied ? <Check size={14} /> : <Copy size={14} />}
                     {copied ? 'Copied Share Code!' : 'Copy My Share Code'}
                   </button>

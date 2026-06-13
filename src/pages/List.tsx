@@ -92,42 +92,60 @@ const List: React.FC = () => {
     }));
   };
 
+  const getCardClass = (status: PlaceStatus) => {
+    const base = "card card-compact border rounded-xl transition-all duration-200 ";
+    if (status === 'VISITED') return base + "bg-accent-visited/5 border-accent-visited/35 text-accent-visited shadow-[0_0_8px_-2px_var(--accent-visited)]";
+    if (status === 'WISHLIST') return base + "bg-accent-wishlist/5 border-accent-wishlist/35 text-accent-wishlist shadow-[0_0_8px_-2px_var(--accent-wishlist)]";
+    if (status === 'REVISIT') return base + "bg-accent-revisit/5 border-accent-revisit/35 text-accent-revisit shadow-[0_0_8px_-2px_var(--accent-revisit)]";
+    if (status === 'AVOID') return base + "bg-accent-avoid/5 border-accent-avoid/35 text-accent-avoid shadow-[0_0_8px_-2px_var(--accent-avoid)]";
+    return base + "bg-base-200/30 border-base-300/40 text-base-content/85 hover:bg-base-200/60";
+  };
+
+  const getSubregionRowClass = (status: PlaceStatus) => {
+    const base = "flex items-center justify-between p-1 px-2.5 rounded-lg border text-[11px] font-medium transition-all gap-2 ";
+    if (status === 'VISITED') return base + "bg-accent-visited/10 border-accent-visited/25 text-accent-visited";
+    if (status === 'WISHLIST') return base + "bg-accent-wishlist/10 border-accent-wishlist/25 text-accent-wishlist";
+    if (status === 'REVISIT') return base + "bg-accent-revisit/10 border-accent-revisit/25 text-accent-revisit";
+    if (status === 'AVOID') return base + "bg-accent-avoid/10 border-accent-avoid/25 text-accent-avoid";
+    return base + "bg-base-200/45 border-transparent text-base-content/75 hover:bg-base-200/80";
+  };
+
   return (
-    <div className="page-container page-transition">
+    <div className="p-4 md:p-6 h-full flex flex-col gap-4 overflow-hidden bg-base-100 select-none">
       {/* Header and Controls */}
-      <div className="glass-panel directory-controls">
-        <h2 className="directory-controls-title">
-          <Filter size={24} color="var(--accent-primary)" />
+      <div className="glass-panel border border-base-300/50 p-4 rounded-2xl shrink-0 flex flex-col gap-4">
+        <h2 className="flex items-center gap-2 text-md font-bold text-base-content select-none">
+          <Filter size={18} className="text-primary" />
           Country Directory
         </h2>
         
-        <div className="directory-controls-row">
-          <div className="search-input-wrapper">
-            <Search size={18} className="search-input-icon" />
+        <div className="flex flex-col lg:flex-row gap-4 items-start lg:items-center justify-between">
+          <div className="relative w-full lg:w-72 shrink-0">
+            <Search size={14} className="absolute left-2.5 top-1/2 -translate-y-1/2 text-base-content/40" />
             <input 
               type="text" 
-              className="glass-input search-input-field" 
+              className="input input-bordered input-sm pl-8 w-full text-xs" 
               placeholder="Search countries..." 
               value={search}
               onChange={(e) => setSearch(e.target.value)}
             />
           </div>
           
-          <label className="checkbox-label">
+          <label className="flex items-center gap-2 cursor-pointer text-xs text-base-content/70 select-none py-1">
             <input 
               type="checkbox" 
-              className="checkbox-input"
+              className="checkbox checkbox-primary checkbox-xs"
               checked={searchSubRegions} 
               onChange={(e) => setSearchSubRegions(e.target.checked)} 
             />
-            Include Sub-regions in Search
+            <span>Include Sub-regions in Search</span>
           </label>
           
-          <div className="filter-buttons-wrapper">
+          <div className="flex flex-wrap gap-1 justify-end w-full lg:w-auto">
             {(['ALL', 'VISITED', 'WISHLIST', 'REVISIT', 'AVOID', 'UNSELECTED'] as const).map((mode) => (
               <button
                 key={mode}
-                className={`glass-button ${filterMode === mode ? 'glass-button--primary' : ''}`}
+                className={`btn btn-xs ${filterMode === mode ? 'btn-primary' : 'btn-outline border-base-300 text-base-content/85 hover:text-primary'}`}
                 onClick={() => setFilterMode(mode)}
               >
                 {mode === 'ALL' ? 'All' : 
@@ -142,14 +160,14 @@ const List: React.FC = () => {
         </div>
       </div>
 
-      {/* Grid */}
-      <div className="glass-panel directory-grid-panel" style={{ padding: '1.25rem' }}>
-        <p className="directory-stats">
+      {/* Grid Panel */}
+      <div className="glass-panel border border-base-300/50 p-4 rounded-2xl flex-1 overflow-y-auto flex flex-col gap-3">
+        <p className="text-xs text-base-content/50 font-semibold select-none">
           Showing {filteredCountries.length} countries
         </p>
 
         {Object.keys(groupedPlaces).length === 0 ? (
-          <div className="directory-empty">
+          <div className="text-center py-12 text-sm text-base-content/50 select-none border border-dashed border-base-300 rounded-xl">
             No countries found matching your criteria.
           </div>
         ) : (
@@ -157,17 +175,17 @@ const List: React.FC = () => {
             const isCollapsed = collapsedContinents[continent];
             
             return (
-              <div key={continent} className="continent-section">
+              <div key={continent} className="flex flex-col">
                 <h3 
                   onClick={() => toggleContinent(continent)}
-                  className="continent-title"
+                  className="flex items-center gap-1 font-bold text-xs text-base-content/90 border-b border-base-300/40 pb-1.5 mt-3 mb-2.5 cursor-pointer uppercase tracking-wider select-none hover:text-primary transition-colors"
                 >
-                  {isCollapsed ? <ChevronRight size={20} /> : <ChevronDown size={20} />}
+                  {isCollapsed ? <ChevronRight size={14} /> : <ChevronDown size={14} />}
                   {continent} ({placesInContinent.length})
                 </h3>
                 
                 {!isCollapsed && (
-                  <div className="countries-grid">
+                  <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-3">
                     {placesInContinent.map(country => {
                       const status = places[country.id]?.status || 'NONE';
                       let isExpanded = expandedCountries[country.id];
@@ -182,137 +200,123 @@ const List: React.FC = () => {
                           const countryNameMatches = country.name.toLowerCase().includes(searchVal);
                           
                           if (matchingStates.length > 0) {
-                            countryStates = matchingStates; // only show matched states
+                            countryStates = matchingStates; 
                             if (!isExpanded && !countryNameMatches) {
-                              isExpanded = true; // auto-expand if country didn't match but states did
+                              isExpanded = true; 
                             }
                           } else if (!countryNameMatches && !isExpanded) {
-                            countryStates = []; // Nothing matched and not manually expanded
+                            countryStates = []; 
                           }
                         }
                       }
 
-                      const cardClass = `country-card ${
-                        status === 'VISITED' ? 'country-card--visited' : 
-                        status === 'WISHLIST' ? 'country-card--wishlist' : 
-                        status === 'AVOID' ? 'country-card--avoid' : 
-                        status === 'REVISIT' ? 'country-card--revisit' : ''
-                      }`;
-
                       return (
-                        <div key={country.id} className="country-card-container">
-                          <div className={cardClass}>
-                            <div className="country-info">
-                              {/* Expand button placed first for vertical alignment alignment of flags/names */}
-                              {getSubRegionUrl(country.id) !== null ? (
-                                <button
-                                  className="action-btn"
-                                  onClick={(e) => {
-                                    e.stopPropagation();
-                                    const isNowExpanded = !expandedCountries[country.id];
-                                    setExpandedCountries(prev => ({ ...prev, [country.id]: isNowExpanded }));
-                                    if (isNowExpanded) loadSubRegions(country.id);
-                                  }}
-                                  title="View Regions"
-                                  style={{ flexShrink: 0 }}
-                                >
-                                  {loadingSubRegions[country.id] ? (
-                                    <Loader2 size={14} className="animate-spin" />
-                                  ) : (
-                                    isExpanded ? <ChevronDown size={14} /> : <MapIcon size={14} />
-                                  )}
-                                </button>
-                              ) : (
-                                <div style={{ width: '28px', flexShrink: 0 }} />
-                              )}
+                        <div key={country.id} className="flex flex-col gap-1">
+                          <div className={getCardClass(status)}>
+                            <div className="card-body p-3 flex flex-row items-center justify-between gap-3 text-xs w-full">
+                              <div className="flex items-center gap-2 min-w-0 flex-1">
+                                {getSubRegionUrl(country.id) !== null ? (
+                                  <button
+                                    className="btn btn-ghost btn-xs btn-circle text-base-content/40 hover:text-base-content shrink-0"
+                                    onClick={(e) => {
+                                      e.stopPropagation();
+                                      const isNowExpanded = !expandedCountries[country.id];
+                                      setExpandedCountries(prev => ({ ...prev, [country.id]: isNowExpanded }));
+                                      if (isNowExpanded) loadSubRegions(country.id);
+                                    }}
+                                    title="View Regions"
+                                  >
+                                    {loadingSubRegions[country.id] ? (
+                                      <Loader2 size={12} className="animate-spin" />
+                                    ) : (
+                                      isExpanded ? <ChevronDown size={12} /> : <MapIcon size={12} />
+                                    )}
+                                  </button>
+                                ) : (
+                                  <div className="w-6 shrink-0" />
+                                )}
 
-                              {country.flag ? (
-                                <img src={country.flag} alt="" className="country-flag" />
-                              ) : (
-                                <div className="country-flag-placeholder" />
-                              )}
-                              <div className="country-name-wrapper">
-                                <span>{country.name}</span>
-                                <span className="country-id-sub">{country.id}</span>
+                                {country.flag ? (
+                                  <img src={country.flag} alt="" className="w-5 h-3.5 object-cover rounded-sm border border-base-300/20 shrink-0" />
+                                ) : (
+                                  <div className="w-5 h-3.5 bg-base-300 rounded-sm border border-base-300/20 shrink-0" />
+                                )}
+                                <div className="flex flex-col min-w-0">
+                                  <span className="truncate font-semibold text-base-content">{country.name}</span>
+                                  <span className="text-[10px] opacity-40 font-mono">{country.id}</span>
+                                </div>
                               </div>
-                            </div>
-                            
-                            <div className="country-actions">
-                              <button 
-                                onClick={() => handleStatusChange(country.id, 'VISITED')}
-                                title="Mark as Visited"
-                                className={`action-btn ${status === 'VISITED' ? 'action-btn--visited' : ''}`}
-                              >
-                                <Check size={14} />
-                              </button>
-                              <button 
-                                onClick={() => handleStatusChange(country.id, 'WISHLIST')}
-                                title="Add to Wishlist"
-                                className={`action-btn ${status === 'WISHLIST' ? 'action-btn--wishlist' : ''}`}
-                              >
-                                <Heart size={14} />
-                              </button>
-                              <button 
-                                onClick={() => handleStatusChange(country.id, 'REVISIT')}
-                                title="Mark as Revisit"
-                                className={`action-btn ${status === 'REVISIT' ? 'action-btn--revisit' : ''}`}
-                              >
-                                <RotateCcw size={14} />
-                              </button>
-                              <button 
-                                onClick={() => handleStatusChange(country.id, 'AVOID')}
-                                title="Don't want to go"
-                                className={`action-btn ${status === 'AVOID' ? 'action-btn--avoid' : ''}`}
-                              >
-                                <Ban size={14} />
-                              </button>
+                              
+                              <div className="flex gap-0.5 shrink-0">
+                                <button 
+                                  onClick={() => handleStatusChange(country.id, 'VISITED')}
+                                  title="Mark as Visited"
+                                  className={`btn btn-square btn-xs ${status === 'VISITED' ? 'btn-success text-white' : 'btn-ghost text-base-content/40 hover:text-base-content'}`}
+                                >
+                                  <Check size={12} />
+                                </button>
+                                <button 
+                                  onClick={() => handleStatusChange(country.id, 'WISHLIST')}
+                                  title="Add to Wishlist"
+                                  className={`btn btn-square btn-xs ${status === 'WISHLIST' ? 'btn-secondary text-white' : 'btn-ghost text-base-content/40 hover:text-base-content'}`}
+                                >
+                                  <Heart size={12} />
+                                </button>
+                                <button 
+                                  onClick={() => handleStatusChange(country.id, 'REVISIT')}
+                                  title="Mark as Revisit"
+                                  className={`btn btn-square btn-xs ${status === 'REVISIT' ? 'btn-warning text-white' : 'btn-ghost text-base-content/40 hover:text-base-content'}`}
+                                >
+                                  <RotateCcw size={12} />
+                                </button>
+                                <button 
+                                  onClick={() => handleStatusChange(country.id, 'AVOID')}
+                                  title="Don't want to go"
+                                  className={`btn btn-square btn-xs ${status === 'AVOID' ? 'btn-error text-white' : 'btn-ghost text-base-content/40 hover:text-base-content'}`}
+                                >
+                                  <Ban size={12} />
+                                </button>
+                              </div>
                             </div>
                           </div>
                           
                           {isExpanded && countryStates.length > 0 && (
-                            <div className="subregions-container">
+                            <div className="flex flex-col gap-1 px-3 pb-3 pt-1 border-t border-base-300/40 bg-base-300/10 rounded-b-xl">
                               {countryStates.map(state => {
                                 const stateId = (state.id.toString().startsWith(`${country.id}-`)) ? state.id : `${country.id}-${state.id}`;
                                 const stateStatus = places[stateId]?.status || 'NONE';
-                                
-                                const rowClass = `subregion-row ${
-                                  stateStatus === 'VISITED' ? 'subregion-row--visited' :
-                                  stateStatus === 'WISHLIST' ? 'subregion-row--wishlist' :
-                                  stateStatus === 'AVOID' ? 'subregion-row--avoid' :
-                                  stateStatus === 'REVISIT' ? 'subregion-row--revisit' : ''
-                                }`;
 
                                 return (
-                                  <div key={stateId} className={rowClass}>
-                                    <span className="subregion-name">{state.name}</span>
-                                    <div className="subregion-actions">
+                                  <div key={stateId} className={getSubregionRowClass(stateStatus)}>
+                                    <span className="truncate flex-1 font-medium">{state.name}</span>
+                                    <div className="flex gap-0.5 shrink-0">
                                       <button 
-                                        className={`action-btn ${stateStatus === 'VISITED' ? 'action-btn--visited' : ''}`}
+                                        className={`btn btn-square btn-xs ${stateStatus === 'VISITED' ? 'btn-success text-white' : 'btn-ghost text-base-content/30 hover:text-base-content'}`}
                                         onClick={() => setCountryStatus(stateId, stateStatus === 'VISITED' ? 'NONE' : 'VISITED')}
                                         title="Visited"
                                       >
-                                        <Check size={12} />
+                                        <Check size={11} />
                                       </button>
                                       <button 
-                                        className={`action-btn ${stateStatus === 'WISHLIST' ? 'action-btn--wishlist' : ''}`}
+                                        className={`btn btn-square btn-xs ${stateStatus === 'WISHLIST' ? 'btn-secondary text-white' : 'btn-ghost text-base-content/30 hover:text-base-content'}`}
                                         onClick={() => setCountryStatus(stateId, stateStatus === 'WISHLIST' ? 'NONE' : 'WISHLIST')}
                                         title="Wishlist"
                                       >
-                                        <Heart size={12} />
+                                        <Heart size={11} />
                                       </button>
                                       <button 
-                                        className={`action-btn ${stateStatus === 'REVISIT' ? 'action-btn--revisit' : ''}`}
+                                        className={`btn btn-square btn-xs ${stateStatus === 'REVISIT' ? 'btn-warning text-white' : 'btn-ghost text-base-content/30 hover:text-base-content'}`}
                                         onClick={() => setCountryStatus(stateId, stateStatus === 'REVISIT' ? 'NONE' : 'REVISIT')}
                                         title="Mark as Revisit"
                                       >
-                                        <RotateCcw size={12} />
+                                        <RotateCcw size={11} />
                                       </button>
                                       <button 
-                                        className={`action-btn ${stateStatus === 'AVOID' ? 'action-btn--avoid' : ''}`}
+                                        className={`btn btn-square btn-xs ${stateStatus === 'AVOID' ? 'btn-error text-white' : 'btn-ghost text-base-content/30 hover:text-base-content'}`}
                                         onClick={() => setCountryStatus(stateId, stateStatus === 'AVOID' ? 'NONE' : 'AVOID')}
                                         title="Don't want to go"
                                       >
-                                        <Ban size={12} />
+                                        <Ban size={11} />
                                       </button>
                                     </div>
                                   </div>
@@ -321,7 +325,7 @@ const List: React.FC = () => {
                             </div>
                           )}
                           {isExpanded && countryStates.length === 0 && !loadingSubRegions[country.id] && (
-                            <div className="subregions-container" style={{ borderLeft: 'none', color: 'var(--text-secondary)', fontSize: '0.8rem', paddingLeft: '0.5rem' }}>
+                            <div className="text-[10px] text-base-content/50 font-medium px-4 py-2 bg-base-300/10 border-t border-base-300/40 rounded-b-xl italic">
                               No specific sub-regions available for map drill-down.
                             </div>
                           )}

@@ -3,7 +3,7 @@ import { MapContainer } from '../components/map/MapContainer';
 
 const Home: React.FC = () => {
   return (
-    <div className="page-transition" style={{ height: '100%', minHeight: 'calc(100vh - 120px)' }}>
+    <div className="h-full w-full">
       <MapContainer />
     </div>
   );

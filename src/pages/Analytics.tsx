@@ -66,7 +66,7 @@ const Analytics: React.FC = () => {
           ]
         };
       })
-      .sort((a, b) => b.total - a.total); // Sort by continent logical size
+      .sort((a, b) => b.total - a.total); 
 
     const totalExplored = visited + revisit;
     const visData = Object.entries(continentCounts)
@@ -103,110 +103,116 @@ const Analytics: React.FC = () => {
   const percentVisited = totalCountries > 0 ? ((totalVisitedAndRevisit / totalCountries) * 100).toFixed(1) : '0';
 
   return (
-    <div className="page-container page-transition">
+    <div className="p-4 md:p-6 h-full flex flex-col gap-4 overflow-hidden bg-base-100">
       {/* Header */}
-      <div className="glass-panel" style={{ padding: '1rem 1.25rem', display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
-        <PieIcon size={24} color="var(--accent-primary)" />
-        <h2 style={{ fontSize: '1.25rem', fontWeight: 800 }}>Analytics Dashboard</h2>
+      <div className="glass-panel border border-base-300/50 p-4 rounded-2xl shrink-0 flex items-center gap-2 select-none">
+        <PieIcon size={18} className="text-primary" />
+        <h2 className="font-bold text-sm text-base-content">Analytics Dashboard</h2>
       </div>
 
       {/* Scrollable Container */}
-      <div className="analytics-scroll-container">
-        {/* KPI Row */}
-        <div className="kpi-grid">
-          <div className="glass-panel kpi-card">
-            <Globe size={40} color="var(--accent-primary)" style={{ marginBottom: '0.5rem' }} />
-            <h3 className="kpi-card-title">{percentVisited}%</h3>
-            <p style={{ color: 'var(--text-secondary)', fontSize: '0.8rem', fontWeight: 600 }}>of {totalCountries} countries visited</p>
+      <div className="flex-1 overflow-y-auto flex flex-col gap-5 pr-1">
+        {/* KPI Dashboard Row */}
+        <div className="stats shadow border border-base-300/40 rounded-2xl bg-base-200/20 backdrop-blur-md grid grid-cols-1 md:grid-cols-3 shrink-0 select-none">
+          <div className="stat py-3">
+            <div className="stat-figure text-primary">
+              <Globe className="w-7 h-7" />
+            </div>
+            <div className="stat-title text-[10px] font-bold text-base-content/50 uppercase tracking-wide">Total Coverage</div>
+            <div className="stat-value text-primary text-2xl mt-0.5">{percentVisited}%</div>
+            <div className="stat-desc text-[10px] mt-0.5 text-base-content/60">of {totalCountries} countries visited</div>
           </div>
           
-          <div className="glass-panel kpi-card">
-            <Award size={40} color="var(--accent-visited)" style={{ marginBottom: '0.5rem' }} />
-            <h3 className="kpi-card-persona">{mostExplored}</h3>
-            <p style={{ color: 'var(--text-secondary)', fontSize: '0.8rem', fontWeight: 600 }}>Traveler Persona</p>
+          <div className="stat py-3 border-t md:border-t-0 md:border-l border-base-300/50">
+            <div className="stat-figure text-success">
+              <Award className="w-7 h-7 text-accent-visited" />
+            </div>
+            <div className="stat-title text-[10px] font-bold text-base-content/50 uppercase tracking-wide">Traveler Persona</div>
+            <div className="stat-value text-accent-visited text-md truncate mt-1.5 font-bold" title={mostExplored}>{mostExplored}</div>
+            <div className="stat-desc text-[10px] mt-0.5 text-base-content/60">Unlocked ranking profile</div>
           </div>
           
-          <div className="glass-panel kpi-card--flex">
-            <div className="kpi-stat-sub">
-              <h4 className="kpi-stat-value kpi-stat-value--visited">{stats.visited}</h4>
-              <p className="kpi-stat-label">Visited</p>
+          <div className="stat py-3 border-t md:border-t-0 md:border-l border-base-300/50 flex flex-row items-center px-4 gap-2">
+            <div className="flex-1 text-center border-r border-base-300/50 py-1">
+              <div className="text-[10px] font-semibold text-base-content/60 uppercase">Visited</div>
+              <div className="text-lg font-extrabold text-accent-visited mt-0.5">{stats.visited}</div>
             </div>
-            <div className="kpi-stat-divider"></div>
-            <div className="kpi-stat-sub">
-              <h4 className="kpi-stat-value kpi-stat-value--revisit">{stats.revisit}</h4>
-              <p className="kpi-stat-label">Revisit</p>
+            <div className="flex-1 text-center border-r border-base-300/50 py-1">
+              <div className="text-[10px] font-semibold text-base-content/60 uppercase">Revisit</div>
+              <div className="text-lg font-extrabold text-accent-revisit mt-0.5">{stats.revisit}</div>
             </div>
-            <div className="kpi-stat-divider"></div>
-            <div className="kpi-stat-sub">
-              <h4 className="kpi-stat-value kpi-stat-value--wishlist">{stats.wishlist}</h4>
-              <p className="kpi-stat-label">Wishlist</p>
+            <div className="flex-1 text-center py-1">
+              <div className="text-[10px] font-semibold text-base-content/60 uppercase">Wishlist</div>
+              <div className="text-lg font-extrabold text-accent-wishlist mt-0.5">{stats.wishlist}</div>
             </div>
           </div>
         </div>
 
         {/* Global Charts Row */}
-        <div className="analytics-charts-container">
-          <div className="glass-panel chart-panel">
-            <h3 className="chart-panel-title">
-              <TrendingUp size={18} />
-              Global Coverage Breakdown
-            </h3>
-            <div style={{ flex: 1, minHeight: 0 }}>
-              <ResponsiveContainer width="100%" height="100%">
-                <PieChart>
-                  <Pie data={pieData} cx="50%" cy="50%" innerRadius={60} outerRadius={95} paddingAngle={4} dataKey="value" stroke="none">
-                    {pieData.map((entry, index) => <Cell key={`cell-${index}`} fill={entry.color} />)}
-                  </Pie>
-                  <RechartsTooltip 
-                    contentStyle={{ 
-                      backgroundColor: 'var(--glass-bg)', 
-                      borderColor: 'var(--glass-border)', 
-                      borderRadius: '10px', 
-                      backdropFilter: 'blur(10px)' 
-                    }} 
-                    itemStyle={{ color: 'var(--text-primary)' }} 
-                    labelStyle={{ color: 'var(--text-primary)' }} 
-                  />
-                  <Legend 
-                    verticalAlign="bottom" 
-                    height={36} 
-                    formatter={(value) => <span style={{ color: 'var(--text-secondary)', fontSize: '0.8rem', fontWeight: 600 }}>{value}</span>} 
-                  />
-                </PieChart>
-              </ResponsiveContainer>
-            </div>
+        <div className="card card-compact bg-base-200/20 border border-base-300/40 rounded-2xl shadow-sm p-4 flex flex-col gap-3 h-80 select-none shrink-0">
+          <h3 className="flex items-center gap-2 font-bold text-xs text-base-content uppercase tracking-wider">
+            <TrendingUp size={14} className="text-primary" />
+            Global Coverage Breakdown
+          </h3>
+          <div className="flex-1 min-h-0">
+            <ResponsiveContainer width="100%" height="100%">
+              <PieChart>
+                <Pie data={pieData} cx="50%" cy="50%" innerRadius={55} outerRadius={88} paddingAngle={4} dataKey="value" stroke="none">
+                  {pieData.map((entry, index) => <Cell key={`cell-${index}`} fill={entry.color} />)}
+                </Pie>
+                <RechartsTooltip 
+                  contentStyle={{ 
+                    backgroundColor: 'var(--glass-bg)', 
+                    borderColor: 'var(--glass-border)', 
+                    borderRadius: '10px', 
+                    backdropFilter: 'blur(10px)' 
+                  }} 
+                  itemStyle={{ color: 'var(--text-primary)', fontSize: '0.75rem' }} 
+                  labelStyle={{ color: 'var(--text-primary)', fontSize: '0.75rem' }} 
+                />
+                <Legend 
+                  verticalAlign="bottom" 
+                  height={30} 
+                  formatter={(value) => <span className="text-base-content/80 text-xs font-semibold select-none">{value}</span>} 
+                />
+              </PieChart>
+            </ResponsiveContainer>
           </div>
         </div>
 
         {/* Continental Breakdown Grid */}
-        <div style={{ display: 'flex', flexDirection: 'column', gap: '0.75rem' }}>
-          <h3 style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', fontSize: '1.1rem', fontWeight: 700 }}>
-            <MapIcon size={20} color="var(--accent-primary)" />
+        <div className="flex flex-col gap-2.5">
+          <h3 className="flex items-center gap-1.5 font-bold text-xs text-base-content uppercase tracking-wider mt-1.5">
+            <MapIcon size={16} className="text-primary" />
             Coverage by Continent
           </h3>
           
-          <div className="continental-grid">
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4 pb-4 select-none">
             {continentPies.map((cont) => {
               const totalVisitedInContinent = cont.visited + cont.revisit;
               const percent = cont.total > 0 ? Math.round((totalVisitedInContinent / cont.total) * 100) : 0;
               return (
-                <div key={cont.name} className="glass-panel continent-card">
-                  <div className="continent-card-header">
-                    <h4 className="continent-card-title">{cont.name}</h4>
-                    <div className="continent-card-stats">
-                      <span className="continent-card-percent">{percent}%</span>
-                      <div className="continent-card-count">
+                <div key={cont.name} className="card card-compact bg-base-200/20 border border-base-300/40 rounded-xl shadow-sm p-4 flex flex-col gap-3 h-64 relative">
+                  <div className="flex justify-between items-start border-b border-base-300/30 pb-2">
+                    <h4 className="font-bold text-xs text-base-content">{cont.name}</h4>
+                    <div className="text-right flex flex-col">
+                      <span className="font-extrabold text-xs text-primary">{percent}%</span>
+                      <div className="text-[9px] opacity-50 mt-0.5">
                         {totalVisitedInContinent} / {cont.total} visited
                       </div>
                     </div>
                   </div>
-                  <div style={{ flex: 1, minHeight: 0 }}>
+                  <div className="flex-1 min-h-0">
                     <ResponsiveContainer width="100%" height="100%">
                       <PieChart>
-                        <Pie data={cont.pieData} cx="50%" cy="50%" innerRadius={48} outerRadius={72} paddingAngle={2} dataKey="value" stroke="none">
+                        <Pie data={cont.pieData} cx="50%" cy="50%" innerRadius={42} outerRadius={65} paddingAngle={2} dataKey="value" stroke="none">
                           {cont.pieData.map((entry, index) => <Cell key={`cell-${index}`} fill={entry.color} />)}
                         </Pie>
-                        <RechartsTooltip contentStyle={{ backgroundColor: 'var(--glass-bg)', borderColor: 'var(--glass-border)', borderRadius: '10px' }} itemStyle={{ color: 'var(--text-primary)' }} labelStyle={{ color: 'var(--text-primary)' }} />
+                        <RechartsTooltip 
+                          contentStyle={{ backgroundColor: 'var(--glass-bg)', borderColor: 'var(--glass-border)', borderRadius: '10px' }} 
+                          itemStyle={{ color: 'var(--text-primary)', fontSize: '0.7rem' }} 
+                          labelStyle={{ color: 'var(--text-primary)', fontSize: '0.7rem' }} 
+                        />
                       </PieChart>
                     </ResponsiveContainer>
                   </div>

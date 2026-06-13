@@ -11,11 +11,7 @@ const App: React.FC = () => {
   const { theme } = useStore();
 
   useEffect(() => {
-    if (theme === 'light') {
-      document.documentElement.classList.add('light-mode');
-    } else {
-      document.documentElement.classList.remove('light-mode');
-    }
+    document.documentElement.setAttribute('data-theme', theme);
   }, [theme]);
 
   return (
