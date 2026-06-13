@@ -596,7 +596,15 @@ const List: React.FC = () => {
                               )}
                               <div className="flex flex-col min-w-0 flex-1">
                                 <span className="truncate font-extrabold text-[12px] leading-snug">{country.name}</span>
-                                <span className="text-[9px] opacity-40 font-mono tracking-wider font-semibold uppercase">{country.id}</span>
+                                <div className="flex items-center gap-1.5 mt-0.5">
+                                  <span className="text-[9px] opacity-40 font-mono tracking-wider font-semibold uppercase">{country.id}</span>
+                                  {hasDrill && (
+                                    <div className="flex items-center gap-0.5 bg-primary/10 border border-primary/20 text-primary rounded px-1 text-[9px] font-bold py-0.5 shrink-0 select-none">
+                                      <Map size={9} />
+                                      <span>{getSubregionsProgressString(country.id)}</span>
+                                    </div>
+                                  )}
+                                </div>
                               </div>
                             </div>
 
@@ -631,13 +639,6 @@ const List: React.FC = () => {
                                   <Ban size={10} />
                                 </button>
                               </div>
-
-                              {hasDrill && (
-                                <div className="flex items-center gap-0.5 bg-primary/10 border border-primary/20 text-primary rounded px-1 text-[9px] font-bold py-0.5 shrink-0 select-none ml-1">
-                                  <Map size={9} />
-                                  <span>{getSubregionsProgressString(country.id)}</span>
-                                </div>
-                              )}
                             </div>
                           </div>
                         );
