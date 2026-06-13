@@ -1,6 +1,6 @@
 # AGENTS.MD — VisitedPlaces Project Guide
 
-> **Version**: 1.0.0  
+> **Version**: 1.0.1  
 > **Last Updated**: 2026-06-13  
 > **Status**: Active Development
 
@@ -252,7 +252,7 @@ We use [Semantic Versioning](https://semver.org/):
 
 ### Current Version
 
-`1.0.0` — First stable release with all core features: map tracking, list view, analytics, comparison, share codes, theme toggle, and REVISIT status.
+`1.0.1` — Version containing layout fixes, codebase cleanup, duplicate URL fix, and standard CI pipeline integration.
 
 ### Display
 
@@ -276,7 +276,7 @@ The version is injected at build time via Vite's `define` config and displayed a
 | Linting | ESLint 9 | ✅ Active |
 | E2E Tests | Playwright | 🔧 Spec exists, needs expansion |
 | Unit Tests | Vitest (planned) | 📋 Planned |
-| CI Pipeline | GitHub Actions (planned) | 📋 Planned |
+| CI Pipeline | GitHub Actions | ✅ Active |
 
 ### Testing Priorities
 
@@ -336,8 +336,8 @@ npx playwright test   # E2E tests (requires Playwright browsers installed)
 - [ ] Polished sharing UX: visual preview of share code content, one-click copy
 - [ ] Bundle curated drill-down TopoJSON (USA, GBR, AUS, JPN, FRA, DEU)
 - [ ] Full test coverage (unit + E2E)
-- [ ] GitHub Actions CI pipeline
-- [ ] Proper README with screenshots, feature list, and deployment instructions
+- [x] GitHub Actions CI pipeline
+- [x] Proper README with screenshots, feature list, and deployment instructions
 
 ### Phase 2: New Dimensions
 

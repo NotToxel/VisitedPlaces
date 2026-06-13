@@ -47,12 +47,12 @@ export const getRegionId = (
   activeCountry: string | null
 ): string => {
   if (activeCountry === 'GBR') {
-     const rawId = geo.properties?.AREACD || geo.properties?.areacd || geo.id;
+     const rawId = geo.properties?.AREACD || geo.properties?.areacd || geo.id?.toString() || '';
      return `GBR-${rawId}`;
   }
   if (activeCountry === 'USA') {
-     return `USA-${geo.id}`;
+     return `USA-${geo.id?.toString() || ''}`;
   }
-  const rawId = geo.properties?.ISO_A3 || geo.id.toString();
+  const rawId = geo.properties?.ISO_A3 || geo.id?.toString() || '';
   return numericToA3[rawId] || rawId;
 };
