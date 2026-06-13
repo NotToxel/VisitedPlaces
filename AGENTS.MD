@@ -1,6 +1,6 @@
 # AGENTS.MD — VisitedPlaces Project Guide
 
-> **Version**: 1.0.1  
+> **Version**: 1.0.2  
 > **Last Updated**: 2026-06-13  
 > **Status**: Active Development
 
@@ -252,7 +252,7 @@ We use [Semantic Versioning](https://semver.org/):
 
 ### Current Version
 
-`1.0.1` — Version containing layout fixes, codebase cleanup, duplicate URL fix, and standard CI pipeline integration.
+`1.0.2` — Version containing layout fixes, codebase cleanup, duplicate URL fix, standard CI pipeline integration, and corrected country flag CDN URLs.
 
 ### Display
 

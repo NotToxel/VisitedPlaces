@@ -15,7 +15,7 @@ export const COUNTRIES: Country[] = [
     "ccn3": "004",
     "name": "Afghanistan",
     "continent": "Asia",
-    "flag": "https://flagcdn.com/w320/af.svg"
+    "flag": "https://flagcdn.com/af.svg"
   },
   {
     "id": "ALB",
@@ -23,7 +23,7 @@ export const COUNTRIES: Country[] = [
     "ccn3": "008",
     "name": "Albania",
     "continent": "Europe",
-    "flag": "https://flagcdn.com/w320/al.svg"
+    "flag": "https://flagcdn.com/al.svg"
   },
   {
     "id": "DZA",
@@ -31,7 +31,7 @@ export const COUNTRIES: Country[] = [
     "ccn3": "012",
     "name": "Algeria",
     "continent": "Africa",
-    "flag": "https://flagcdn.com/w320/dz.svg"
+    "flag": "https://flagcdn.com/dz.svg"
   },
   {
     "id": "AND",
@@ -39,7 +39,7 @@ export const COUNTRIES: Country[] = [
     "ccn3": "020",
     "name": "Andorra",
     "continent": "Europe",
-    "flag": "https://flagcdn.com/w320/ad.svg"
+    "flag": "https://flagcdn.com/ad.svg"
   },
   {
     "id": "AGO",
@@ -47,7 +47,7 @@ export const COUNTRIES: Country[] = [
     "ccn3": "024",
     "name": "Angola",
     "continent": "Africa",
-    "flag": "https://flagcdn.com/w320/ao.svg"
+    "flag": "https://flagcdn.com/ao.svg"
   },
   {
     "id": "ATG",
@@ -55,7 +55,7 @@ export const COUNTRIES: Country[] = [
     "ccn3": "028",
     "name": "Antigua and Barbuda",
     "continent": "North America",
-    "flag": "https://flagcdn.com/w320/ag.svg"
+    "flag": "https://flagcdn.com/ag.svg"
   },
   {
     "id": "ARG",
@@ -63,7 +63,7 @@ export const COUNTRIES: Country[] = [
     "ccn3": "032",
     "name": "Argentina",
     "continent": "South America",
-    "flag": "https://flagcdn.com/w320/ar.svg"
+    "flag": "https://flagcdn.com/ar.svg"
   },
   {
     "id": "ARM",
@@ -71,7 +71,7 @@ export const COUNTRIES: Country[] = [
     "ccn3": "051",
     "name": "Armenia",
     "continent": "Asia",
-    "flag": "https://flagcdn.com/w320/am.svg"
+    "flag": "https://flagcdn.com/am.svg"
   },
   {
     "id": "AUS",
@@ -79,7 +79,7 @@ export const COUNTRIES: Country[] = [
     "ccn3": "036",
     "name": "Australia",
     "continent": "Oceania",
-    "flag": "https://flagcdn.com/w320/au.svg"
+    "flag": "https://flagcdn.com/au.svg"
   },
   {
     "id": "AUT",
@@ -87,7 +87,7 @@ export const COUNTRIES: Country[] = [
     "ccn3": "040",
     "name": "Austria",
     "continent": "Europe",
-    "flag": "https://flagcdn.com/w320/at.svg"
+    "flag": "https://flagcdn.com/at.svg"
   },
   {
     "id": "AZE",
@@ -95,7 +95,7 @@ export const COUNTRIES: Country[] = [
     "ccn3": "031",
     "name": "Azerbaijan",
     "continent": "Asia",
-    "flag": "https://flagcdn.com/w320/az.svg"
+    "flag": "https://flagcdn.com/az.svg"
   },
   {
     "id": "BHS",
@@ -103,7 +103,7 @@ export const COUNTRIES: Country[] = [
     "ccn3": "044",
     "name": "Bahamas",
     "continent": "North America",
-    "flag": "https://flagcdn.com/w320/bs.svg"
+    "flag": "https://flagcdn.com/bs.svg"
   },
   {
     "id": "BHR",
@@ -111,7 +111,7 @@ export const COUNTRIES: Country[] = [
     "ccn3": "048",
     "name": "Bahrain",
     "continent": "Asia",
-    "flag": "https://flagcdn.com/w320/bh.svg"
+    "flag": "https://flagcdn.com/bh.svg"
   },
   {
     "id": "BGD",
@@ -119,7 +119,7 @@ export const COUNTRIES: Country[] = [
     "ccn3": "050",
     "name": "Bangladesh",
     "continent": "Asia",
-    "flag": "https://flagcdn.com/w320/bd.svg"
+    "flag": "https://flagcdn.com/bd.svg"
   },
   {
     "id": "BRB",
@@ -127,7 +127,7 @@ export const COUNTRIES: Country[] = [
     "ccn3": "052",
     "name": "Barbados",
     "continent": "North America",
-    "flag": "https://flagcdn.com/w320/bb.svg"
+    "flag": "https://flagcdn.com/bb.svg"
   },
   {
     "id": "BLR",
@@ -135,7 +135,7 @@ export const COUNTRIES: Country[] = [
     "ccn3": "112",
     "name": "Belarus",
     "continent": "Europe",
-    "flag": "https://flagcdn.com/w320/by.svg"
+    "flag": "https://flagcdn.com/by.svg"
   },
   {
     "id": "BEL",
@@ -143,7 +143,7 @@ export const COUNTRIES: Country[] = [
     "ccn3": "056",
     "name": "Belgium",
     "continent": "Europe",
-    "flag": "https://flagcdn.com/w320/be.svg"
+    "flag": "https://flagcdn.com/be.svg"
   },
   {
     "id": "BLZ",
@@ -151,7 +151,7 @@ export const COUNTRIES: Country[] = [
     "ccn3": "084",
     "name": "Belize",
     "continent": "North America",
-    "flag": "https://flagcdn.com/w320/bz.svg"
+    "flag": "https://flagcdn.com/bz.svg"
   },
   {
     "id": "BEN",
@@ -159,7 +159,7 @@ export const COUNTRIES: Country[] = [
     "ccn3": "204",
     "name": "Benin",
     "continent": "Africa",
-    "flag": "https://flagcdn.com/w320/bj.svg"
+    "flag": "https://flagcdn.com/bj.svg"
   },
   {
     "id": "BTN",
@@ -167,7 +167,7 @@ export const COUNTRIES: Country[] = [
     "ccn3": "064",
     "name": "Bhutan",
     "continent": "Asia",
-    "flag": "https://flagcdn.com/w320/bt.svg"
+    "flag": "https://flagcdn.com/bt.svg"
   },
   {
     "id": "BOL",
@@ -175,7 +175,7 @@ export const COUNTRIES: Country[] = [
     "ccn3": "068",
     "name": "Bolivia",
     "continent": "South America",
-    "flag": "https://flagcdn.com/w320/bo.svg"
+    "flag": "https://flagcdn.com/bo.svg"
   },
   {
     "id": "BIH",
@@ -183,7 +183,7 @@ export const COUNTRIES: Country[] = [
     "ccn3": "070",
     "name": "Bosnia and Herzegovina",
     "continent": "Europe",
-    "flag": "https://flagcdn.com/w320/ba.svg"
+    "flag": "https://flagcdn.com/ba.svg"
   },
   {
     "id": "BWA",
@@ -191,7 +191,7 @@ export const COUNTRIES: Country[] = [
     "ccn3": "072",
     "name": "Botswana",
     "continent": "Africa",
-    "flag": "https://flagcdn.com/w320/bw.svg"
+    "flag": "https://flagcdn.com/bw.svg"
   },
   {
     "id": "BRA",
@@ -199,7 +199,7 @@ export const COUNTRIES: Country[] = [
     "ccn3": "076",
     "name": "Brazil",
     "continent": "South America",
-    "flag": "https://flagcdn.com/w320/br.svg"
+    "flag": "https://flagcdn.com/br.svg"
   },
   {
     "id": "BRN",
@@ -207,7 +207,7 @@ export const COUNTRIES: Country[] = [
     "ccn3": "096",
     "name": "Brunei",
     "continent": "Asia",
-    "flag": "https://flagcdn.com/w320/bn.svg"
+    "flag": "https://flagcdn.com/bn.svg"
   },
   {
     "id": "BGR",
@@ -215,7 +215,7 @@ export const COUNTRIES: Country[] = [
     "ccn3": "100",
     "name": "Bulgaria",
     "continent": "Europe",
-    "flag": "https://flagcdn.com/w320/bg.svg"
+    "flag": "https://flagcdn.com/bg.svg"
   },
   {
     "id": "BFA",
@@ -223,7 +223,7 @@ export const COUNTRIES: Country[] = [
     "ccn3": "854",
     "name": "Burkina Faso",
     "continent": "Africa",
-    "flag": "https://flagcdn.com/w320/bf.svg"
+    "flag": "https://flagcdn.com/bf.svg"
   },
   {
     "id": "BDI",
@@ -231,7 +231,7 @@ export const COUNTRIES: Country[] = [
     "ccn3": "108",
     "name": "Burundi",
     "continent": "Africa",
-    "flag": "https://flagcdn.com/w320/bi.svg"
+    "flag": "https://flagcdn.com/bi.svg"
   },
   {
     "id": "KHM",
@@ -239,7 +239,7 @@ export const COUNTRIES: Country[] = [
     "ccn3": "116",
     "name": "Cambodia",
     "continent": "Asia",
-    "flag": "https://flagcdn.com/w320/kh.svg"
+    "flag": "https://flagcdn.com/kh.svg"
   },
   {
     "id": "CMR",
@@ -247,7 +247,7 @@ export const COUNTRIES: Country[] = [
     "ccn3": "120",
     "name": "Cameroon",
     "continent": "Africa",
-    "flag": "https://flagcdn.com/w320/cm.svg"
+    "flag": "https://flagcdn.com/cm.svg"
   },
   {
     "id": "CAN",
@@ -255,7 +255,7 @@ export const COUNTRIES: Country[] = [
     "ccn3": "124",
     "name": "Canada",
     "continent": "North America",
-    "flag": "https://flagcdn.com/w320/ca.svg"
+    "flag": "https://flagcdn.com/ca.svg"
   },
   {
     "id": "CPV",
@@ -263,7 +263,7 @@ export const COUNTRIES: Country[] = [
     "ccn3": "132",
     "name": "Cape Verde",
     "continent": "Africa",
-    "flag": "https://flagcdn.com/w320/cv.svg"
+    "flag": "https://flagcdn.com/cv.svg"
   },
   {
     "id": "CAF",
@@ -271,7 +271,7 @@ export const COUNTRIES: Country[] = [
     "ccn3": "140",
     "name": "Central African Republic",
     "continent": "Africa",
-    "flag": "https://flagcdn.com/w320/cf.svg"
+    "flag": "https://flagcdn.com/cf.svg"
   },
   {
     "id": "TCD",
@@ -279,7 +279,7 @@ export const COUNTRIES: Country[] = [
     "ccn3": "148",
     "name": "Chad",
     "continent": "Africa",
-    "flag": "https://flagcdn.com/w320/td.svg"
+    "flag": "https://flagcdn.com/td.svg"
   },
   {
     "id": "CHL",
@@ -287,7 +287,7 @@ export const COUNTRIES: Country[] = [
     "ccn3": "152",
     "name": "Chile",
     "continent": "South America",
-    "flag": "https://flagcdn.com/w320/cl.svg"
+    "flag": "https://flagcdn.com/cl.svg"
   },
   {
     "id": "CHN",
@@ -295,7 +295,7 @@ export const COUNTRIES: Country[] = [
     "ccn3": "156",
     "name": "China",
     "continent": "Asia",
-    "flag": "https://flagcdn.com/w320/cn.svg"
+    "flag": "https://flagcdn.com/cn.svg"
   },
   {
     "id": "COL",
@@ -303,7 +303,7 @@ export const COUNTRIES: Country[] = [
     "ccn3": "170",
     "name": "Colombia",
     "continent": "South America",
-    "flag": "https://flagcdn.com/w320/co.svg"
+    "flag": "https://flagcdn.com/co.svg"
   },
   {
     "id": "COM",
@@ -311,7 +311,7 @@ export const COUNTRIES: Country[] = [
     "ccn3": "174",
     "name": "Comoros",
     "continent": "Africa",
-    "flag": "https://flagcdn.com/w320/km.svg"
+    "flag": "https://flagcdn.com/km.svg"
   },
   {
     "id": "COG",
@@ -319,7 +319,7 @@ export const COUNTRIES: Country[] = [
     "ccn3": "178",
     "name": "Congo",
     "continent": "Africa",
-    "flag": "https://flagcdn.com/w320/cg.svg"
+    "flag": "https://flagcdn.com/cg.svg"
   },
   {
     "id": "CRI",
@@ -327,7 +327,7 @@ export const COUNTRIES: Country[] = [
     "ccn3": "188",
     "name": "Costa Rica",
     "continent": "North America",
-    "flag": "https://flagcdn.com/w320/cr.svg"
+    "flag": "https://flagcdn.com/cr.svg"
   },
   {
     "id": "HRV",
@@ -335,7 +335,7 @@ export const COUNTRIES: Country[] = [
     "ccn3": "191",
     "name": "Croatia",
     "continent": "Europe",
-    "flag": "https://flagcdn.com/w320/hr.svg"
+    "flag": "https://flagcdn.com/hr.svg"
   },
   {
     "id": "CUB",
@@ -343,7 +343,7 @@ export const COUNTRIES: Country[] = [
     "ccn3": "192",
     "name": "Cuba",
     "continent": "North America",
-    "flag": "https://flagcdn.com/w320/cu.svg"
+    "flag": "https://flagcdn.com/cu.svg"
   },
   {
     "id": "CYP",
@@ -351,7 +351,7 @@ export const COUNTRIES: Country[] = [
     "ccn3": "196",
     "name": "Cyprus",
     "continent": "Europe",
-    "flag": "https://flagcdn.com/w320/cy.svg"
+    "flag": "https://flagcdn.com/cy.svg"
   },
   {
     "id": "CZE",
@@ -359,7 +359,7 @@ export const COUNTRIES: Country[] = [
     "ccn3": "203",
     "name": "Czechia",
     "continent": "Europe",
-    "flag": "https://flagcdn.com/w320/cz.svg"
+    "flag": "https://flagcdn.com/cz.svg"
   },
   {
     "id": "DNK",
@@ -367,7 +367,7 @@ export const COUNTRIES: Country[] = [
     "ccn3": "208",
     "name": "Denmark",
     "continent": "Europe",
-    "flag": "https://flagcdn.com/w320/dk.svg"
+    "flag": "https://flagcdn.com/dk.svg"
   },
   {
     "id": "DJI",
@@ -375,7 +375,7 @@ export const COUNTRIES: Country[] = [
     "ccn3": "262",
     "name": "Djibouti",
     "continent": "Africa",
-    "flag": "https://flagcdn.com/w320/dj.svg"
+    "flag": "https://flagcdn.com/dj.svg"
   },
   {
     "id": "DMA",
@@ -383,7 +383,7 @@ export const COUNTRIES: Country[] = [
     "ccn3": "212",
     "name": "Dominica",
     "continent": "North America",
-    "flag": "https://flagcdn.com/w320/dm.svg"
+    "flag": "https://flagcdn.com/dm.svg"
   },
   {
     "id": "DOM",
@@ -391,7 +391,7 @@ export const COUNTRIES: Country[] = [
     "ccn3": "214",
     "name": "Dominican Republic",
     "continent": "North America",
-    "flag": "https://flagcdn.com/w320/do.svg"
+    "flag": "https://flagcdn.com/do.svg"
   },
   {
     "id": "COD",
@@ -399,7 +399,7 @@ export const COUNTRIES: Country[] = [
     "ccn3": "180",
     "name": "DR Congo",
     "continent": "Africa",
-    "flag": "https://flagcdn.com/w320/cd.svg"
+    "flag": "https://flagcdn.com/cd.svg"
   },
   {
     "id": "ECU",
@@ -407,7 +407,7 @@ export const COUNTRIES: Country[] = [
     "ccn3": "218",
     "name": "Ecuador",
     "continent": "South America",
-    "flag": "https://flagcdn.com/w320/ec.svg"
+    "flag": "https://flagcdn.com/ec.svg"
   },
   {
     "id": "EGY",
@@ -415,7 +415,7 @@ export const COUNTRIES: Country[] = [
     "ccn3": "818",
     "name": "Egypt",
     "continent": "Africa",
-    "flag": "https://flagcdn.com/w320/eg.svg"
+    "flag": "https://flagcdn.com/eg.svg"
   },
   {
     "id": "SLV",
@@ -423,7 +423,7 @@ export const COUNTRIES: Country[] = [
     "ccn3": "222",
     "name": "El Salvador",
     "continent": "North America",
-    "flag": "https://flagcdn.com/w320/sv.svg"
+    "flag": "https://flagcdn.com/sv.svg"
   },
   {
     "id": "GNQ",
@@ -431,7 +431,7 @@ export const COUNTRIES: Country[] = [
     "ccn3": "226",
     "name": "Equatorial Guinea",
     "continent": "Africa",
-    "flag": "https://flagcdn.com/w320/gq.svg"
+    "flag": "https://flagcdn.com/gq.svg"
   },
   {
     "id": "ERI",
@@ -439,7 +439,7 @@ export const COUNTRIES: Country[] = [
     "ccn3": "232",
     "name": "Eritrea",
     "continent": "Africa",
-    "flag": "https://flagcdn.com/w320/er.svg"
+    "flag": "https://flagcdn.com/er.svg"
   },
   {
     "id": "EST",
@@ -447,7 +447,7 @@ export const COUNTRIES: Country[] = [
     "ccn3": "233",
     "name": "Estonia",
     "continent": "Europe",
-    "flag": "https://flagcdn.com/w320/ee.svg"
+    "flag": "https://flagcdn.com/ee.svg"
   },
   {
     "id": "SWZ",
@@ -455,7 +455,7 @@ export const COUNTRIES: Country[] = [
     "ccn3": "748",
     "name": "Eswatini",
     "continent": "Africa",
-    "flag": "https://flagcdn.com/w320/sz.svg"
+    "flag": "https://flagcdn.com/sz.svg"
   },
   {
     "id": "ETH",
@@ -463,7 +463,7 @@ export const COUNTRIES: Country[] = [
     "ccn3": "231",
     "name": "Ethiopia",
     "continent": "Africa",
-    "flag": "https://flagcdn.com/w320/et.svg"
+    "flag": "https://flagcdn.com/et.svg"
   },
   {
     "id": "FJI",
@@ -471,7 +471,7 @@ export const COUNTRIES: Country[] = [
     "ccn3": "242",
     "name": "Fiji",
     "continent": "Oceania",
-    "flag": "https://flagcdn.com/w320/fj.svg"
+    "flag": "https://flagcdn.com/fj.svg"
   },
   {
     "id": "FIN",
@@ -479,7 +479,7 @@ export const COUNTRIES: Country[] = [
     "ccn3": "246",
     "name": "Finland",
     "continent": "Europe",
-    "flag": "https://flagcdn.com/w320/fi.svg"
+    "flag": "https://flagcdn.com/fi.svg"
   },
   {
     "id": "FRA",
@@ -487,7 +487,7 @@ export const COUNTRIES: Country[] = [
     "ccn3": "250",
     "name": "France",
     "continent": "Europe",
-    "flag": "https://flagcdn.com/w320/fr.svg"
+    "flag": "https://flagcdn.com/fr.svg"
   },
   {
     "id": "GAB",
@@ -495,7 +495,7 @@ export const COUNTRIES: Country[] = [
     "ccn3": "266",
     "name": "Gabon",
     "continent": "Africa",
-    "flag": "https://flagcdn.com/w320/ga.svg"
+    "flag": "https://flagcdn.com/ga.svg"
   },
   {
     "id": "GMB",
@@ -503,7 +503,7 @@ export const COUNTRIES: Country[] = [
     "ccn3": "270",
     "name": "Gambia",
     "continent": "Africa",
-    "flag": "https://flagcdn.com/w320/gm.svg"
+    "flag": "https://flagcdn.com/gm.svg"
   },
   {
     "id": "GEO",
@@ -511,7 +511,7 @@ export const COUNTRIES: Country[] = [
     "ccn3": "268",
     "name": "Georgia",
     "continent": "Asia",
-    "flag": "https://flagcdn.com/w320/ge.svg"
+    "flag": "https://flagcdn.com/ge.svg"
   },
   {
     "id": "DEU",
@@ -519,7 +519,7 @@ export const COUNTRIES: Country[] = [
     "ccn3": "276",
     "name": "Germany",
     "continent": "Europe",
-    "flag": "https://flagcdn.com/w320/de.svg"
+    "flag": "https://flagcdn.com/de.svg"
   },
   {
     "id": "GHA",
@@ -527,7 +527,7 @@ export const COUNTRIES: Country[] = [
     "ccn3": "288",
     "name": "Ghana",
     "continent": "Africa",
-    "flag": "https://flagcdn.com/w320/gh.svg"
+    "flag": "https://flagcdn.com/gh.svg"
   },
   {
     "id": "GRC",
@@ -535,7 +535,7 @@ export const COUNTRIES: Country[] = [
     "ccn3": "300",
     "name": "Greece",
     "continent": "Europe",
-    "flag": "https://flagcdn.com/w320/gr.svg"
+    "flag": "https://flagcdn.com/gr.svg"
   },
   {
     "id": "GRD",
@@ -543,7 +543,7 @@ export const COUNTRIES: Country[] = [
     "ccn3": "308",
     "name": "Grenada",
     "continent": "North America",
-    "flag": "https://flagcdn.com/w320/gd.svg"
+    "flag": "https://flagcdn.com/gd.svg"
   },
   {
     "id": "GTM",
@@ -551,7 +551,7 @@ export const COUNTRIES: Country[] = [
     "ccn3": "320",
     "name": "Guatemala",
     "continent": "North America",
-    "flag": "https://flagcdn.com/w320/gt.svg"
+    "flag": "https://flagcdn.com/gt.svg"
   },
   {
     "id": "GIN",
@@ -559,7 +559,7 @@ export const COUNTRIES: Country[] = [
     "ccn3": "324",
     "name": "Guinea",
     "continent": "Africa",
-    "flag": "https://flagcdn.com/w320/gn.svg"
+    "flag": "https://flagcdn.com/gn.svg"
   },
   {
     "id": "GNB",
@@ -567,7 +567,7 @@ export const COUNTRIES: Country[] = [
     "ccn3": "624",
     "name": "Guinea-Bissau",
     "continent": "Africa",
-    "flag": "https://flagcdn.com/w320/gw.svg"
+    "flag": "https://flagcdn.com/gw.svg"
   },
   {
     "id": "GUY",
@@ -575,7 +575,7 @@ export const COUNTRIES: Country[] = [
     "ccn3": "328",
     "name": "Guyana",
     "continent": "South America",
-    "flag": "https://flagcdn.com/w320/gy.svg"
+    "flag": "https://flagcdn.com/gy.svg"
   },
   {
     "id": "HTI",
@@ -583,7 +583,7 @@ export const COUNTRIES: Country[] = [
     "ccn3": "332",
     "name": "Haiti",
     "continent": "North America",
-    "flag": "https://flagcdn.com/w320/ht.svg"
+    "flag": "https://flagcdn.com/ht.svg"
   },
   {
     "id": "HND",
@@ -591,7 +591,7 @@ export const COUNTRIES: Country[] = [
     "ccn3": "340",
     "name": "Honduras",
     "continent": "North America",
-    "flag": "https://flagcdn.com/w320/hn.svg"
+    "flag": "https://flagcdn.com/hn.svg"
   },
   {
     "id": "HKG",
@@ -599,7 +599,7 @@ export const COUNTRIES: Country[] = [
     "ccn3": "344",
     "name": "Hong Kong",
     "continent": "Asia",
-    "flag": "https://flagcdn.com/w320/hk.svg"
+    "flag": "https://flagcdn.com/hk.svg"
   },
   {
     "id": "HUN",
@@ -607,7 +607,7 @@ export const COUNTRIES: Country[] = [
     "ccn3": "348",
     "name": "Hungary",
     "continent": "Europe",
-    "flag": "https://flagcdn.com/w320/hu.svg"
+    "flag": "https://flagcdn.com/hu.svg"
   },
   {
     "id": "ISL",
@@ -615,7 +615,7 @@ export const COUNTRIES: Country[] = [
     "ccn3": "352",
     "name": "Iceland",
     "continent": "Europe",
-    "flag": "https://flagcdn.com/w320/is.svg"
+    "flag": "https://flagcdn.com/is.svg"
   },
   {
     "id": "IND",
@@ -623,7 +623,7 @@ export const COUNTRIES: Country[] = [
     "ccn3": "356",
     "name": "India",
     "continent": "Asia",
-    "flag": "https://flagcdn.com/w320/in.svg"
+    "flag": "https://flagcdn.com/in.svg"
   },
   {
     "id": "IDN",
@@ -631,7 +631,7 @@ export const COUNTRIES: Country[] = [
     "ccn3": "360",
     "name": "Indonesia",
     "continent": "Asia",
-    "flag": "https://flagcdn.com/w320/id.svg"
+    "flag": "https://flagcdn.com/id.svg"
   },
   {
     "id": "IRN",
@@ -639,7 +639,7 @@ export const COUNTRIES: Country[] = [
     "ccn3": "364",
     "name": "Iran",
     "continent": "Asia",
-    "flag": "https://flagcdn.com/w320/ir.svg"
+    "flag": "https://flagcdn.com/ir.svg"
   },
   {
     "id": "IRQ",
@@ -647,7 +647,7 @@ export const COUNTRIES: Country[] = [
     "ccn3": "368",
     "name": "Iraq",
     "continent": "Asia",
-    "flag": "https://flagcdn.com/w320/iq.svg"
+    "flag": "https://flagcdn.com/iq.svg"
   },
   {
     "id": "IRL",
@@ -655,7 +655,7 @@ export const COUNTRIES: Country[] = [
     "ccn3": "372",
     "name": "Ireland",
     "continent": "Europe",
-    "flag": "https://flagcdn.com/w320/ie.svg"
+    "flag": "https://flagcdn.com/ie.svg"
   },
   {
     "id": "ISR",
@@ -663,7 +663,7 @@ export const COUNTRIES: Country[] = [
     "ccn3": "376",
     "name": "Israel",
     "continent": "Asia",
-    "flag": "https://flagcdn.com/w320/il.svg"
+    "flag": "https://flagcdn.com/il.svg"
   },
   {
     "id": "ITA",
@@ -671,7 +671,7 @@ export const COUNTRIES: Country[] = [
     "ccn3": "380",
     "name": "Italy",
     "continent": "Europe",
-    "flag": "https://flagcdn.com/w320/it.svg"
+    "flag": "https://flagcdn.com/it.svg"
   },
   {
     "id": "CIV",
@@ -679,7 +679,7 @@ export const COUNTRIES: Country[] = [
     "ccn3": "384",
     "name": "Ivory Coast",
     "continent": "Africa",
-    "flag": "https://flagcdn.com/w320/ci.svg"
+    "flag": "https://flagcdn.com/ci.svg"
   },
   {
     "id": "JAM",
@@ -687,7 +687,7 @@ export const COUNTRIES: Country[] = [
     "ccn3": "388",
     "name": "Jamaica",
     "continent": "North America",
-    "flag": "https://flagcdn.com/w320/jm.svg"
+    "flag": "https://flagcdn.com/jm.svg"
   },
   {
     "id": "JPN",
@@ -695,7 +695,7 @@ export const COUNTRIES: Country[] = [
     "ccn3": "392",
     "name": "Japan",
     "continent": "Asia",
-    "flag": "https://flagcdn.com/w320/jp.svg"
+    "flag": "https://flagcdn.com/jp.svg"
   },
   {
     "id": "JOR",
@@ -703,7 +703,7 @@ export const COUNTRIES: Country[] = [
     "ccn3": "400",
     "name": "Jordan",
     "continent": "Asia",
-    "flag": "https://flagcdn.com/w320/jo.svg"
+    "flag": "https://flagcdn.com/jo.svg"
   },
   {
     "id": "KAZ",
@@ -711,7 +711,7 @@ export const COUNTRIES: Country[] = [
     "ccn3": "398",
     "name": "Kazakhstan",
     "continent": "Asia",
-    "flag": "https://flagcdn.com/w320/kz.svg"
+    "flag": "https://flagcdn.com/kz.svg"
   },
   {
     "id": "KEN",
@@ -719,7 +719,7 @@ export const COUNTRIES: Country[] = [
     "ccn3": "404",
     "name": "Kenya",
     "continent": "Africa",
-    "flag": "https://flagcdn.com/w320/ke.svg"
+    "flag": "https://flagcdn.com/ke.svg"
   },
   {
     "id": "KIR",
@@ -727,7 +727,7 @@ export const COUNTRIES: Country[] = [
     "ccn3": "296",
     "name": "Kiribati",
     "continent": "Oceania",
-    "flag": "https://flagcdn.com/w320/ki.svg"
+    "flag": "https://flagcdn.com/ki.svg"
   },
   {
     "id": "KWT",
@@ -735,7 +735,7 @@ export const COUNTRIES: Country[] = [
     "ccn3": "414",
     "name": "Kuwait",
     "continent": "Asia",
-    "flag": "https://flagcdn.com/w320/kw.svg"
+    "flag": "https://flagcdn.com/kw.svg"
   },
   {
     "id": "KGZ",
@@ -743,7 +743,7 @@ export const COUNTRIES: Country[] = [
     "ccn3": "417",
     "name": "Kyrgyzstan",
     "continent": "Asia",
-    "flag": "https://flagcdn.com/w320/kg.svg"
+    "flag": "https://flagcdn.com/kg.svg"
   },
   {
     "id": "LAO",
@@ -751,7 +751,7 @@ export const COUNTRIES: Country[] = [
     "ccn3": "418",
     "name": "Laos",
     "continent": "Asia",
-    "flag": "https://flagcdn.com/w320/la.svg"
+    "flag": "https://flagcdn.com/la.svg"
   },
   {
     "id": "LVA",
@@ -759,7 +759,7 @@ export const COUNTRIES: Country[] = [
     "ccn3": "428",
     "name": "Latvia",
     "continent": "Europe",
-    "flag": "https://flagcdn.com/w320/lv.svg"
+    "flag": "https://flagcdn.com/lv.svg"
   },
   {
     "id": "LBN",
@@ -767,7 +767,7 @@ export const COUNTRIES: Country[] = [
     "ccn3": "422",
     "name": "Lebanon",
     "continent": "Asia",
-    "flag": "https://flagcdn.com/w320/lb.svg"
+    "flag": "https://flagcdn.com/lb.svg"
   },
   {
     "id": "LSO",
@@ -775,7 +775,7 @@ export const COUNTRIES: Country[] = [
     "ccn3": "426",
     "name": "Lesotho",
     "continent": "Africa",
-    "flag": "https://flagcdn.com/w320/ls.svg"
+    "flag": "https://flagcdn.com/ls.svg"
   },
   {
     "id": "LBR",
@@ -783,7 +783,7 @@ export const COUNTRIES: Country[] = [
     "ccn3": "430",
     "name": "Liberia",
     "continent": "Africa",
-    "flag": "https://flagcdn.com/w320/lr.svg"
+    "flag": "https://flagcdn.com/lr.svg"
   },
   {
     "id": "LBY",
@@ -791,7 +791,7 @@ export const COUNTRIES: Country[] = [
     "ccn3": "434",
     "name": "Libya",
     "continent": "Africa",
-    "flag": "https://flagcdn.com/w320/ly.svg"
+    "flag": "https://flagcdn.com/ly.svg"
   },
   {
     "id": "LIE",
@@ -799,7 +799,7 @@ export const COUNTRIES: Country[] = [
     "ccn3": "438",
     "name": "Liechtenstein",
     "continent": "Europe",
-    "flag": "https://flagcdn.com/w320/li.svg"
+    "flag": "https://flagcdn.com/li.svg"
   },
   {
     "id": "LTU",
@@ -807,7 +807,7 @@ export const COUNTRIES: Country[] = [
     "ccn3": "440",
     "name": "Lithuania",
     "continent": "Europe",
-    "flag": "https://flagcdn.com/w320/lt.svg"
+    "flag": "https://flagcdn.com/lt.svg"
   },
   {
     "id": "LUX",
@@ -815,7 +815,7 @@ export const COUNTRIES: Country[] = [
     "ccn3": "442",
     "name": "Luxembourg",
     "continent": "Europe",
-    "flag": "https://flagcdn.com/w320/lu.svg"
+    "flag": "https://flagcdn.com/lu.svg"
   },
   {
     "id": "MAC",
@@ -823,7 +823,7 @@ export const COUNTRIES: Country[] = [
     "ccn3": "446",
     "name": "Macau",
     "continent": "Asia",
-    "flag": "https://flagcdn.com/w320/mo.svg"
+    "flag": "https://flagcdn.com/mo.svg"
   },
   {
     "id": "MDG",
@@ -831,7 +831,7 @@ export const COUNTRIES: Country[] = [
     "ccn3": "450",
     "name": "Madagascar",
     "continent": "Africa",
-    "flag": "https://flagcdn.com/w320/mg.svg"
+    "flag": "https://flagcdn.com/mg.svg"
   },
   {
     "id": "MWI",
@@ -839,7 +839,7 @@ export const COUNTRIES: Country[] = [
     "ccn3": "454",
     "name": "Malawi",
     "continent": "Africa",
-    "flag": "https://flagcdn.com/w320/mw.svg"
+    "flag": "https://flagcdn.com/mw.svg"
   },
   {
     "id": "MYS",
@@ -847,7 +847,7 @@ export const COUNTRIES: Country[] = [
     "ccn3": "458",
     "name": "Malaysia",
     "continent": "Asia",
-    "flag": "https://flagcdn.com/w320/my.svg"
+    "flag": "https://flagcdn.com/my.svg"
   },
   {
     "id": "MDV",
@@ -855,7 +855,7 @@ export const COUNTRIES: Country[] = [
     "ccn3": "462",
     "name": "Maldives",
     "continent": "Asia",
-    "flag": "https://flagcdn.com/w320/mv.svg"
+    "flag": "https://flagcdn.com/mv.svg"
   },
   {
     "id": "MLI",
@@ -863,7 +863,7 @@ export const COUNTRIES: Country[] = [
     "ccn3": "466",
     "name": "Mali",
     "continent": "Africa",
-    "flag": "https://flagcdn.com/w320/ml.svg"
+    "flag": "https://flagcdn.com/ml.svg"
   },
   {
     "id": "MLT",
@@ -871,7 +871,7 @@ export const COUNTRIES: Country[] = [
     "ccn3": "470",
     "name": "Malta",
     "continent": "Europe",
-    "flag": "https://flagcdn.com/w320/mt.svg"
+    "flag": "https://flagcdn.com/mt.svg"
   },
   {
     "id": "MHL",
@@ -879,7 +879,7 @@ export const COUNTRIES: Country[] = [
     "ccn3": "584",
     "name": "Marshall Islands",
     "continent": "Oceania",
-    "flag": "https://flagcdn.com/w320/mh.svg"
+    "flag": "https://flagcdn.com/mh.svg"
   },
   {
     "id": "MRT",
@@ -887,7 +887,7 @@ export const COUNTRIES: Country[] = [
     "ccn3": "478",
     "name": "Mauritania",
     "continent": "Africa",
-    "flag": "https://flagcdn.com/w320/mr.svg"
+    "flag": "https://flagcdn.com/mr.svg"
   },
   {
     "id": "MUS",
@@ -895,7 +895,7 @@ export const COUNTRIES: Country[] = [
     "ccn3": "480",
     "name": "Mauritius",
     "continent": "Africa",
-    "flag": "https://flagcdn.com/w320/mu.svg"
+    "flag": "https://flagcdn.com/mu.svg"
   },
   {
     "id": "MEX",
@@ -903,7 +903,7 @@ export const COUNTRIES: Country[] = [
     "ccn3": "484",
     "name": "Mexico",
     "continent": "North America",
-    "flag": "https://flagcdn.com/w320/mx.svg"
+    "flag": "https://flagcdn.com/mx.svg"
   },
   {
     "id": "FSM",
@@ -911,7 +911,7 @@ export const COUNTRIES: Country[] = [
     "ccn3": "583",
     "name": "Micronesia",
     "continent": "Oceania",
-    "flag": "https://flagcdn.com/w320/fm.svg"
+    "flag": "https://flagcdn.com/fm.svg"
   },
   {
     "id": "MDA",
@@ -919,7 +919,7 @@ export const COUNTRIES: Country[] = [
     "ccn3": "498",
     "name": "Moldova",
     "continent": "Europe",
-    "flag": "https://flagcdn.com/w320/md.svg"
+    "flag": "https://flagcdn.com/md.svg"
   },
   {
     "id": "MCO",
@@ -927,7 +927,7 @@ export const COUNTRIES: Country[] = [
     "ccn3": "492",
     "name": "Monaco",
     "continent": "Europe",
-    "flag": "https://flagcdn.com/w320/mc.svg"
+    "flag": "https://flagcdn.com/mc.svg"
   },
   {
     "id": "MNG",
@@ -935,7 +935,7 @@ export const COUNTRIES: Country[] = [
     "ccn3": "496",
     "name": "Mongolia",
     "continent": "Asia",
-    "flag": "https://flagcdn.com/w320/mn.svg"
+    "flag": "https://flagcdn.com/mn.svg"
   },
   {
     "id": "MNE",
@@ -943,7 +943,7 @@ export const COUNTRIES: Country[] = [
     "ccn3": "499",
     "name": "Montenegro",
     "continent": "Europe",
-    "flag": "https://flagcdn.com/w320/me.svg"
+    "flag": "https://flagcdn.com/me.svg"
   },
   {
     "id": "MAR",
@@ -951,7 +951,7 @@ export const COUNTRIES: Country[] = [
     "ccn3": "504",
     "name": "Morocco",
     "continent": "Africa",
-    "flag": "https://flagcdn.com/w320/ma.svg"
+    "flag": "https://flagcdn.com/ma.svg"
   },
   {
     "id": "MOZ",
@@ -959,7 +959,7 @@ export const COUNTRIES: Country[] = [
     "ccn3": "508",
     "name": "Mozambique",
     "continent": "Africa",
-    "flag": "https://flagcdn.com/w320/mz.svg"
+    "flag": "https://flagcdn.com/mz.svg"
   },
   {
     "id": "MMR",
@@ -967,7 +967,7 @@ export const COUNTRIES: Country[] = [
     "ccn3": "104",
     "name": "Myanmar",
     "continent": "Asia",
-    "flag": "https://flagcdn.com/w320/mm.svg"
+    "flag": "https://flagcdn.com/mm.svg"
   },
   {
     "id": "NAM",
@@ -975,7 +975,7 @@ export const COUNTRIES: Country[] = [
     "ccn3": "516",
     "name": "Namibia",
     "continent": "Africa",
-    "flag": "https://flagcdn.com/w320/na.svg"
+    "flag": "https://flagcdn.com/na.svg"
   },
   {
     "id": "NRU",
@@ -983,7 +983,7 @@ export const COUNTRIES: Country[] = [
     "ccn3": "520",
     "name": "Nauru",
     "continent": "Oceania",
-    "flag": "https://flagcdn.com/w320/nr.svg"
+    "flag": "https://flagcdn.com/nr.svg"
   },
   {
     "id": "NPL",
@@ -991,7 +991,7 @@ export const COUNTRIES: Country[] = [
     "ccn3": "524",
     "name": "Nepal",
     "continent": "Asia",
-    "flag": "https://flagcdn.com/w320/np.svg"
+    "flag": "https://flagcdn.com/np.svg"
   },
   {
     "id": "NLD",
@@ -999,7 +999,7 @@ export const COUNTRIES: Country[] = [
     "ccn3": "528",
     "name": "Netherlands",
     "continent": "Europe",
-    "flag": "https://flagcdn.com/w320/nl.svg"
+    "flag": "https://flagcdn.com/nl.svg"
   },
   {
     "id": "NZL",
@@ -1007,7 +1007,7 @@ export const COUNTRIES: Country[] = [
     "ccn3": "554",
     "name": "New Zealand",
     "continent": "Oceania",
-    "flag": "https://flagcdn.com/w320/nz.svg"
+    "flag": "https://flagcdn.com/nz.svg"
   },
   {
     "id": "NIC",
@@ -1015,7 +1015,7 @@ export const COUNTRIES: Country[] = [
     "ccn3": "558",
     "name": "Nicaragua",
     "continent": "North America",
-    "flag": "https://flagcdn.com/w320/ni.svg"
+    "flag": "https://flagcdn.com/ni.svg"
   },
   {
     "id": "NER",
@@ -1023,7 +1023,7 @@ export const COUNTRIES: Country[] = [
     "ccn3": "562",
     "name": "Niger",
     "continent": "Africa",
-    "flag": "https://flagcdn.com/w320/ne.svg"
+    "flag": "https://flagcdn.com/ne.svg"
   },
   {
     "id": "NGA",
@@ -1031,7 +1031,7 @@ export const COUNTRIES: Country[] = [
     "ccn3": "566",
     "name": "Nigeria",
     "continent": "Africa",
-    "flag": "https://flagcdn.com/w320/ng.svg"
+    "flag": "https://flagcdn.com/ng.svg"
   },
   {
     "id": "PRK",
@@ -1039,7 +1039,7 @@ export const COUNTRIES: Country[] = [
     "ccn3": "408",
     "name": "North Korea",
     "continent": "Asia",
-    "flag": "https://flagcdn.com/w320/kp.svg"
+    "flag": "https://flagcdn.com/kp.svg"
   },
   {
     "id": "MKD",
@@ -1047,7 +1047,7 @@ export const COUNTRIES: Country[] = [
     "ccn3": "807",
     "name": "North Macedonia",
     "continent": "Europe",
-    "flag": "https://flagcdn.com/w320/mk.svg"
+    "flag": "https://flagcdn.com/mk.svg"
   },
   {
     "id": "NOR",
@@ -1055,7 +1055,7 @@ export const COUNTRIES: Country[] = [
     "ccn3": "578",
     "name": "Norway",
     "continent": "Europe",
-    "flag": "https://flagcdn.com/w320/no.svg"
+    "flag": "https://flagcdn.com/no.svg"
   },
   {
     "id": "OMN",
@@ -1063,7 +1063,7 @@ export const COUNTRIES: Country[] = [
     "ccn3": "512",
     "name": "Oman",
     "continent": "Asia",
-    "flag": "https://flagcdn.com/w320/om.svg"
+    "flag": "https://flagcdn.com/om.svg"
   },
   {
     "id": "PAK",
@@ -1071,7 +1071,7 @@ export const COUNTRIES: Country[] = [
     "ccn3": "586",
     "name": "Pakistan",
     "continent": "Asia",
-    "flag": "https://flagcdn.com/w320/pk.svg"
+    "flag": "https://flagcdn.com/pk.svg"
   },
   {
     "id": "PLW",
@@ -1079,7 +1079,7 @@ export const COUNTRIES: Country[] = [
     "ccn3": "585",
     "name": "Palau",
     "continent": "Oceania",
-    "flag": "https://flagcdn.com/w320/pw.svg"
+    "flag": "https://flagcdn.com/pw.svg"
   },
   {
     "id": "PAN",
@@ -1087,7 +1087,7 @@ export const COUNTRIES: Country[] = [
     "ccn3": "591",
     "name": "Panama",
     "continent": "North America",
-    "flag": "https://flagcdn.com/w320/pa.svg"
+    "flag": "https://flagcdn.com/pa.svg"
   },
   {
     "id": "PNG",
@@ -1095,7 +1095,7 @@ export const COUNTRIES: Country[] = [
     "ccn3": "598",
     "name": "Papua New Guinea",
     "continent": "Oceania",
-    "flag": "https://flagcdn.com/w320/pg.svg"
+    "flag": "https://flagcdn.com/pg.svg"
   },
   {
     "id": "PRY",
@@ -1103,7 +1103,7 @@ export const COUNTRIES: Country[] = [
     "ccn3": "600",
     "name": "Paraguay",
     "continent": "South America",
-    "flag": "https://flagcdn.com/w320/py.svg"
+    "flag": "https://flagcdn.com/py.svg"
   },
   {
     "id": "PER",
@@ -1111,7 +1111,7 @@ export const COUNTRIES: Country[] = [
     "ccn3": "604",
     "name": "Peru",
     "continent": "South America",
-    "flag": "https://flagcdn.com/w320/pe.svg"
+    "flag": "https://flagcdn.com/pe.svg"
   },
   {
     "id": "PHL",
@@ -1119,7 +1119,7 @@ export const COUNTRIES: Country[] = [
     "ccn3": "608",
     "name": "Philippines",
     "continent": "Asia",
-    "flag": "https://flagcdn.com/w320/ph.svg"
+    "flag": "https://flagcdn.com/ph.svg"
   },
   {
     "id": "POL",
@@ -1127,7 +1127,7 @@ export const COUNTRIES: Country[] = [
     "ccn3": "616",
     "name": "Poland",
     "continent": "Europe",
-    "flag": "https://flagcdn.com/w320/pl.svg"
+    "flag": "https://flagcdn.com/pl.svg"
   },
   {
     "id": "PRT",
@@ -1135,7 +1135,7 @@ export const COUNTRIES: Country[] = [
     "ccn3": "620",
     "name": "Portugal",
     "continent": "Europe",
-    "flag": "https://flagcdn.com/w320/pt.svg"
+    "flag": "https://flagcdn.com/pt.svg"
   },
   {
     "id": "QAT",
@@ -1143,7 +1143,7 @@ export const COUNTRIES: Country[] = [
     "ccn3": "634",
     "name": "Qatar",
     "continent": "Asia",
-    "flag": "https://flagcdn.com/w320/qa.svg"
+    "flag": "https://flagcdn.com/qa.svg"
   },
   {
     "id": "ROU",
@@ -1151,7 +1151,7 @@ export const COUNTRIES: Country[] = [
     "ccn3": "642",
     "name": "Romania",
     "continent": "Europe",
-    "flag": "https://flagcdn.com/w320/ro.svg"
+    "flag": "https://flagcdn.com/ro.svg"
   },
   {
     "id": "RUS",
@@ -1159,7 +1159,7 @@ export const COUNTRIES: Country[] = [
     "ccn3": "643",
     "name": "Russia",
     "continent": "Asia",
-    "flag": "https://flagcdn.com/w320/ru.svg"
+    "flag": "https://flagcdn.com/ru.svg"
   },
   {
     "id": "RWA",
@@ -1167,7 +1167,7 @@ export const COUNTRIES: Country[] = [
     "ccn3": "646",
     "name": "Rwanda",
     "continent": "Africa",
-    "flag": "https://flagcdn.com/w320/rw.svg"
+    "flag": "https://flagcdn.com/rw.svg"
   },
   {
     "id": "KNA",
@@ -1175,7 +1175,7 @@ export const COUNTRIES: Country[] = [
     "ccn3": "659",
     "name": "Saint Kitts and Nevis",
     "continent": "North America",
-    "flag": "https://flagcdn.com/w320/kn.svg"
+    "flag": "https://flagcdn.com/kn.svg"
   },
   {
     "id": "LCA",
@@ -1183,7 +1183,7 @@ export const COUNTRIES: Country[] = [
     "ccn3": "662",
     "name": "Saint Lucia",
     "continent": "North America",
-    "flag": "https://flagcdn.com/w320/lc.svg"
+    "flag": "https://flagcdn.com/lc.svg"
   },
   {
     "id": "VCT",
@@ -1191,7 +1191,7 @@ export const COUNTRIES: Country[] = [
     "ccn3": "670",
     "name": "Saint Vincent and the Grenadines",
     "continent": "North America",
-    "flag": "https://flagcdn.com/w320/vc.svg"
+    "flag": "https://flagcdn.com/vc.svg"
   },
   {
     "id": "WSM",
@@ -1199,7 +1199,7 @@ export const COUNTRIES: Country[] = [
     "ccn3": "882",
     "name": "Samoa",
     "continent": "Oceania",
-    "flag": "https://flagcdn.com/w320/ws.svg"
+    "flag": "https://flagcdn.com/ws.svg"
   },
   {
     "id": "SMR",
@@ -1207,7 +1207,7 @@ export const COUNTRIES: Country[] = [
     "ccn3": "674",
     "name": "San Marino",
     "continent": "Europe",
-    "flag": "https://flagcdn.com/w320/sm.svg"
+    "flag": "https://flagcdn.com/sm.svg"
   },
   {
     "id": "STP",
@@ -1215,7 +1215,7 @@ export const COUNTRIES: Country[] = [
     "ccn3": "678",
     "name": "São Tomé and Príncipe",
     "continent": "Africa",
-    "flag": "https://flagcdn.com/w320/st.svg"
+    "flag": "https://flagcdn.com/st.svg"
   },
   {
     "id": "SAU",
@@ -1223,7 +1223,7 @@ export const COUNTRIES: Country[] = [
     "ccn3": "682",
     "name": "Saudi Arabia",
     "continent": "Asia",
-    "flag": "https://flagcdn.com/w320/sa.svg"
+    "flag": "https://flagcdn.com/sa.svg"
   },
   {
     "id": "SEN",
@@ -1231,7 +1231,7 @@ export const COUNTRIES: Country[] = [
     "ccn3": "686",
     "name": "Senegal",
     "continent": "Africa",
-    "flag": "https://flagcdn.com/w320/sn.svg"
+    "flag": "https://flagcdn.com/sn.svg"
   },
   {
     "id": "SRB",
@@ -1239,7 +1239,7 @@ export const COUNTRIES: Country[] = [
     "ccn3": "688",
     "name": "Serbia",
     "continent": "Europe",
-    "flag": "https://flagcdn.com/w320/rs.svg"
+    "flag": "https://flagcdn.com/rs.svg"
   },
   {
     "id": "SYC",
@@ -1247,7 +1247,7 @@ export const COUNTRIES: Country[] = [
     "ccn3": "690",
     "name": "Seychelles",
     "continent": "Africa",
-    "flag": "https://flagcdn.com/w320/sc.svg"
+    "flag": "https://flagcdn.com/sc.svg"
   },
   {
     "id": "SLE",
@@ -1255,7 +1255,7 @@ export const COUNTRIES: Country[] = [
     "ccn3": "694",
     "name": "Sierra Leone",
     "continent": "Africa",
-    "flag": "https://flagcdn.com/w320/sl.svg"
+    "flag": "https://flagcdn.com/sl.svg"
   },
   {
     "id": "SGP",
@@ -1263,7 +1263,7 @@ export const COUNTRIES: Country[] = [
     "ccn3": "702",
     "name": "Singapore",
     "continent": "Asia",
-    "flag": "https://flagcdn.com/w320/sg.svg"
+    "flag": "https://flagcdn.com/sg.svg"
   },
   {
     "id": "SVK",
@@ -1271,7 +1271,7 @@ export const COUNTRIES: Country[] = [
     "ccn3": "703",
     "name": "Slovakia",
     "continent": "Europe",
-    "flag": "https://flagcdn.com/w320/sk.svg"
+    "flag": "https://flagcdn.com/sk.svg"
   },
   {
     "id": "SVN",
@@ -1279,7 +1279,7 @@ export const COUNTRIES: Country[] = [
     "ccn3": "705",
     "name": "Slovenia",
     "continent": "Europe",
-    "flag": "https://flagcdn.com/w320/si.svg"
+    "flag": "https://flagcdn.com/si.svg"
   },
   {
     "id": "SLB",
@@ -1287,7 +1287,7 @@ export const COUNTRIES: Country[] = [
     "ccn3": "090",
     "name": "Solomon Islands",
     "continent": "Oceania",
-    "flag": "https://flagcdn.com/w320/sb.svg"
+    "flag": "https://flagcdn.com/sb.svg"
   },
   {
     "id": "SOM",
@@ -1295,7 +1295,7 @@ export const COUNTRIES: Country[] = [
     "ccn3": "706",
     "name": "Somalia",
     "continent": "Africa",
-    "flag": "https://flagcdn.com/w320/so.svg"
+    "flag": "https://flagcdn.com/so.svg"
   },
   {
     "id": "ZAF",
@@ -1303,7 +1303,7 @@ export const COUNTRIES: Country[] = [
     "ccn3": "710",
     "name": "South Africa",
     "continent": "Africa",
-    "flag": "https://flagcdn.com/w320/za.svg"
+    "flag": "https://flagcdn.com/za.svg"
   },
   {
     "id": "KOR",
@@ -1311,7 +1311,7 @@ export const COUNTRIES: Country[] = [
     "ccn3": "410",
     "name": "South Korea",
     "continent": "Asia",
-    "flag": "https://flagcdn.com/w320/kr.svg"
+    "flag": "https://flagcdn.com/kr.svg"
   },
   {
     "id": "SSD",
@@ -1319,7 +1319,7 @@ export const COUNTRIES: Country[] = [
     "ccn3": "728",
     "name": "South Sudan",
     "continent": "Africa",
-    "flag": "https://flagcdn.com/w320/ss.svg"
+    "flag": "https://flagcdn.com/ss.svg"
   },
   {
     "id": "ESP",
@@ -1327,7 +1327,7 @@ export const COUNTRIES: Country[] = [
     "ccn3": "724",
     "name": "Spain",
     "continent": "Europe",
-    "flag": "https://flagcdn.com/w320/es.svg"
+    "flag": "https://flagcdn.com/es.svg"
   },
   {
     "id": "LKA",
@@ -1335,7 +1335,7 @@ export const COUNTRIES: Country[] = [
     "ccn3": "144",
     "name": "Sri Lanka",
     "continent": "Asia",
-    "flag": "https://flagcdn.com/w320/lk.svg"
+    "flag": "https://flagcdn.com/lk.svg"
   },
   {
     "id": "SDN",
@@ -1343,7 +1343,7 @@ export const COUNTRIES: Country[] = [
     "ccn3": "729",
     "name": "Sudan",
     "continent": "Africa",
-    "flag": "https://flagcdn.com/w320/sd.svg"
+    "flag": "https://flagcdn.com/sd.svg"
   },
   {
     "id": "SUR",
@@ -1351,7 +1351,7 @@ export const COUNTRIES: Country[] = [
     "ccn3": "740",
     "name": "Suriname",
     "continent": "South America",
-    "flag": "https://flagcdn.com/w320/sr.svg"
+    "flag": "https://flagcdn.com/sr.svg"
   },
   {
     "id": "SWE",
@@ -1359,7 +1359,7 @@ export const COUNTRIES: Country[] = [
     "ccn3": "752",
     "name": "Sweden",
     "continent": "Europe",
-    "flag": "https://flagcdn.com/w320/se.svg"
+    "flag": "https://flagcdn.com/se.svg"
   },
   {
     "id": "CHE",
@@ -1367,7 +1367,7 @@ export const COUNTRIES: Country[] = [
     "ccn3": "756",
     "name": "Switzerland",
     "continent": "Europe",
-    "flag": "https://flagcdn.com/w320/ch.svg"
+    "flag": "https://flagcdn.com/ch.svg"
   },
   {
     "id": "SYR",
@@ -1375,7 +1375,7 @@ export const COUNTRIES: Country[] = [
     "ccn3": "760",
     "name": "Syria",
     "continent": "Asia",
-    "flag": "https://flagcdn.com/w320/sy.svg"
+    "flag": "https://flagcdn.com/sy.svg"
   },
   {
     "id": "TWN",
@@ -1383,7 +1383,7 @@ export const COUNTRIES: Country[] = [
     "ccn3": "158",
     "name": "Taiwan",
     "continent": "Asia",
-    "flag": "https://flagcdn.com/w320/tw.svg"
+    "flag": "https://flagcdn.com/tw.svg"
   },
   {
     "id": "TJK",
@@ -1391,7 +1391,7 @@ export const COUNTRIES: Country[] = [
     "ccn3": "762",
     "name": "Tajikistan",
     "continent": "Asia",
-    "flag": "https://flagcdn.com/w320/tj.svg"
+    "flag": "https://flagcdn.com/tj.svg"
   },
   {
     "id": "TZA",
@@ -1399,7 +1399,7 @@ export const COUNTRIES: Country[] = [
     "ccn3": "834",
     "name": "Tanzania",
     "continent": "Africa",
-    "flag": "https://flagcdn.com/w320/tz.svg"
+    "flag": "https://flagcdn.com/tz.svg"
   },
   {
     "id": "THA",
@@ -1407,7 +1407,7 @@ export const COUNTRIES: Country[] = [
     "ccn3": "764",
     "name": "Thailand",
     "continent": "Asia",
-    "flag": "https://flagcdn.com/w320/th.svg"
+    "flag": "https://flagcdn.com/th.svg"
   },
   {
     "id": "TLS",
@@ -1415,7 +1415,7 @@ export const COUNTRIES: Country[] = [
     "ccn3": "626",
     "name": "Timor-Leste",
     "continent": "Oceania",
-    "flag": "https://flagcdn.com/w320/tl.svg"
+    "flag": "https://flagcdn.com/tl.svg"
   },
   {
     "id": "TGO",
@@ -1423,7 +1423,7 @@ export const COUNTRIES: Country[] = [
     "ccn3": "768",
     "name": "Togo",
     "continent": "Africa",
-    "flag": "https://flagcdn.com/w320/tg.svg"
+    "flag": "https://flagcdn.com/tg.svg"
   },
   {
     "id": "TON",
@@ -1431,7 +1431,7 @@ export const COUNTRIES: Country[] = [
     "ccn3": "776",
     "name": "Tonga",
     "continent": "Oceania",
-    "flag": "https://flagcdn.com/w320/to.svg"
+    "flag": "https://flagcdn.com/to.svg"
   },
   {
     "id": "TTO",
@@ -1439,7 +1439,7 @@ export const COUNTRIES: Country[] = [
     "ccn3": "780",
     "name": "Trinidad and Tobago",
     "continent": "North America",
-    "flag": "https://flagcdn.com/w320/tt.svg"
+    "flag": "https://flagcdn.com/tt.svg"
   },
   {
     "id": "TUN",
@@ -1447,7 +1447,7 @@ export const COUNTRIES: Country[] = [
     "ccn3": "788",
     "name": "Tunisia",
     "continent": "Africa",
-    "flag": "https://flagcdn.com/w320/tn.svg"
+    "flag": "https://flagcdn.com/tn.svg"
   },
   {
     "id": "TUR",
@@ -1455,7 +1455,7 @@ export const COUNTRIES: Country[] = [
     "ccn3": "792",
     "name": "Türkiye",
     "continent": "Asia",
-    "flag": "https://flagcdn.com/w320/tr.svg"
+    "flag": "https://flagcdn.com/tr.svg"
   },
   {
     "id": "TKM",
@@ -1463,7 +1463,7 @@ export const COUNTRIES: Country[] = [
     "ccn3": "795",
     "name": "Turkmenistan",
     "continent": "Asia",
-    "flag": "https://flagcdn.com/w320/tm.svg"
+    "flag": "https://flagcdn.com/tm.svg"
   },
   {
     "id": "TUV",
@@ -1471,7 +1471,7 @@ export const COUNTRIES: Country[] = [
     "ccn3": "798",
     "name": "Tuvalu",
     "continent": "Oceania",
-    "flag": "https://flagcdn.com/w320/tv.svg"
+    "flag": "https://flagcdn.com/tv.svg"
   },
   {
     "id": "UGA",
@@ -1479,7 +1479,7 @@ export const COUNTRIES: Country[] = [
     "ccn3": "800",
     "name": "Uganda",
     "continent": "Africa",
-    "flag": "https://flagcdn.com/w320/ug.svg"
+    "flag": "https://flagcdn.com/ug.svg"
   },
   {
     "id": "UKR",
@@ -1487,7 +1487,7 @@ export const COUNTRIES: Country[] = [
     "ccn3": "804",
     "name": "Ukraine",
     "continent": "Europe",
-    "flag": "https://flagcdn.com/w320/ua.svg"
+    "flag": "https://flagcdn.com/ua.svg"
   },
   {
     "id": "ARE",
@@ -1495,7 +1495,7 @@ export const COUNTRIES: Country[] = [
     "ccn3": "784",
     "name": "United Arab Emirates",
     "continent": "Asia",
-    "flag": "https://flagcdn.com/w320/ae.svg"
+    "flag": "https://flagcdn.com/ae.svg"
   },
   {
     "id": "GBR",
@@ -1503,7 +1503,7 @@ export const COUNTRIES: Country[] = [
     "ccn3": "826",
     "name": "United Kingdom",
     "continent": "Europe",
-    "flag": "https://flagcdn.com/w320/gb.svg"
+    "flag": "https://flagcdn.com/gb.svg"
   },
   {
     "id": "USA",
@@ -1511,7 +1511,7 @@ export const COUNTRIES: Country[] = [
     "ccn3": "840",
     "name": "United States",
     "continent": "North America",
-    "flag": "https://flagcdn.com/w320/us.svg"
+    "flag": "https://flagcdn.com/us.svg"
   },
   {
     "id": "URY",
@@ -1519,7 +1519,7 @@ export const COUNTRIES: Country[] = [
     "ccn3": "858",
     "name": "Uruguay",
     "continent": "South America",
-    "flag": "https://flagcdn.com/w320/uy.svg"
+    "flag": "https://flagcdn.com/uy.svg"
   },
   {
     "id": "UZB",
@@ -1527,7 +1527,7 @@ export const COUNTRIES: Country[] = [
     "ccn3": "860",
     "name": "Uzbekistan",
     "continent": "Asia",
-    "flag": "https://flagcdn.com/w320/uz.svg"
+    "flag": "https://flagcdn.com/uz.svg"
   },
   {
     "id": "VUT",
@@ -1535,7 +1535,7 @@ export const COUNTRIES: Country[] = [
     "ccn3": "548",
     "name": "Vanuatu",
     "continent": "Oceania",
-    "flag": "https://flagcdn.com/w320/vu.svg"
+    "flag": "https://flagcdn.com/vu.svg"
   },
   {
     "id": "VAT",
@@ -1543,7 +1543,7 @@ export const COUNTRIES: Country[] = [
     "ccn3": "336",
     "name": "Vatican City",
     "continent": "Europe",
-    "flag": "https://flagcdn.com/w320/va.svg"
+    "flag": "https://flagcdn.com/va.svg"
   },
   {
     "id": "VEN",
@@ -1551,7 +1551,7 @@ export const COUNTRIES: Country[] = [
     "ccn3": "862",
     "name": "Venezuela",
     "continent": "South America",
-    "flag": "https://flagcdn.com/w320/ve.svg"
+    "flag": "https://flagcdn.com/ve.svg"
   },
   {
     "id": "VNM",
@@ -1559,7 +1559,7 @@ export const COUNTRIES: Country[] = [
     "ccn3": "704",
     "name": "Vietnam",
     "continent": "Asia",
-    "flag": "https://flagcdn.com/w320/vn.svg"
+    "flag": "https://flagcdn.com/vn.svg"
   },
   {
     "id": "YEM",
@@ -1567,7 +1567,7 @@ export const COUNTRIES: Country[] = [
     "ccn3": "887",
     "name": "Yemen",
     "continent": "Asia",
-    "flag": "https://flagcdn.com/w320/ye.svg"
+    "flag": "https://flagcdn.com/ye.svg"
   },
   {
     "id": "ZMB",
@@ -1575,7 +1575,7 @@ export const COUNTRIES: Country[] = [
     "ccn3": "894",
     "name": "Zambia",
     "continent": "Africa",
-    "flag": "https://flagcdn.com/w320/zm.svg"
+    "flag": "https://flagcdn.com/zm.svg"
   },
   {
     "id": "ZWE",
@@ -1583,7 +1583,7 @@ export const COUNTRIES: Country[] = [
     "ccn3": "716",
     "name": "Zimbabwe",
     "continent": "Africa",
-    "flag": "https://flagcdn.com/w320/zw.svg"
+    "flag": "https://flagcdn.com/zw.svg"
   }
 ];
 
