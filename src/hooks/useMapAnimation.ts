@@ -1,4 +1,4 @@
-import { useState, useRef, useEffect } from 'react';
+import { useState, useRef, useEffect, useCallback } from 'react';
 
 /**
  * Handles smooth requestAnimationFrame-based panning/iteration for a map view
@@ -12,7 +12,14 @@ export function useMapAnimation(initialCenter: [number, number] = [0, 0], initia
   const animFrameRef = useRef<number | null>(null);
   const liveRef = useRef({ cx: initialCenter[0], cy: initialCenter[1], zoom: initialZoom });
 
-  const animateTo = (targetCx: number, targetCy: number, targetZoom: number) => {
+  // Sync liveRef with manual mapCenter/mapZoom changes to prevent jumps on subsequent animations
+  useEffect(() => {
+    liveRef.current.cx = mapCenter[0];
+    liveRef.current.cy = mapCenter[1];
+    liveRef.current.zoom = mapZoom;
+  }, [mapCenter, mapZoom]);
+
+  const animateTo = useCallback((targetCx: number, targetCy: number, targetZoom: number) => {
     if (animFrameRef.current) cancelAnimationFrame(animFrameRef.current);
     const step = () => {
       const live = liveRef.current;
@@ -38,7 +45,7 @@ export function useMapAnimation(initialCenter: [number, number] = [0, 0], initia
       }
     };
     animFrameRef.current = requestAnimationFrame(step);
-  };
+  }, []);
 
   // Cleanup animation on unmount
   useEffect(() => () => { if (animFrameRef.current) cancelAnimationFrame(animFrameRef.current); }, []);
