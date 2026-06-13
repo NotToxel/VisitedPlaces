@@ -165,7 +165,7 @@ const List: React.FC = () => {
 
   // Count visited subregions dynamically
   const getSubregionsProgressString = useCallback((countryId: string) => {
-    const visited = Object.keys(places).filter(k => k.startsWith(`${countryId}-`) && places[k]?.status === 'VISITED').length;
+    const visited = Object.keys(places).filter(k => k.startsWith(`${countryId}-`) && (places[k]?.status === 'VISITED' || places[k]?.status === 'REVISIT')).length;
     const regions = subRegionsByCountry[countryId];
     if (regions && regions.length > 0) {
       return `${visited}/${regions.length} Visited`;
@@ -180,7 +180,8 @@ const List: React.FC = () => {
     const wishlist = COUNTRIES.filter(c => places[c.id]?.status === 'WISHLIST').length;
     const revisit = COUNTRIES.filter(c => places[c.id]?.status === 'REVISIT').length;
     const avoid = COUNTRIES.filter(c => places[c.id]?.status === 'AVOID').length;
-    const rate = total > 0 ? Math.round((visited / total) * 1000) / 10 : 0;
+    const visitedAndRevisitCount = visited + revisit;
+    const rate = total > 0 ? Math.round((visitedAndRevisitCount / total) * 1000) / 10 : 0;
     
     // Continent breakdown
     const continents: Record<string, { total: number; visited: number }> = {};
@@ -189,7 +190,7 @@ const List: React.FC = () => {
         continents[c.continent] = { total: 0, visited: 0 };
       }
       continents[c.continent].total++;
-      if (places[c.id]?.status === 'VISITED') {
+      if (places[c.id]?.status === 'VISITED' || places[c.id]?.status === 'REVISIT') {
         continents[c.continent].visited++;
       }
     });
@@ -214,7 +215,7 @@ const List: React.FC = () => {
               <div className="bg-base-200/30 border border-base-300/40 rounded-xl p-2.5 flex flex-col">
                 <span className="text-[10px] uppercase font-bold text-base-content/40">Travel Coverage</span>
                 <span className="text-lg font-extrabold text-primary mt-0.5">{stats.rate}%</span>
-                <span className="text-[9px] text-base-content/50 mt-0.5">{stats.visited} of {stats.total} countries</span>
+                <span className="text-[9px] text-base-content/50 mt-0.5">{stats.visited + stats.revisit} of {stats.total} countries</span>
               </div>
               <div className="bg-base-200/30 border border-base-300/40 rounded-xl p-2.5 flex flex-col">
                 <span className="text-[10px] uppercase font-bold text-base-content/40">Wishlisted</span>

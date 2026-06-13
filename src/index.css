@@ -482,6 +482,7 @@ body {
   display: flex;
   align-items: center;
   width: 100%;
+  padding: 0.75rem 2.5rem 0.75rem 1rem;
   outline: none;
   cursor: pointer;
   list-style: none;
@@ -491,10 +492,16 @@ body {
 }
 .accordion-content {
   display: none;
-  padding-top: 0.5rem;
+  padding: 0.25rem 1rem 0.75rem 1rem;
 }
 details.accordion[open] .accordion-content {
   display: flex;
+}
+details.accordion[open] .accordion-content.grid {
+  display: grid;
+}
+details.accordion[open] .accordion-content.block {
+  display: block;
 }
 .accordion-arrow > .accordion-title::after {
   content: "";

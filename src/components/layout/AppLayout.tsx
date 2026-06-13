@@ -15,7 +15,7 @@ export const AppLayout: React.FC = () => {
         id="map-tooltip" 
         className="pointer-events-none fixed z-[100] rounded-lg bg-base-300/95 border border-base-300/60 text-base-content px-2.5 py-1.5 text-xs font-semibold shadow-2xl opacity-0 transition-opacity duration-150 backdrop-blur-md select-none" 
       />
-      <footer className="footer bg-base-300/40 backdrop-blur-md text-base-content/70 py-2 px-4 border-t border-base-300/30 flex justify-between items-center text-xs shrink-0 select-none">
+      <footer className="footer bg-base-300/40 backdrop-blur-md text-base-content/70 py-2 px-4 border-t border-base-300/30 hidden md:flex justify-between items-center text-xs shrink-0 select-none">
         <span>
           &copy; {currentYear} VisitedPlaces. Licensed under AGPL-3.0.
         </span>
