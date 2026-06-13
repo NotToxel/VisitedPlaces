@@ -148,7 +148,7 @@ const List: React.FC = () => {
 
   // Get status color styling
   const getCardBorderAndBg = (status: PlaceStatus, isSelected: boolean) => {
-    let base = "border rounded-xl transition-all duration-200 cursor-pointer p-2.5 flex flex-col justify-between h-[84px] ";
+    let base = "border rounded-xl transition-all duration-200 cursor-pointer px-3 py-2.5 flex items-center justify-between min-h-[52px] ";
     
     if (isSelected) {
       base += "ring-2 ring-primary border-primary bg-primary/5 shadow-[0_0_12px_rgba(122,162,247,0.15)] ";
@@ -480,54 +480,56 @@ const List: React.FC = () => {
   return (
     <div className="p-4 md:p-6 h-full flex flex-col gap-4 overflow-hidden bg-transparent select-none max-w-6xl mx-auto w-full">
       {/* Search and Filters Header */}
-      <div className="glass-panel border border-base-300/50 p-4 rounded-2xl shrink-0 flex flex-col gap-3">
-        <div className="flex flex-col md:flex-row gap-3 items-start md:items-center justify-between">
-          <h2 className="flex items-center gap-2 text-md font-extrabold text-base-content select-none">
-            <Filter size={16} className="text-primary" />
+      <div className="glass-panel border border-base-300/50 p-4.5 rounded-2xl shrink-0 flex flex-col gap-3.5 items-center justify-center">
+        <div className="flex flex-col items-center justify-center text-center gap-1 shrink-0 select-none">
+          <h2 className="flex items-center gap-2 text-md font-extrabold text-base-content justify-center">
+            <Filter size={16} className="text-primary animate-pulse" />
             Country Directory
           </h2>
-          
-          <div className="flex items-center gap-2">
-            <span className="text-[11px] text-base-content/50 font-semibold">
-              Showing {filteredCountries.length} countries
-            </span>
-          </div>
+          <span className="text-[10px] text-base-content/40 font-bold uppercase tracking-wider">
+            Showing {filteredCountries.length} of {COUNTRIES.length} countries
+          </span>
         </div>
         
-        <div className="flex flex-col lg:flex-row gap-3 items-start lg:items-center justify-between">
-          {/* Global search */}
-          <div className="relative w-full lg:w-72 shrink-0">
-            <Search size={14} className="absolute left-2.5 top-1/2 -translate-y-1/2 text-base-content/40" />
-            <input 
-              type="text" 
-              className="input input-bordered input-sm !pl-8 w-full text-xs" 
-              placeholder="Search countries..." 
-              value={search}
-              onChange={(e) => setSearch(e.target.value)}
-            />
-            {search && (
-              <button 
-                onClick={() => setSearch('')}
-                className="absolute right-2.5 top-1/2 -translate-y-1/2 text-base-content/40 hover:text-base-content"
-              >
-                <X size={12} />
-              </button>
-            )}
+        <div className="flex flex-col lg:flex-row gap-3.5 items-center justify-center w-full mt-0.5">
+          {/* Global search & Sub-regions check wrapper */}
+          <div className="flex flex-col sm:flex-row gap-3 items-center justify-center w-full lg:w-auto">
+            <div className="relative w-full sm:w-64 shrink-0">
+              <Search size={14} className="absolute left-2.5 top-1/2 -translate-y-1/2 text-base-content/40" />
+              <input 
+                type="text" 
+                className="input input-bordered input-sm !pl-8 w-full text-xs" 
+                placeholder="Search countries..." 
+                value={search}
+                onChange={(e) => setSearch(e.target.value)}
+              />
+              {search && (
+                <button 
+                  onClick={() => setSearch('')}
+                  className="absolute right-2.5 top-1/2 -translate-y-1/2 text-base-content/40 hover:text-base-content"
+                >
+                  <X size={12} />
+                </button>
+              )}
+            </div>
+            
+            {/* Include sub-regions toggle */}
+            <label className="flex items-center gap-2 cursor-pointer text-xs text-base-content/70 select-none shrink-0 py-1">
+              <input 
+                type="checkbox" 
+                className="checkbox checkbox-primary checkbox-xs"
+                checked={searchSubRegions} 
+                onChange={(e) => setSearchSubRegions(e.target.checked)} 
+              />
+              <span>Include Sub-regions</span>
+            </label>
           </div>
           
-          {/* Include sub-regions toggle */}
-          <label className="flex items-center gap-2 cursor-pointer text-xs text-base-content/70 select-none py-1">
-            <input 
-              type="checkbox" 
-              className="checkbox checkbox-primary checkbox-xs"
-              checked={searchSubRegions} 
-              onChange={(e) => setSearchSubRegions(e.target.checked)} 
-            />
-            <span>Include Sub-regions in Search</span>
-          </label>
+          {/* Divider on desktop */}
+          <div className="hidden lg:block w-px h-6 bg-base-300/40" />
           
           {/* Global filter tabs */}
-          <div className="flex flex-wrap gap-1 justify-start lg:justify-end w-full lg:w-auto">
+          <div className="flex flex-wrap gap-1 justify-center items-center w-full lg:w-auto">
             {(['ALL', 'VISITED', 'WISHLIST', 'REVISIT', 'AVOID', 'UNSELECTED'] as const).map((mode) => (
               <button
                 key={mode}
@@ -586,63 +588,35 @@ const List: React.FC = () => {
                             }}
                             className={getCardBorderAndBg(status, isSelected)}
                           >
-                            {/* Card Top Row: Flag & Name */}
-                            <div className="flex items-start justify-between gap-2.5 min-w-0">
-                              <div className="flex items-center gap-2 min-w-0 flex-1">
-                                {country.flag ? (
-                                  <img src={country.flag} alt="" className="w-5 h-3.5 object-cover rounded-sm border border-base-300/20 shrink-0" />
-                                ) : (
-                                  <div className="w-5 h-3.5 bg-base-300 rounded-sm border border-base-300/20 shrink-0" />
-                                )}
-                                <div className="flex flex-col min-w-0">
-                                  <span className="truncate font-extrabold text-[12px] leading-snug">{country.name}</span>
-                                  <span className="text-[9px] opacity-40 font-mono tracking-wider font-semibold uppercase">{country.id}</span>
-                                </div>
-                              </div>
-
-                              {hasDrill && (
-                                <div className="flex items-center gap-0.5 bg-primary/10 border border-primary/20 text-primary rounded px-1 text-[9px] font-bold py-0.5 shrink-0 select-none">
-                                  <Map size={9} />
-                                  <span>{getSubregionsProgressString(country.id)}</span>
-                                </div>
+                            <div className="flex items-center gap-2.5 min-w-0 flex-1">
+                              {country.flag ? (
+                                <img src={country.flag} alt="" className="w-5 h-3.5 object-cover rounded-sm border border-base-300/20 shrink-0" />
+                              ) : (
+                                <div className="w-5 h-3.5 bg-base-300 rounded-sm border border-base-300/20 shrink-0" />
                               )}
-                            </div>
-
-                            {/* Card Bottom Row: Direct Actions */}
-                            <div className="flex justify-between items-center gap-2 border-t border-base-300/30 pt-1.5 mt-1 shrink-0">
-                              <span className="text-[9px] text-base-content/40 font-bold tracking-wide uppercase select-none">Quick Status</span>
-                              
-                              <div className="flex gap-0.5 shrink-0" onClick={e => e.stopPropagation()}>
-                                <button 
-                                  onClick={() => handleStatusChange(country.id, 'VISITED')}
-                                  title="Mark Visited"
-                                  className={`btn btn-square btn-circle btn-xs h-5.5 w-5.5 ${status === 'VISITED' ? 'btn-success text-white' : 'btn-ghost text-base-content/30 hover:text-base-content'}`}
-                                >
-                                  <Check size={11} />
-                                </button>
-                                <button 
-                                  onClick={() => handleStatusChange(country.id, 'WISHLIST')}
-                                  title="Add Wishlist"
-                                  className={`btn btn-square btn-circle btn-xs h-5.5 w-5.5 ${status === 'WISHLIST' ? 'btn-secondary text-white' : 'btn-ghost text-base-content/30 hover:text-base-content'}`}
-                                >
-                                  <Heart size={11} />
-                                </button>
-                                <button 
-                                  onClick={() => handleStatusChange(country.id, 'REVISIT')}
-                                  title="Mark Revisit"
-                                  className={`btn btn-square btn-circle btn-xs h-5.5 w-5.5 ${status === 'REVISIT' ? 'btn-warning text-white' : 'btn-ghost text-base-content/30 hover:text-base-content'}`}
-                                >
-                                  <RotateCcw size={11} />
-                                </button>
-                                <button 
-                                  onClick={() => handleStatusChange(country.id, 'AVOID')}
-                                  title="Mark Avoid"
-                                  className={`btn btn-square btn-circle btn-xs h-5.5 w-5.5 ${status === 'AVOID' ? 'btn-error text-white' : 'btn-ghost text-base-content/30 hover:text-base-content'}`}
-                                >
-                                  <Ban size={11} />
-                                </button>
+                              <div className="flex flex-col min-w-0 flex-1">
+                                <span className="truncate font-extrabold text-[12px] leading-snug">{country.name}</span>
+                                <div className="flex items-center gap-1.5 mt-0.5">
+                                  <span className="text-[9px] opacity-40 font-mono tracking-wider font-semibold uppercase">{country.id}</span>
+                                  {status !== 'NONE' && (
+                                    <span className={`text-[8px] font-bold tracking-wide uppercase px-1 py-0.5 rounded-sm border leading-none shrink-0
+                                      ${status === 'VISITED' ? 'text-accent-visited bg-accent-visited/10 border-accent-visited/20' : ''}
+                                      ${status === 'WISHLIST' ? 'text-accent-wishlist bg-accent-wishlist/10 border-accent-wishlist/20' : ''}
+                                      ${status === 'REVISIT' ? 'text-accent-revisit bg-accent-revisit/10 border-accent-revisit/20' : ''}
+                                      ${status === 'AVOID' ? 'text-accent-avoid bg-accent-avoid/10 border-accent-avoid/20' : ''}
+                                    `}>
+                                      {status.toLowerCase()}
+                                    </span>
+                                  )}
+                                </div>
                               </div>
                             </div>
+                            {hasDrill && (
+                              <div className="flex items-center gap-0.5 bg-primary/10 border border-primary/20 text-primary rounded px-1 text-[9px] font-bold py-0.5 shrink-0 select-none ml-2">
+                                <Map size={9} />
+                                <span>{getSubregionsProgressString(country.id)}</span>
+                              </div>
+                            )}
                           </div>
                         );
                       })}
