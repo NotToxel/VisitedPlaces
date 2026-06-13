@@ -100,14 +100,7 @@ const CompareMapBase: React.FC<CompareMapProps> = ({ mergedData, setTooltipConte
   }, []);
 
   return (
-    <div style={{ position: 'relative', width: '100%', height: '100%' }}>
-      {isLoading && (
-        <div className="map-loading-overlay">
-          <div className="map-loading-spinner" />
-          <span>Loading Map Data...</span>
-        </div>
-      )}
-
+    <div className="w-full h-full relative flex flex-col items-center justify-center">
       <ComposableMap
         projection="geoMercator"
         projectionConfig={{ scale: 147, center: [0, 0] }}
@@ -155,6 +148,13 @@ const CompareMapBase: React.FC<CompareMapProps> = ({ mergedData, setTooltipConte
           })}
         </ZoomableGroup>
       </ComposableMap>
+
+      {isLoading && (
+        <div className="map-loading-overlay">
+          <div className="map-loading-spinner" />
+          <span>Loading Map Data...</span>
+        </div>
+      )}
     </div>
   );
 };

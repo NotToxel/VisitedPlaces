@@ -137,7 +137,7 @@ const StandardMapBase: React.FC<StandardMapProps> = ({
   const currentConfig = activeCountry ? drilldownRegistry[activeCountry] : null;
 
   return (
-    <>
+    <div className="w-full h-full relative flex flex-col items-center justify-center">
       {activeCountry && currentConfig && (
         <DrilldownControls 
           activeCountry={activeCountry}
@@ -148,13 +148,6 @@ const StandardMapBase: React.FC<StandardMapProps> = ({
           setSubRegionCenter={setSubRegionCenter}
           setSubRegionZoom={setSubRegionZoom}
         />
-      )}
-
-      {isLoading && (
-        <div className="map-loading-overlay">
-          <div className="map-loading-spinner" />
-          <span>Loading Map Data...</span>
-        </div>
       )}
 
       <ComposableMap 
@@ -225,7 +218,14 @@ const StandardMapBase: React.FC<StandardMapProps> = ({
           })}
         </ZoomableGroup>
       </ComposableMap>
-    </>
+
+      {isLoading && (
+        <div className="map-loading-overlay">
+          <div className="map-loading-spinner" />
+          <span>Loading Map Data...</span>
+        </div>
+      )}
+    </div>
   );
 };
 

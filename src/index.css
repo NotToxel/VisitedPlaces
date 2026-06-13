@@ -166,6 +166,7 @@ body {
   color: #ffffff;
   font-size: 0.9rem;
   font-weight: 600;
+  animation: fadeIn 0.25s ease-out forwards;
 }
 
 [data-theme="light"] .map-loading-overlay {
@@ -189,6 +190,11 @@ body {
 
 @keyframes spin {
   to { transform: rotate(360deg); }
+}
+
+@keyframes fadeIn {
+  from { opacity: 0; }
+  to { opacity: 1; }
 }
 
 /* Glassmorphism panel helper utilities */
