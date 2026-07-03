@@ -2,10 +2,10 @@ import React, { useEffect } from 'react';
 import { BrowserRouter, Routes, Route } from 'react-router-dom';
 import { useStore } from './store/useStore';
 import { AppLayout } from './components/layout/AppLayout';
-import Home from './pages/Home';
-import List from './pages/List';
-import Analytics from './pages/Analytics';
-import Compare from './pages/Compare';
+const Home = React.lazy(() => import('./pages/Home'));
+const List = React.lazy(() => import('./pages/List'));
+const Analytics = React.lazy(() => import('./pages/Analytics'));
+const Compare = React.lazy(() => import('./pages/Compare'));
 
 const App: React.FC = () => {
   const { theme } = useStore();
