@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react';
-import { WORLD_GEO_URL } from '../config/constants';
+import { WORLD_GEO_URL } from '../config/urls';
 import { getSubRegionUrl, fetchRawTopology } from '../utils/topojsonCache';
 import { drilldownRegistry } from '../config/drilldownConfig';
 

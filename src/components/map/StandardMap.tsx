@@ -7,7 +7,7 @@ import * as topojson from 'topojson-client';
 import { geoCentroid } from 'd3-geo';
 import { getFillColor, getRegionId, showMapTooltip, hideMapTooltip } from '../../utils/mapUtils';
 import type { GeoFeature } from '../../utils/mapUtils';
-import { WORLD_GEO_URL } from '../../config/constants';
+import { WORLD_GEO_URL } from '../../config/urls';
 import { drilldownRegistry } from '../../config/drilldownConfig';
 import { useMapAnimation } from '../../hooks/useMapAnimation';
 import { useDrilldownGeography } from '../../hooks/useDrilldownGeography';

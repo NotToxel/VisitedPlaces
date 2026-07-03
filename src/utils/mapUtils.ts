@@ -1,4 +1,4 @@
-import { UI_COLORS } from '../config/constants';
+import { UI_COLORS } from '../config/colors';
 import type { PlaceStatus } from '../store/useStore';
 import { UK_TERRITORIES, USA_TERRITORIES } from '../data/mapData';
 import { COUNTRIES } from '../data/countries';

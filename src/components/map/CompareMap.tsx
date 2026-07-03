@@ -2,7 +2,7 @@ import React, { memo, useState, useEffect } from 'react';
 import { ComposableMap, Geographies, Geography, ZoomableGroup, Marker } from 'react-simple-maps';
 import type { MapCompareResult } from '../../pages/Compare';
 import { MICROSTATES } from '../../data/mapData';
-import { WORLD_GEO_URL } from '../../config/constants';
+import { WORLD_GEO_URL } from '../../config/urls';
 import { fetchRawTopology } from '../../utils/topojsonCache';
 import { showMapTooltip, hideMapTooltip } from '../../utils/mapUtils';
 
