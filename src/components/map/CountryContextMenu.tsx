@@ -68,13 +68,9 @@ export const CountryContextMenu: React.FC<CountryContextMenuProps> = ({
         onClose();
       }
     };
-    // Delay to avoid closing on the click that opened the menu
-    const timer = setTimeout(() => {
-      window.addEventListener('mousedown', handleClick);
-    }, 50);
+    window.addEventListener('click', handleClick);
     return () => {
-      clearTimeout(timer);
-      window.removeEventListener('mousedown', handleClick);
+      window.removeEventListener('click', handleClick);
     };
   }, [onClose]);
 
@@ -99,6 +95,7 @@ export const CountryContextMenu: React.FC<CountryContextMenuProps> = ({
       ref={menuRef}
       className="country-context-menu"
       style={{ left: x, top: y }}
+      onClick={(e) => e.stopPropagation()}
     >
       {/* Header */}
       <div className="country-context-menu__header">

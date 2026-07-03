@@ -44,6 +44,7 @@ export const MapContainer: React.FC = () => {
   // Country click → show context menu
   const handleCountryClick = useCallback(
     (countryId: string, event: React.MouseEvent, displayName?: string) => {
+      event?.stopPropagation?.();
       if (activeCountry) {
         // In drilldown view, prefix with parent country code
         const placeIdForStore =
