@@ -284,7 +284,12 @@ const List: React.FC = () => {
         <div className="flex items-start justify-between border-b border-base-300/50 pb-3 shrink-0">
           <div className="flex items-center gap-2.5 min-w-0">
             {selectedCountry.flag ? (
-              <img src={selectedCountry.flag} alt="" className="w-7 h-5 object-cover rounded-sm border border-base-300/40 shrink-0" />
+              <img 
+                key={selectedCountry.flag} 
+                src={selectedCountry.flag} 
+                alt="" 
+                className="w-7 h-5 object-cover rounded-sm border border-base-300/40 shrink-0" 
+              />
             ) : (
               <div className="w-7 h-5 bg-base-300 rounded-sm shrink-0" />
             )}

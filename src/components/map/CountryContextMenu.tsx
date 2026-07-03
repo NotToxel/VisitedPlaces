@@ -105,6 +105,7 @@ export const CountryContextMenu: React.FC<CountryContextMenuProps> = ({
         <div className="country-context-menu__country-info">
           {flagUrl ? (
             <img
+              key={flagUrl}
               src={flagUrl}
               alt=""
               className="country-context-menu__flag"

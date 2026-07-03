@@ -124,6 +124,7 @@ export const MapContainer: React.FC = () => {
           <div className="map-drilldown-header__info">
             {activeCountryData.flag ? (
               <img
+                key={activeCountryData.flag}
                 src={activeCountryData.flag}
                 alt=""
                 className="map-drilldown-header__flag"
