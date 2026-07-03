@@ -36,8 +36,13 @@ export const TerritoryListPanel: React.FC<TerritoryListPanelProps> = ({
         <div className="territory-list-panel__list">
           {territories.map((territory) => {
             const status = places[territory.id]?.status || 'NONE';
+            const statusClass = 
+              status === 'VISITED' ? 'territory-list-panel__item--visited' :
+              status === 'WISHLIST' ? 'territory-list-panel__item--wishlist' :
+              status === 'REVISIT' ? 'territory-list-panel__item--revisit' :
+              status === 'AVOID' ? 'territory-list-panel__item--avoid' : '';
             return (
-              <div key={territory.id} className="territory-list-panel__item">
+              <div key={territory.id} className={`territory-list-panel__item ${statusClass}`}>
                 <div className="territory-list-panel__item-info">
                   {territory.flagCode ? (
                     <img
@@ -55,16 +60,16 @@ export const TerritoryListPanel: React.FC<TerritoryListPanelProps> = ({
                 </div>
                 <div className="territory-list-panel__item-actions">
                   {([
-                    { s: 'VISITED' as const, Icon: Check, cls: 'visited' },
-                    { s: 'WISHLIST' as const, Icon: Heart, cls: 'wishlist' },
-                    { s: 'REVISIT' as const, Icon: RotateCcw, cls: 'revisit' },
-                    { s: 'AVOID' as const, Icon: Ban, cls: 'avoid' },
-                  ]).map(({ s, Icon, cls }) => (
+                    { s: 'VISITED' as const, label: 'Visited', Icon: Check, cls: 'visited' },
+                    { s: 'WISHLIST' as const, label: 'Wishlist', Icon: Heart, cls: 'wishlist' },
+                    { s: 'REVISIT' as const, label: 'Revisit', Icon: RotateCcw, cls: 'revisit' },
+                    { s: 'AVOID' as const, label: 'Avoid', Icon: Ban, cls: 'avoid' },
+                  ]).map(({ s, label, Icon, cls }) => (
                     <button
                       key={s}
                       onClick={() => onSetStatus(territory.id, status === s ? 'NONE' : s)}
                       className={`territory-list-panel__action-btn territory-list-panel__action-btn--${cls} ${status === s ? 'territory-list-panel__action-btn--active' : ''}`}
-                      title={s}
+                      title={label}
                     >
                       <Icon size={10} />
                     </button>

@@ -1412,7 +1412,8 @@ path.rsm-geography:active {
   justify-content: space-between;
   padding: 6px 8px;
   border-radius: 8px;
-  transition: background 0.12s;
+  transition: all 0.15s ease;
+  border: 1px solid transparent;
 }
 
 .territory-list-panel__item:hover {
@@ -1421,6 +1422,38 @@ path.rsm-geography:active {
 
 [data-theme="light"] .territory-list-panel__item:hover {
   background: rgba(0, 0, 0, 0.03);
+}
+
+.territory-list-panel__item--visited {
+  background: color-mix(in srgb, var(--accent-visited) 10%, transparent);
+  border-color: color-mix(in srgb, var(--accent-visited) 25%, transparent);
+}
+.territory-list-panel__item--visited .territory-list-panel__item-name {
+  color: var(--accent-visited);
+}
+
+.territory-list-panel__item--wishlist {
+  background: color-mix(in srgb, var(--accent-wishlist) 10%, transparent);
+  border-color: color-mix(in srgb, var(--accent-wishlist) 25%, transparent);
+}
+.territory-list-panel__item--wishlist .territory-list-panel__item-name {
+  color: var(--accent-wishlist);
+}
+
+.territory-list-panel__item--revisit {
+  background: color-mix(in srgb, var(--accent-revisit) 10%, transparent);
+  border-color: color-mix(in srgb, var(--accent-revisit) 25%, transparent);
+}
+.territory-list-panel__item--revisit .territory-list-panel__item-name {
+  color: var(--accent-revisit);
+}
+
+.territory-list-panel__item--avoid {
+  background: color-mix(in srgb, var(--accent-avoid) 10%, transparent);
+  border-color: color-mix(in srgb, var(--accent-avoid) 25%, transparent);
+}
+.territory-list-panel__item--avoid .territory-list-panel__item-name {
+  color: var(--accent-avoid);
 }
 
 .territory-list-panel__item-info {
