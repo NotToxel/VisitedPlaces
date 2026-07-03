@@ -13,10 +13,9 @@ import { useMapAnimation } from '../../hooks/useMapAnimation';
 import { useDrilldownGeography } from '../../hooks/useDrilldownGeography';
 import { DrilldownControls } from './DrilldownControls';
 import { MapGeographies } from './MapGeographies';
-import { getSubRegionUrl, fetchRawTopology } from '../../utils/topojsonCache';
+import { fetchRawTopology } from '../../utils/topojsonCache';
 
 interface StandardMapProps {
-  selectionMode: 'VISITED' | 'WISHLIST' | 'AVOID' | 'REVISIT';
   activeCountry: string | null;
   setActiveCountry: (id: string | null) => void;
   highlightedCountry?: string | null;
@@ -25,15 +24,17 @@ interface StandardMapProps {
   showWishlist: boolean;
   showAvoid: boolean;
   showRevisit: boolean;
+  onCountryClick: (countryId: string, event: React.MouseEvent, displayName?: string) => void;
 }
 
 const COMPOSABLE_MAP_STYLE = { width: "100%", height: "100%", outline: 'none' };
 
 const StandardMapBase: React.FC<StandardMapProps> = ({ 
-  selectionMode, activeCountry, setActiveCountry, highlightedCountry, 
-  numericToA3, showVisited, showWishlist, showAvoid, showRevisit
+  activeCountry, setActiveCountry, highlightedCountry, 
+  numericToA3, showVisited, showWishlist, showAvoid, showRevisit,
+  onCountryClick
 }) => {
-  const { places, setCountryStatus } = useStore();
+  const { places } = useStore();
   const worldTopoRef = useRef<unknown>(null);
 
   const { 
@@ -100,45 +101,15 @@ const StandardMapBase: React.FC<StandardMapProps> = ({
     if (!highlightedCountry) animateTo(0, 0, 1);
   }, [highlightedCountry, animateTo]);
 
-  const handleCountryClick = useCallback((geo: GeoFeature) => {
+  const handleCountryClick = useCallback((geo: GeoFeature, event: React.MouseEvent, displayName?: string) => {
     const countryId = getRegionId(geo, numericToA3, activeCountry);
     if (!countryId) return;
+    onCountryClick(countryId, event, displayName);
+  }, [numericToA3, activeCountry, onCountryClick]);
 
-    const placeIdForStore = (activeCountry && !countryId.toString().startsWith(`${activeCountry}-`)) 
-      ? `${activeCountry}-${countryId}` 
-      : countryId;
-    const currentStatus = places[placeIdForStore]?.status || 'NONE';
-    
-    if (currentStatus === selectionMode) {
-      setCountryStatus(placeIdForStore, 'NONE');
-    } else {
-      setCountryStatus(placeIdForStore, selectionMode);
-    }
-  }, [numericToA3, activeCountry, places, selectionMode, setCountryStatus]);
-
-  const handleRightClick = useCallback((e: React.MouseEvent, geo: GeoFeature) => {
-    e.preventDefault();
-    const countryId = getRegionId(geo, numericToA3, activeCountry);
-    
-    if (!countryId || activeCountry) return;
-
-    if (getSubRegionUrl(countryId)) {
-        setActiveCountry(countryId);
-        // Look up the country's drilldown configuration to automatically set the proper zoom/center math
-        const config = drilldownRegistry[countryId];
-        if (config) {
-            setSubRegionCenter(config.defaultView.center);
-            setSubRegionZoom(config.defaultView.zoom);
-        }
-    } else {
-        showMapTooltip(`No sub-regions available for ${geo.properties?.name || 'this country'}`, e);
-        setTimeout(hideMapTooltip, 2000);
-    }
-  }, [numericToA3, activeCountry, setActiveCountry, setSubRegionCenter, setSubRegionZoom]);
-
-  const handleMicrostateClick = useCallback((id: string, currentStatus: PlaceStatus) => {
-    setCountryStatus(id, currentStatus === selectionMode ? 'NONE' : selectionMode);
-  }, [selectionMode, setCountryStatus]);
+  const handleMicrostateClick = useCallback((id: string, name: string, event: React.MouseEvent) => {
+    onCountryClick(id, event, name);
+  }, [onCountryClick]);
 
   const handleMoveEnd = useCallback(({ coordinates, zoom }: { coordinates: [number, number]; zoom: number }) => {
     if (isFinite(coordinates[0]) && isFinite(coordinates[1])) { 
@@ -155,7 +126,7 @@ const StandardMapBase: React.FC<StandardMapProps> = ({
   const currentConfig = activeCountry ? drilldownRegistry[activeCountry] : null;
 
   return (
-    <div className="w-full h-full relative flex flex-col items-center justify-center">
+    <div style={{ width: '100%', height: '100%', position: 'relative', display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center' }}>
       {activeCountry && currentConfig && (
         <DrilldownControls 
           activeCountry={activeCountry}
@@ -197,7 +168,6 @@ const StandardMapBase: React.FC<StandardMapProps> = ({
             showAvoid={showAvoid}
             showRevisit={showRevisit}
             handleCountryClick={handleCountryClick}
-            handleRightClick={handleRightClick}
           />
 
           {!activeCountry && !isLoading && MICROSTATES.map((marker) => {
@@ -238,7 +208,7 @@ interface MicrostateMarkerProps {
   showWishlist: boolean;
   showAvoid: boolean;
   showRevisit: boolean;
-  onMarkerClick: (id: string, currentStatus: PlaceStatus) => void;
+  onMarkerClick: (id: string, name: string, event: React.MouseEvent) => void;
 }
 
 const MicrostateMarkerBase: React.FC<MicrostateMarkerProps> = ({
@@ -261,7 +231,7 @@ const MicrostateMarkerBase: React.FC<MicrostateMarkerProps> = ({
         stroke={isHighlighted ? "var(--accent-highlight)" : "var(--map-stroke)"} 
         strokeWidth={0.5} 
         style={{ cursor: 'pointer' }} 
-        onClick={() => onMarkerClick(marker.id, status)}
+        onClick={(e) => onMarkerClick(marker.id, marker.name, e as unknown as React.MouseEvent)}
         onMouseEnter={(e) => showMapTooltip(`${marker.name}${status !== 'NONE' ? ` - ${status}` : ''}`, e)}
         onMouseMove={(e) => showMapTooltip(`${marker.name}${status !== 'NONE' ? ` - ${status}` : ''}`, e)}
         onMouseLeave={hideMapTooltip}

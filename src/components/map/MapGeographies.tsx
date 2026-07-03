@@ -14,8 +14,7 @@ interface MapGeographiesProps {
   showWishlist: boolean;
   showAvoid: boolean;
   showRevisit: boolean;
-  handleCountryClick: (geo: GeoFeature) => void;
-  handleRightClick: (e: React.MouseEvent, geo: GeoFeature) => void;
+  handleCountryClick: (geo: GeoFeature, event: React.MouseEvent, displayName?: string) => void;
 }
 
 interface RsmGeography {
@@ -41,8 +40,7 @@ const MapGeographiesBase: React.FC<MapGeographiesProps> = ({
   showWishlist,
   showAvoid,
   showRevisit,
-  handleCountryClick,
-  handleRightClick
+  handleCountryClick
 }) => {
   return (
     <Geographies geography={geoData}>
@@ -69,16 +67,20 @@ const MapGeographiesBase: React.FC<MapGeographiesProps> = ({
           );
 
           const fill = getFillColor(status, isHighlighted, !!activeCountry, showVisited, showWishlist, showAvoid, showRevisit);
-          
+
+          // Build tooltip text
+          const tooltipParts = [countryName];
+          if (isSelected) tooltipParts.push(`— ${status}`);
+          const tooltipText = tooltipParts.join(' ');
+
           return (
             <Geography
               key={geo.rsmKey}
               geography={geo}
-              onMouseEnter={(e) => showMapTooltip(`${countryName}${isSelected ? ` - ${status}` : ''}`, e)}
-              onMouseMove={(e) => showMapTooltip(`${countryName}${isSelected ? ` - ${status}` : ''}`, e)}
+              onMouseEnter={(e) => showMapTooltip(tooltipText, e)}
+              onMouseMove={(e) => showMapTooltip(tooltipText, e)}
               onMouseLeave={hideMapTooltip}
-              onClick={() => handleCountryClick(feature)}
-              onContextMenu={(e) => handleRightClick(e, feature)}
+              onClick={(e) => handleCountryClick(feature, e, countryName)}
               fill={fill}
               stroke={isHighlighted ? "var(--accent-highlight)" : 'var(--map-stroke)'}
               strokeWidth={isHighlighted ? 1.5 : (activeCountry ? 0.7 : 0.5)}

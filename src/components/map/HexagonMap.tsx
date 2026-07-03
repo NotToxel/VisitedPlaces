@@ -4,13 +4,13 @@ import { hexGridData } from '../../utils/hexGridData';
 import { getFillColor, showMapTooltip, hideMapTooltip } from '../../utils/mapUtils';
 
 interface HexagonMapProps {
-  selectionMode: 'VISITED' | 'WISHLIST' | 'AVOID' | 'REVISIT';
   highlightedCountry?: string | null;
   showLabels?: boolean;
   showVisited: boolean;
   showWishlist: boolean;
   showAvoid: boolean;
   showRevisit: boolean;
+  onCountryClick: (countryId: string, event: React.MouseEvent) => void;
 }
 
 const RADIUS = 11;
@@ -51,15 +51,15 @@ function hexCenter(dot: { x: number; y: number }) {
 }
 
 const HexagonMapBase: React.FC<HexagonMapProps> = ({
-  selectionMode,
   highlightedCountry,
   showLabels,
   showVisited,
   showWishlist,
   showAvoid,
-  showRevisit
+  showRevisit,
+  onCountryClick
 }) => {
-  const { places, setCountryStatus } = useStore();
+  const { places } = useStore();
   const [hoveredId, setHoveredId] = useState<string | null>(null);
   const [isDragging, setIsDragging] = useState(false);
 
@@ -188,19 +188,12 @@ const HexagonMapBase: React.FC<HexagonMapProps> = ({
     dragRef.current = null; 
   }, []);
 
-  const handleCountryClick = useCallback((countryId: string) => {
+  const handleCountryClick = useCallback((countryId: string, event: React.MouseEvent) => {
     // Ignore if we were dragging
     if (dragRef.current?.moved) return;
     if (!countryId) return;
-    const currentStatus = places[countryId]?.status || 'NONE';
-    setCountryStatus(countryId, currentStatus === selectionMode ? 'NONE' : selectionMode);
-  }, [places, selectionMode, setCountryStatus]);
-
-  const handleRightClick = useCallback((e: React.MouseEvent) => {
-    e.preventDefault();
-    showMapTooltip('Sub-regions are only visible in Standard Map view.', e);
-    setTimeout(hideMapTooltip, 3000);
-  }, []);
+    onCountryClick(countryId, event);
+  }, [onCountryClick]);
 
   return (
     <svg
@@ -241,8 +234,7 @@ const HexagonMapBase: React.FC<HexagonMapProps> = ({
                   setHoveredId(null);
                   hideMapTooltip();
                 }}
-                onClick={() => handleCountryClick(countryId)}
-                onContextMenu={handleRightClick}
+                onClick={(e) => handleCountryClick(countryId, e as unknown as React.MouseEvent)}
               />
               {showLabels && (
                 <text

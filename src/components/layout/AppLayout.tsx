@@ -1,6 +1,7 @@
-import React from 'react';
+import React, { Suspense } from 'react';
 import { Outlet } from 'react-router-dom';
 import { Navbar } from './Navbar';
+import { PageLoader } from './PageLoader';
 
 export const AppLayout: React.FC = () => {
   const currentYear = new Date().getFullYear();
@@ -9,7 +10,9 @@ export const AppLayout: React.FC = () => {
     <div className="flex flex-col h-screen overflow-hidden bg-transparent text-base-content">
       <Navbar />
       <main className="flex-1 overflow-hidden relative">
-        <Outlet />
+        <Suspense fallback={<PageLoader />}>
+          <Outlet />
+        </Suspense>
       </main>
       <div 
         id="map-tooltip" 
