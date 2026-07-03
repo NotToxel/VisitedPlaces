@@ -7,7 +7,7 @@ export const Navbar: React.FC = () => {
   const [isSettingsOpen, setIsSettingsOpen] = React.useState(false);
 
   const getLinkClass = (isActive: boolean) => 
-    `px-4 py-2 rounded-lg flex items-center gap-2 font-bold text-sm transition-all duration-200 select-none ${
+    `px-3 sm:px-4 py-2 rounded-lg flex items-center gap-1.5 sm:gap-2 font-bold text-sm transition-all duration-200 select-none ${
       isActive 
         ? 'bg-primary text-white shadow-[0_2px_10px_rgba(122,162,247,0.25)] hover:bg-primary/95 scale-[1.02]' 
         : 'text-base-content/80 hover:text-primary hover:bg-base-300/20'
@@ -46,38 +46,42 @@ export const Navbar: React.FC = () => {
           <NavLink
             to="/"
             className={({ isActive }) => getLinkClass(isActive)}
+            title="Map"
           >
             <Map size={14} />
-            <span>Map</span>
+            <span className="hidden sm:inline">Map</span>
           </NavLink>
           <NavLink
             to="/list"
             className={({ isActive }) => getLinkClass(isActive)}
+            title="List"
           >
             <List size={14} />
-            <span>List</span>
+            <span className="hidden sm:inline">List</span>
           </NavLink>
           <NavLink
             to="/analytics"
             className={({ isActive }) => getLinkClass(isActive)}
+            title="Analytics"
           >
             <BarChart3 size={14} />
-            <span>Analytics</span>
+            <span className="hidden sm:inline">Analytics</span>
           </NavLink>
           <NavLink
             to="/compare"
             className={({ isActive }) => getLinkClass(isActive)}
+            title="Compare"
           >
             <Users size={14} />
-            <span>Compare</span>
+            <span className="hidden sm:inline">Compare</span>
           </NavLink>
           <button
             onClick={() => setIsSettingsOpen(true)}
-            className="px-4 py-2 rounded-lg flex items-center gap-2 font-bold text-sm text-base-content/80 hover:text-primary hover:bg-base-300/20 transition-all duration-200"
+            className="px-3 sm:px-4 py-2 rounded-lg flex items-center gap-1.5 sm:gap-2 font-bold text-sm text-base-content/80 hover:text-primary hover:bg-base-300/20 transition-all duration-200"
             title="Settings"
           >
             <Settings size={14} />
-            <span>Settings</span>
+            <span className="hidden sm:inline">Settings</span>
           </button>
         </div>
       </div>
