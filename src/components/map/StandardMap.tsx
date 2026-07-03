@@ -129,11 +129,7 @@ const StandardMapBase: React.FC<StandardMapProps> = ({
     <div style={{ width: '100%', height: '100%', position: 'relative', display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center' }}>
       {activeCountry && currentConfig && (
         <DrilldownControls 
-          activeCountry={activeCountry}
           config={currentConfig}
-          showTerritories={false}
-          setShowTerritories={() => {}}
-          setActiveCountry={setActiveCountry}
           setSubRegionCenter={setSubRegionCenter}
           setSubRegionZoom={setSubRegionZoom}
         />

@@ -1501,6 +1501,42 @@ path.rsm-geography:active {
   color: var(--accent-avoid);
 }
 
+/* ==========================================================================
+   Map Reset Zoom Button (floating top right)
+   ========================================================================== */
+
+.map-reset-zoom {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  padding: 6px 10px;
+  background: var(--glass-bg);
+  backdrop-filter: blur(20px);
+  -webkit-backdrop-filter: blur(20px);
+  border: 1px solid var(--glass-border);
+  border-radius: 12px;
+  box-shadow: 0 8px 32px rgba(0, 0, 0, 0.3);
+  color: var(--accent-primary);
+  font-size: 0.72rem;
+  font-weight: 700;
+  cursor: pointer;
+  transition: all 0.15s ease;
+  outline: none;
+  position: absolute;
+  top: 12px;
+  right: 12px;
+  z-index: 40;
+}
+
+[data-theme="light"] .map-reset-zoom {
+  box-shadow: 0 8px 32px rgba(0, 0, 0, 0.08);
+}
+
+.map-reset-zoom:hover {
+  background: rgba(122, 162, 247, 0.1);
+  border-color: var(--accent-primary);
+}
+
 @media (max-width: 640px) {
   .map-drilldown-header {
     top: 8px;
@@ -1513,5 +1549,12 @@ path.rsm-geography:active {
     width: 200px;
     right: 8px;
     top: 52px;
+  }
+
+  .map-reset-zoom {
+    top: 8px;
+    right: 8px;
+    padding: 5px 8px;
+    font-size: 0.65rem;
   }
 }
