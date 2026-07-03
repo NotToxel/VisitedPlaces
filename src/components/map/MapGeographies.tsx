@@ -58,7 +58,10 @@ const MapGeographiesBase: React.FC<MapGeographiesProps> = ({
              
           const status = placeIdForStore ? (places[placeIdForStore]?.status || 'NONE') : 'NONE';
           const isSelected = status !== 'NONE';
-          const countryName = geo.properties?.AREANM || geo.properties?.areanm || geo.properties?.name || 'Unknown Region';
+          let countryName = geo.properties?.AREANM || geo.properties?.areanm || geo.properties?.name || 'Unknown Region';
+          if (countryName === 'Commonwealth of the Northern Mariana Islands') {
+            countryName = 'Northern Mariana Islands';
+          }
           
           const isHighlighted = !!highlightedCountry && (
             highlightedCountry === (geo.properties?.ISO_A3 || geo.properties?.iso_a3 || geo.properties?.cca3) 

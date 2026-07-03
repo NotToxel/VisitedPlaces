@@ -36,10 +36,16 @@ export const fetchSubRegions = async (countryA3: string): Promise<TopoRegion[]> 
       
       // Handle USA
       if (countryA3 === 'USA' && data.objects.states) {
-        regions = (data.objects.states.geometries as TopologyGeometry[]).map((g) => ({
-          id: `USA-${g.id}`,
-          name: (g.properties?.name || '').toString()
-        }));
+        regions = (data.objects.states.geometries as TopologyGeometry[]).map((g) => {
+          let name = (g.properties?.name || '').toString();
+          if (name === 'Commonwealth of the Northern Mariana Islands') {
+            name = 'Northern Mariana Islands';
+          }
+          return {
+            id: `USA-${g.id}`,
+            name
+          };
+        });
       } 
       // Handle UK (utla layer)
       else if (countryA3 === 'GBR' && data.objects.utla) {
