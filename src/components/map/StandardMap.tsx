@@ -46,11 +46,12 @@ const StandardMapBase: React.FC<StandardMapProps> = ({
 
   // Pre-fetch and cache the world topology so we can compute centroids for search pan
   useEffect(() => {
+    if (activeCountry) return; // Delay world topology prefetch if inside a sub-region drilldown
     if (worldTopoRef.current) return;
     fetchRawTopology(WORLD_GEO_URL)
       .then(topo => { worldTopoRef.current = topo; })
       .catch(() => {});
-  }, []);
+  }, [activeCountry]);
 
   const tryPanToCountry = useCallback((topo: unknown, cca3: string) => {
     try {

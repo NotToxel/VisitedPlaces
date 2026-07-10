@@ -46,7 +46,7 @@ const MapGeographiesBase: React.FC<MapGeographiesProps> = ({
   strokeWidth
 }) => {
   return (
-    <Geographies geography={geoData}>
+    <Geographies key={activeCountry || 'world'} geography={geoData}>
       {({ geographies }) => {
         // Pre-compute duplicates for Natural Earth admin-1 features of the active country
         const duplicateIsos = new Set<string>();

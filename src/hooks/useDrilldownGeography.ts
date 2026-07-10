@@ -6,7 +6,9 @@ import { getCountryGeoJSON, computeBoundingBox } from '../data/naturalEarthAdmin
 import type { BBox } from '../data/naturalEarthAdmin1';
 
 export function useDrilldownGeography(activeCountry: string | null, setActiveCountry: (id: string | null) => void) {
-  const [geoData, setGeoData] = useState<string | object>(WORLD_GEO_URL);
+  const [geoData, setGeoData] = useState<string | object>(() => {
+    return activeCountry ? { type: 'FeatureCollection', features: [] } : WORLD_GEO_URL;
+  });
   const [isLoading, setIsLoading] = useState(true);
   const [countryBBox, setCountryBBox] = useState<BBox | null>(null);
 
