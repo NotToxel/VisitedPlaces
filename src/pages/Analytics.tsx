@@ -445,7 +445,7 @@ const Analytics: React.FC = () => {
               <BarChart3 size={14} className="text-primary shrink-0" />
               Regional Profile Comparison
             </h3>
-            <div className="flex-1 min-h-0 mt-2">
+            <div className="w-full h-[240px] mt-2 relative">
               <ResponsiveContainer width="100%" height="100%" minWidth={0} minHeight={0}>
                 <BarChart data={barChartData} margin={{ top: 5, right: 5, left: -22, bottom: 0 }}>
                   <CartesianGrid strokeDasharray="3 3" stroke="rgba(240, 240, 240, 0.04)" vertical={false} />
