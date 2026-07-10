@@ -166,7 +166,12 @@ const RegionCardBase: React.FC<RegionCardProps> = ({
         <img
           src={flagUrl}
           alt=""
-          className="region-card__flag"
+          className="region-card__flag cursor-pointer"
+          title="Click flag to instantly toggle Visited status"
+          onClick={(e) => {
+            e.stopPropagation();
+            handleMapClick();
+          }}
           onError={(e) => {
             const parentFlag = getParentCountryFlagUrl(regionId);
             if (parentFlag && e.currentTarget.src !== parentFlag) {
@@ -185,7 +190,7 @@ const RegionCardBase: React.FC<RegionCardProps> = ({
             className={`region-card__action-btn region-card__action-btn--${cls} ${status === s ? 'region-card__action-btn--active' : ''}`}
             title={label}
           >
-            <Icon size={10} />
+            <Icon size={13} />
           </button>
         ))}
       </div>

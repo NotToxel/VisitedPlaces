@@ -163,4 +163,52 @@ describe('Zustand App Store', () => {
       expect(store.getState().places).toEqual(testMap);
     });
   });
+
+  describe('Dual Schema Sub-region Synchronization', () => {
+    beforeEach(() => {
+      useStore.setState({ places: {} });
+    });
+
+    it('should synchronize flat subregion key into nested regions object on setCountryStatus', () => {
+      const store = useStore;
+      store.getState().setCountryStatus('USA-US-CA', 'VISITED');
+      
+      // Flat key check
+      expect(store.getState().places['USA-US-CA']).toBeDefined();
+      expect(store.getState().places['USA-US-CA'].status).toBe('VISITED');
+      
+      // Nested key check
+      expect(store.getState().places['USA']).toBeDefined();
+      expect(store.getState().places['USA'].regions['USA-US-CA']).toBe('VISITED');
+    });
+
+    it('should synchronize nested region into flat keys map on setRegionStatus', () => {
+      const store = useStore;
+      store.getState().setRegionStatus('USA', 'USA-US-NY', 'WISHLIST');
+      
+      // Nested key check
+      expect(store.getState().places['USA']).toBeDefined();
+      expect(store.getState().places['USA'].regions['USA-US-NY']).toBe('WISHLIST');
+      
+      // Flat key check
+      expect(store.getState().places['USA-US-NY']).toBeDefined();
+      expect(store.getState().places['USA-US-NY'].status).toBe('WISHLIST');
+    });
+
+    it('should delete from both representations when status is NONE', () => {
+      const store = useStore;
+      
+      // 1. Check via setCountryStatus -> NONE
+      store.getState().setCountryStatus('USA-US-CA', 'VISITED');
+      store.getState().setCountryStatus('USA-US-CA', 'NONE');
+      expect(store.getState().places['USA-US-CA']).toBeUndefined();
+      expect(store.getState().places['USA']?.regions['USA-US-CA']).toBeUndefined();
+
+      // 2. Check via setRegionStatus -> NONE
+      store.getState().setRegionStatus('USA', 'USA-US-NY', 'WISHLIST');
+      store.getState().setRegionStatus('USA', 'USA-US-NY', 'NONE');
+      expect(store.getState().places['USA-US-NY']).toBeUndefined();
+      expect(store.getState().places['USA']?.regions['USA-US-NY']).toBeUndefined();
+    });
+  });
 });

@@ -5,7 +5,7 @@ import type { PlaceStatus } from '../../store/useStore';
 import { MICROSTATES } from '../../data/mapData';
 import * as topojson from 'topojson-client';
 import { geoCentroid } from 'd3-geo';
-import { getFillColor, getRegionId, showMapTooltip, hideMapTooltip } from '../../utils/mapUtils';
+import { getFillColor, getRegionId, showMapTooltip, hideMapTooltip, formatStatusLabel } from '../../utils/mapUtils';
 import type { GeoFeature } from '../../utils/mapUtils';
 import { WORLD_GEO_URL } from '../../config/urls';
 import { drilldownRegistry } from '../../config/drilldownConfig';
@@ -287,8 +287,8 @@ const MicrostateMarkerBase: React.FC<MicrostateMarkerProps> = ({
         strokeWidth={0.5} 
         style={{ cursor: 'pointer' }} 
         onClick={(e) => onMarkerClick(marker.id, marker.name, e as unknown as React.MouseEvent)}
-        onMouseEnter={(e) => showMapTooltip(`${marker.name}${status !== 'NONE' ? ` - ${status}` : ''}`, e)}
-        onMouseMove={(e) => showMapTooltip(`${marker.name}${status !== 'NONE' ? ` - ${status}` : ''}`, e)}
+        onMouseEnter={(e) => showMapTooltip(`${marker.name}${status !== 'NONE' ? ` - ${formatStatusLabel(status)}` : ''}`, e)}
+        onMouseMove={(e) => showMapTooltip(`${marker.name}${status !== 'NONE' ? ` - ${formatStatusLabel(status)}` : ''}`, e)}
         onMouseLeave={hideMapTooltip}
       />
     </Marker>

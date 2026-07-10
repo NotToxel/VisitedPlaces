@@ -1,8 +1,9 @@
-import React, { useMemo } from 'react';
+import React, { useMemo, useState, useEffect } from 'react';
 import { useStore } from '../store/useStore';
 import { COUNTRIES } from '../data/countries';
 import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip as RechartsTooltip, Legend, ResponsiveContainer } from 'recharts';
 import { BarChart3, Globe, Award, Trophy, ShieldCheck, Compass, Heart, CheckCircle2, Lock, Milestone } from 'lucide-react';
+import { fetchSubRegions, hasDrilldownSupport } from '../utils/topojsonCache';
 
 const Analytics: React.FC = () => {
   const { places } = useStore();
@@ -60,6 +61,98 @@ const Analytics: React.FC = () => {
   const totalExplored = stats.visited + stats.revisit;
   const percentVisited = totalCountries > 0 ? ((totalExplored / totalCountries) * 100).toFixed(1) : '0';
 
+  // Sub-region dynamic totals loader
+  const [subRegionTotals, setSubRegionTotals] = useState<Record<string, number>>({
+    'USA': 51,
+    'GBR': 124
+  });
+
+  // Load sub-regions dynamically to get total counts
+  useEffect(() => {
+    // Find all countries that have at least one tracked sub-region
+    const countriesWithRegions = new Set<string>();
+    Object.entries(places).forEach(([key, value]) => {
+      if (key.includes('-')) {
+        countriesWithRegions.add(key.split('-')[0]);
+      } else if (value.regions && Object.keys(value.regions).length > 0) {
+        countriesWithRegions.add(key);
+      }
+    });
+
+    countriesWithRegions.forEach((countryId) => {
+      if (subRegionTotals[countryId] === undefined) {
+        fetchSubRegions(countryId).then(list => {
+          if (list && list.length > 0) {
+            setSubRegionTotals(prev => ({
+              ...prev,
+              [countryId]: list.length
+            }));
+          }
+        });
+      }
+    });
+  }, [places, subRegionTotals]);
+
+  // Aggregate sub-region stats per country
+  const subRegionStats = useMemo(() => {
+    const statsMap: Record<string, { visited: number; wishlist: number; avoid: number; total: number }> = {};
+    
+    Object.entries(places).forEach(([key, value]) => {
+      // 1. Process flat keys
+      if (key.includes('-')) {
+        const [parentCode] = key.split('-');
+        if (!hasDrilldownSupport(parentCode)) return;
+        
+        if (!statsMap[parentCode]) {
+          statsMap[parentCode] = { visited: 0, wishlist: 0, avoid: 0, total: subRegionTotals[parentCode] || 0 };
+        }
+        
+        if (value.status === 'VISITED' || value.status === 'REVISIT') statsMap[parentCode].visited++;
+        if (value.status === 'WISHLIST') statsMap[parentCode].wishlist++;
+        if (value.status === 'AVOID') statsMap[parentCode].avoid++;
+      }
+      // 2. Process nested keys
+      else if (value.regions) {
+        if (!hasDrilldownSupport(key)) return;
+        
+        if (!statsMap[key]) {
+          statsMap[key] = { visited: 0, wishlist: 0, avoid: 0, total: subRegionTotals[key] || 0 };
+        }
+        
+        Object.entries(value.regions).forEach(([regKey, regStatus]) => {
+          // If the flat key was already counted above, skip it to avoid double-counting
+          if (places[regKey]) return;
+          
+          if (regStatus === 'VISITED' || regStatus === 'REVISIT') statsMap[key].visited++;
+          if (regStatus === 'WISHLIST') statsMap[key].wishlist++;
+          if (regStatus === 'AVOID') statsMap[key].avoid++;
+        });
+      }
+    });
+
+    // Transform map to sorted list
+    return Object.entries(statsMap)
+      .map(([countryId, item]) => {
+        const country = COUNTRIES.find(c => c.id === countryId);
+        const explored = item.visited;
+        const total = item.total || explored; // fallback to explored if total not loaded yet
+        const percent = total > 0 ? Math.round((explored / total) * 100) : 0;
+        
+        return {
+          countryId,
+          countryName: country?.name || countryId,
+          flag: country?.flag || '',
+          visited: item.visited,
+          wishlist: item.wishlist,
+          avoid: item.avoid,
+          total,
+          percent
+        };
+      })
+      .filter(item => (item.visited + item.wishlist + item.avoid) > 0)
+      .sort((a, b) => b.percent - a.percent);
+  }, [places, subRegionTotals]);
+
   // Traveler Level & Milestones Calculator
   const levelInfo = useMemo(() => {
     if (totalExplored < 5) {
@@ -115,7 +208,26 @@ const Analytics: React.FC = () => {
 
   // Dynamic Achievements Calculator
   const achievements = useMemo(() => {
-    const subRegionExploredCount = Object.keys(places).filter(k => k.includes('-') && (places[k]?.status === 'VISITED' || places[k]?.status === 'REVISIT')).length;
+    // Count unique sub-regions that are VISITED or REVISIT
+    let subRegionExploredCount = 0;
+    const countedKeys = new Set<string>();
+
+    Object.entries(places).forEach(([key, val]) => {
+      if (key.includes('-') && (val?.status === 'VISITED' || val?.status === 'REVISIT')) {
+        if (!countedKeys.has(key)) {
+          countedKeys.add(key);
+          subRegionExploredCount++;
+        }
+      } else if (!key.includes('-') && val?.regions) {
+        Object.entries(val.regions).forEach(([regKey, regStatus]) => {
+          if ((regStatus === 'VISITED' || regStatus === 'REVISIT') && !countedKeys.has(regKey)) {
+            countedKeys.add(regKey);
+            subRegionExploredCount++;
+          }
+        });
+      }
+    });
+
     const visitedContinents = Object.values(continentCounts).filter(c => (c.visited + c.revisit) >= 1).length;
 
     return [
@@ -357,6 +469,45 @@ const Analytics: React.FC = () => {
           </div>
 
         </div>
+
+        {/* Dynamic Sub-regions Exploration Progress */}
+        {subRegionStats.length > 0 && (
+          <div className="glass-panel border border-base-300/40 p-4.5 rounded-2xl bg-base-200/20 flex flex-col gap-3 shrink-0">
+            <h3 className="flex items-center gap-2 font-bold text-xs text-base-content uppercase tracking-wider border-b border-base-300/30 pb-2 select-none">
+              <Milestone size={14} className="text-primary shrink-0" />
+              Sub-regions Exploration
+            </h3>
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+              {subRegionStats.map((item) => (
+                <div key={item.countryId} className="bg-base-300/10 border border-base-300/25 rounded-xl p-3.5 flex flex-col gap-2.5">
+                  <div className="flex items-center justify-between">
+                    <div className="flex items-center gap-2 min-w-0">
+                      {item.flag ? (
+                        <img src={item.flag} alt="" className="w-6 h-4 object-cover rounded-sm border border-base-300/30 shrink-0" />
+                      ) : (
+                        <div className="w-6 h-4 bg-base-300 rounded-sm shrink-0" />
+                      )}
+                      <span className="font-bold text-[12px] text-base-content truncate">{item.countryName}</span>
+                    </div>
+                    <span className="text-[11px] font-extrabold text-primary font-mono">{item.percent}%</span>
+                  </div>
+
+                  <div className="w-full bg-base-300/35 border border-base-300/15 rounded-full h-2 overflow-hidden">
+                    <div 
+                      className="bg-primary h-full rounded-full transition-all duration-700" 
+                      style={{ width: `${item.percent}%` }}
+                    />
+                  </div>
+
+                  <div className="flex items-center justify-between text-[10px] text-base-content/55 font-semibold">
+                    <span>{item.visited} / {item.total} Visited</span>
+                    {item.wishlist > 0 && <span>{item.wishlist} Wishlist</span>}
+                  </div>
+                </div>
+              ))}
+            </div>
+          </div>
+        )}
 
         {/* Row 3: Achievements & Dynamic Milestones */}
         <div className="flex flex-col gap-3 shrink-0">

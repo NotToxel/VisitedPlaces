@@ -1,7 +1,7 @@
 import React, { memo, useState, useEffect, useRef, useCallback } from 'react';
 import { useStore } from '../../store/useStore';
 import { hexGridData } from '../../utils/hexGridData';
-import { getFillColor, showMapTooltip, hideMapTooltip } from '../../utils/mapUtils';
+import { getFillColor, showMapTooltip, hideMapTooltip, formatStatusLabel } from '../../utils/mapUtils';
 
 interface HexagonMapProps {
   highlightedCountry?: string | null;
@@ -225,10 +225,10 @@ const HexagonMapBase: React.FC<HexagonMapProps> = ({
                 style={{ cursor: 'pointer', outline: 'none', transition: 'fill 0.2s ease, transform 0.2s ease' }}
                 onMouseEnter={(e) => {
                   setHoveredId(countryId);
-                  showMapTooltip(`${dot.name}${isSelected ? ` - ${status}` : ''}`, e);
+                  showMapTooltip(`${dot.name}${isSelected ? ` - ${formatStatusLabel(status)}` : ''}`, e);
                 }}
                 onMouseMove={(e) => {
-                  showMapTooltip(`${dot.name}${isSelected ? ` - ${status}` : ''}`, e);
+                  showMapTooltip(`${dot.name}${isSelected ? ` - ${formatStatusLabel(status)}` : ''}`, e);
                 }}
                 onMouseLeave={() => {
                   setHoveredId(null);
@@ -238,12 +238,16 @@ const HexagonMapBase: React.FC<HexagonMapProps> = ({
               />
               {showLabels && (
                 <text
-                  x={cx} y={cy}
+                  x={cx}
+                  y={cy}
                   textAnchor="middle"
                   dy=".35em"
-                  fontSize="4.5"
+                  fontSize="4.2"
                   fill="var(--text-primary)"
-                  style={{ pointerEvents: 'none', fontWeight: 600, opacity: 0.8 }}
+                  stroke="var(--bg-base-100)"
+                  strokeWidth="0.8px"
+                  paintOrder="stroke fill"
+                  style={{ pointerEvents: 'none', fontWeight: 800 }}
                 >
                   {countryId}
                 </text>

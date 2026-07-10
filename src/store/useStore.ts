@@ -48,6 +48,23 @@ export const useStore = create<AppState>()(
         
         if (status === 'NONE') {
           delete updatedPlaces[countryCode];
+          
+          // Sync schemas: if it's a sub-region (contains '-'), also delete it from the parent's regions object
+          if (countryCode.includes('-')) {
+            const parentCode = countryCode.split('-')[0];
+            if (updatedPlaces[parentCode]) {
+              const regions = { ...updatedPlaces[parentCode].regions };
+              delete regions[countryCode];
+              updatedPlaces[parentCode] = {
+                ...updatedPlaces[parentCode],
+                regions
+              };
+              // Cleanup parent if it becomes empty and has status NONE
+              if (updatedPlaces[parentCode].status === 'NONE' && Object.keys(regions).length === 0) {
+                delete updatedPlaces[parentCode];
+              }
+            }
+          }
         } else {
           updatedPlaces[countryCode] = {
             status,
@@ -59,21 +76,25 @@ export const useStore = create<AppState>()(
             const parentCode = countryCode.split('-')[0];
             const currentParentStatus = updatedPlaces[parentCode]?.status || 'NONE';
             
+            let parentStatus = currentParentStatus;
             if (status === 'VISITED') {
-               updatedPlaces[parentCode] = { status: 'VISITED', regions: {} };
-            } else if (status === 'WISHLIST') {
-               if (currentParentStatus !== 'VISITED') {
-                   updatedPlaces[parentCode] = { status: 'WISHLIST', regions: {} };
-               }
-            } else if (status === 'AVOID') {
-               if (currentParentStatus === 'NONE') {
-                   updatedPlaces[parentCode] = { status: 'AVOID', regions: {} };
-               }
-            } else if (status === 'REVISIT') {
-               if (currentParentStatus !== 'VISITED') {
-                   updatedPlaces[parentCode] = { status: 'REVISIT', regions: {} };
-               }
+               parentStatus = 'VISITED';
+            } else if (status === 'WISHLIST' && currentParentStatus !== 'VISITED') {
+               parentStatus = 'WISHLIST';
+            } else if (status === 'AVOID' && currentParentStatus === 'NONE') {
+               parentStatus = 'AVOID';
+            } else if (status === 'REVISIT' && currentParentStatus !== 'VISITED') {
+               parentStatus = 'REVISIT';
             }
+
+            // Sync schemas: also add it to the parent country's nested regions
+            const parentRegions = { ...(updatedPlaces[parentCode]?.regions || {}) };
+            parentRegions[countryCode] = status;
+
+            updatedPlaces[parentCode] = {
+              status: parentStatus,
+              regions: parentRegions
+            };
           }
         }
         
@@ -88,8 +109,14 @@ export const useStore = create<AppState>()(
         
         if (status === 'NONE') {
           delete regions[regionCode];
+          delete updatedPlaces[regionCode]; // Sync schema: delete flat key too
         } else {
           regions[regionCode] = status;
+          // Sync schema: set flat key too
+          updatedPlaces[regionCode] = {
+            status,
+            regions: {}
+          };
         }
         
         let parentStatus = country.status;

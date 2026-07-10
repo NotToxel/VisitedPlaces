@@ -130,3 +130,12 @@ export const hideMapTooltip = () => {
 
 // Re-export the universal flag resolver from flagUtils
 export const getPlaceFlagUrl = getFlagUrl;
+
+export const formatStatusLabel = (status: PlaceStatus): string => {
+  if (status === 'NONE') return 'None';
+  if (status === 'VISITED') return 'Visited';
+  if (status === 'WISHLIST') return 'Wishlist';
+  if (status === 'REVISIT') return 'Revisit';
+  if (status === 'AVOID') return 'Avoid';
+  return status;
+};

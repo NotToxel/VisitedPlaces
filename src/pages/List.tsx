@@ -152,7 +152,7 @@ const List: React.FC = () => {
 
   // Get status color styling
   const getCardBorderAndBg = (status: PlaceStatus, isSelected: boolean) => {
-    let base = "border rounded-xl transition-all duration-200 cursor-pointer px-3 py-2.5 flex items-center justify-between min-h-[52px] ";
+    let base = "border rounded-2xl transition-all duration-200 cursor-pointer p-4 flex flex-col justify-between gap-3 min-h-[96px] ";
     
     if (isSelected) {
       base += "ring-2 ring-primary border-primary bg-primary/5 shadow-[0_0_12px_rgba(122,162,247,0.15)] ";
@@ -431,61 +431,70 @@ const List: React.FC = () => {
                         return (
                           <div 
                             key={state.id} 
-                            className={`flex items-center justify-between p-1.5 px-2 rounded-md border text-[11px] font-medium transition-all gap-1.5 ${
-                              stateStatus === 'VISITED' ? 'bg-accent-visited/10 border-accent-visited/20 text-accent-visited' :
-                              stateStatus === 'WISHLIST' ? 'bg-accent-wishlist/10 border-accent-wishlist/20 text-accent-wishlist' :
-                              stateStatus === 'REVISIT' ? 'bg-accent-revisit/10 border-accent-revisit/20 text-accent-revisit' :
-                              stateStatus === 'AVOID' ? 'bg-accent-avoid/10 border-accent-avoid/20 text-accent-avoid' :
+                            className={`flex items-center justify-between p-3 px-3.5 rounded-xl border text-[12.5px] font-medium transition-all gap-2.5 ${
+                              stateStatus === 'VISITED' ? 'bg-accent-visited/10 border-accent-visited/20 text-accent-visited font-bold' :
+                              stateStatus === 'WISHLIST' ? 'bg-accent-wishlist/10 border-accent-wishlist/20 text-accent-wishlist font-bold' :
+                              stateStatus === 'REVISIT' ? 'bg-accent-revisit/10 border-accent-revisit/20 text-accent-revisit font-bold' :
+                              stateStatus === 'AVOID' ? 'bg-accent-avoid/10 border-accent-avoid/20 text-accent-avoid font-bold' :
                               'bg-base-200/30 border-transparent text-base-content/75 hover:bg-base-200/60'
                             }`}
                           >
-                            <div className="flex items-center gap-2 min-w-0 flex-1">
-                              {flagUrl ? (
-                                <img
-                                  src={flagUrl}
-                                  alt=""
-                                  className="w-5 h-3.5 object-cover rounded-sm border border-base-300/20 shrink-0"
-                                  onError={(e) => {
-                                    const parentFlag = getParentCountryFlagUrl(state.id);
-                                    if (parentFlag && e.currentTarget.src !== parentFlag) {
-                                      e.currentTarget.src = parentFlag;
-                                    }
-                                  }}
-                                />
-                              ) : (
-                                <div className="w-5 h-3.5 bg-base-300 rounded-sm border border-base-300/20 shrink-0" />
-                              )}
-                              <span className="truncate flex-1 font-semibold">{state.name}</span>
+                            <div className="flex items-center gap-2.5 min-w-0 flex-1">
+                              <div
+                                className="cursor-pointer shrink-0"
+                                title="Click flag to instantly toggle Visited status"
+                                onClick={(e) => {
+                                  e.stopPropagation();
+                                  handleStatusChange(state.id, 'VISITED');
+                                }}
+                              >
+                                {flagUrl ? (
+                                  <img
+                                    src={flagUrl}
+                                    alt=""
+                                    className="w-7.5 h-5 object-cover rounded-sm border border-base-300/20"
+                                    onError={(e) => {
+                                      const parentFlag = getParentCountryFlagUrl(state.id);
+                                      if (parentFlag && e.currentTarget.src !== parentFlag) {
+                                        e.currentTarget.src = parentFlag;
+                                      }
+                                    }}
+                                  />
+                                ) : (
+                                  <div className="w-7.5 h-5 bg-base-300 rounded-sm border border-base-300/20" />
+                                )}
+                              </div>
+                              <span className="truncate flex-1 font-bold">{state.name}</span>
                             </div>
                             
-                            <div className="flex gap-0.5 shrink-0">
+                            <div className="flex gap-1 shrink-0">
                               <button
                                 onClick={() => handleStatusChange(state.id, 'VISITED')}
-                                className={`btn btn-square btn-circle btn-xs h-5 w-5 ${stateStatus === 'VISITED' ? 'btn-success text-white' : 'btn-ghost text-base-content/30 hover:text-base-content'}`}
+                                className={`btn btn-square btn-circle btn-sm h-7.5 w-7.5 ${stateStatus === 'VISITED' ? 'btn-success text-white border-none' : 'btn-ghost text-base-content/30 hover:text-accent-visited hover:bg-accent-visited/10'}`}
                                 title="Visited"
                               >
-                                <Check size={10} />
+                                <Check size={13} />
                               </button>
                               <button
                                 onClick={() => handleStatusChange(state.id, 'WISHLIST')}
-                                className={`btn btn-square btn-circle btn-xs h-5 w-5 ${stateStatus === 'WISHLIST' ? 'btn-secondary text-white' : 'btn-ghost text-base-content/30 hover:text-base-content'}`}
+                                className={`btn btn-square btn-circle btn-sm h-7.5 w-7.5 ${stateStatus === 'WISHLIST' ? 'btn-secondary text-white border-none' : 'btn-ghost text-base-content/30 hover:text-accent-wishlist hover:bg-accent-wishlist/10'}`}
                                 title="Wishlist"
                               >
-                                <Heart size={10} />
+                                <Heart size={13} fill={stateStatus === 'WISHLIST' ? 'currentColor' : 'none'} />
                               </button>
                               <button
                                 onClick={() => handleStatusChange(state.id, 'REVISIT')}
-                                className={`btn btn-square btn-circle btn-xs h-5 w-5 ${stateStatus === 'REVISIT' ? 'btn-warning text-white' : 'btn-ghost text-base-content/30 hover:text-base-content'}`}
+                                className={`btn btn-square btn-circle btn-sm h-7.5 w-7.5 ${stateStatus === 'REVISIT' ? 'btn-warning text-white border-none' : 'btn-ghost text-base-content/30 hover:text-accent-revisit hover:bg-accent-revisit/10'}`}
                                 title="Revisit"
                               >
-                                <RotateCcw size={10} />
+                                <RotateCcw size={13} />
                               </button>
                               <button
                                 onClick={() => handleStatusChange(state.id, 'AVOID')}
-                                className={`btn btn-square btn-circle btn-xs h-5 w-5 ${stateStatus === 'AVOID' ? 'btn-error text-white' : 'btn-ghost text-base-content/30 hover:text-base-content'}`}
+                                className={`btn btn-square btn-circle btn-sm h-7.5 w-7.5 ${stateStatus === 'AVOID' ? 'btn-error text-white border-none' : 'btn-ghost text-base-content/30 hover:text-accent-avoid hover:bg-accent-avoid/10'}`}
                                 title="Avoid"
                               >
-                                <Ban size={10} />
+                                <Ban size={13} />
                               </button>
                             </div>
                           </div>
@@ -604,13 +613,11 @@ const List: React.FC = () => {
                   </h3>
                   
                   {!isCollapsed && (
-                    <div className="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-3 gap-2.5 mt-1">
+                    <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-4 mt-2.5">
                       {placesInContinent.map(country => {
                         const status = places[country.id]?.status || 'NONE';
                         const isSelected = selectedCountryId === country.id;
-                        const hasDrill = hasDrilldownSupport(country.id);
-
-                        return (
+                        const hasDrill = hasDrilldownSupport(country.id);                        return (
                           <div 
                             key={country.id} 
                             onClick={() => {
@@ -619,58 +626,81 @@ const List: React.FC = () => {
                             }}
                             className={getCardBorderAndBg(status, isSelected)}
                           >
-                            <div className="flex items-center gap-2.5 min-w-0 flex-1">
-                              {country.flag ? (
-                                <img src={country.flag} alt="" className="w-5 h-3.5 object-cover rounded-sm border border-base-300/20 shrink-0" />
-                              ) : (
-                                <div className="w-5 h-3.5 bg-base-300 rounded-sm border border-base-300/20 shrink-0" />
-                              )}
+                            {/* Top Row: Identity (Flag, Name, Code) */}
+                            <div className="flex items-center gap-3 w-full min-w-0">
+                              <div 
+                                className="cursor-pointer shrink-0 hover:scale-105 transition-transform"
+                                title="Click flag to instantly toggle Visited status"
+                                onClick={(e) => {
+                                  e.stopPropagation();
+                                  handleStatusChange(country.id, 'VISITED');
+                                }}
+                              >
+                                {country.flag ? (
+                                  <img src={country.flag} alt="" className="w-9 h-6 object-cover rounded-sm border border-base-300/20" />
+                                ) : (
+                                  <div className="w-9 h-6 bg-base-300 rounded-sm border border-base-300/20" />
+                                )}
+                              </div>
                               <div className="flex flex-col min-w-0 flex-1">
-                                <span className="truncate font-extrabold text-[12px] leading-snug">{country.name}</span>
-                                <span className="text-[9px] opacity-40 font-mono tracking-wider font-semibold uppercase">{country.id}</span>
+                                <span className="truncate font-extrabold text-[14px] leading-tight text-base-content" title={country.name}>{country.name}</span>
+                                <span className="text-[10px] opacity-40 font-mono tracking-wider font-semibold uppercase">{country.id}</span>
                               </div>
                             </div>
 
-                            <div className="flex items-center gap-1.5 shrink-0">
+                            {/* Bottom Row: Progress (left) & Actions (right) */}
+                            <div className="flex items-center justify-between w-full pt-2.5 border-t border-base-300/10 gap-2" onClick={e => e.stopPropagation()}>
                               {hasDrill ? (
-                                <div className="flex items-center gap-1 bg-primary/10 border border-primary/25 text-primary rounded px-2 py-0.5 text-[9px] font-bold shrink-0 select-none">
-                                  <Map size={9} />
+                                <div className="flex items-center gap-1 bg-primary/10 border border-primary/25 text-primary rounded px-2.5 py-1 text-[10px] font-bold shrink-0 select-none">
+                                  <Map size={10} />
                                   <span>{getSubregionsProgressString(country.id)}</span>
                                 </div>
                               ) : (
-                                <div className="flex items-center gap-1.5" onClick={e => e.stopPropagation()}>
-                                  <div className="flex gap-0.5">
-                                    <button 
-                                      onClick={() => handleStatusChange(country.id, 'VISITED')}
-                                      title="Visited"
-                                      className={`btn btn-square btn-circle btn-xs h-5.5 w-5.5 transition-all ${status === 'VISITED' ? 'btn-success text-white border-none' : 'btn-ghost text-base-content/30 hover:text-accent-visited hover:bg-accent-visited/10'}`}
-                                    >
-                                      <Check size={10} />
-                                    </button>
-                                    <button 
-                                      onClick={() => handleStatusChange(country.id, 'WISHLIST')}
-                                      title="Wishlist"
-                                      className={`btn btn-square btn-circle btn-xs h-5.5 w-5.5 transition-all ${status === 'WISHLIST' ? 'btn-secondary text-white border-none' : 'btn-ghost text-base-content/30 hover:text-accent-wishlist hover:bg-accent-wishlist/10'}`}
-                                    >
-                                      <Heart size={10} />
-                                    </button>
-                                    <button 
-                                      onClick={() => handleStatusChange(country.id, 'REVISIT')}
-                                      title="Revisit"
-                                      className={`btn btn-square btn-circle btn-xs h-5.5 w-5.5 transition-all ${status === 'REVISIT' ? 'btn-warning text-white border-none' : 'btn-ghost text-base-content/30 hover:text-accent-revisit hover:bg-accent-revisit/10'}`}
-                                    >
-                                      <RotateCcw size={10} />
-                                    </button>
-                                    <button 
-                                      onClick={() => handleStatusChange(country.id, 'AVOID')}
-                                      title="Avoid"
-                                      className={`btn btn-square btn-circle btn-xs h-5.5 w-5.5 transition-all ${status === 'AVOID' ? 'btn-error text-white border-none' : 'btn-ghost text-base-content/30 hover:text-accent-avoid hover:bg-accent-avoid/10'}`}
-                                    >
-                                      <Ban size={10} />
-                                    </button>
-                                  </div>
-                                </div>
+                                <div className="flex-1" />
                               )}
+                              
+                              <div className="flex gap-1.5 shrink-0">
+                                <button 
+                                  onClick={(e) => {
+                                    e.stopPropagation();
+                                    handleStatusChange(country.id, 'VISITED');
+                                  }}
+                                  title="Visited"
+                                  className={`btn btn-square btn-circle btn-sm h-7.5 w-7.5 transition-all ${status === 'VISITED' ? 'btn-success text-white border-none shadow-sm' : 'btn-ghost text-base-content/30 hover:text-accent-visited hover:bg-accent-visited/10'}`}
+                                >
+                                  <Check size={13} />
+                                </button>
+                                <button 
+                                  onClick={(e) => {
+                                    e.stopPropagation();
+                                    handleStatusChange(country.id, 'WISHLIST');
+                                  }}
+                                  title="Wishlist"
+                                  className={`btn btn-square btn-circle btn-sm h-7.5 w-7.5 transition-all ${status === 'WISHLIST' ? 'btn-secondary text-white border-none shadow-sm' : 'btn-ghost text-base-content/30 hover:text-accent-wishlist hover:bg-accent-wishlist/10'}`}
+                                >
+                                  <Heart size={13} fill={status === 'WISHLIST' ? 'currentColor' : 'none'} />
+                                </button>
+                                <button 
+                                  onClick={(e) => {
+                                    e.stopPropagation();
+                                    handleStatusChange(country.id, 'REVISIT');
+                                  }}
+                                  title="Revisit"
+                                  className={`btn btn-square btn-circle btn-sm h-7.5 w-7.5 transition-all ${status === 'REVISIT' ? 'btn-warning text-white border-none shadow-sm' : 'btn-ghost text-base-content/30 hover:text-accent-revisit hover:bg-accent-revisit/10'}`}
+                                >
+                                  <RotateCcw size={13} />
+                                </button>
+                                <button 
+                                  onClick={(e) => {
+                                    e.stopPropagation();
+                                    handleStatusChange(country.id, 'AVOID');
+                                  }}
+                                  title="Avoid"
+                                  className={`btn btn-square btn-circle btn-sm h-7.5 w-7.5 transition-all ${status === 'AVOID' ? 'btn-error text-white border-none shadow-sm' : 'btn-ghost text-base-content/30 hover:text-accent-avoid hover:bg-accent-avoid/10'}`}
+                                >
+                                  <Ban size={13} />
+                                </button>
+                              </div>
                             </div>
                           </div>
                         );

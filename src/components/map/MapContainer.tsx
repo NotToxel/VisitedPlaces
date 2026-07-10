@@ -16,6 +16,7 @@ import { getAllCountryFeaturesWithMeta } from '../../data/naturalEarthAdmin1';
 import type { NERegionFeature } from '../../data/naturalEarthAdmin1';
 import { getSubRegionUrl } from '../../utils/topojsonCache';
 import { getPlaceFlagUrl } from '../../utils/flagUtils';
+import { hideMapTooltip } from '../../utils/mapUtils';
 
 interface ContextMenuState {
   countryId: string;
@@ -113,6 +114,7 @@ export const MapContainer: React.FC = () => {
   const handleCountryClick = useCallback(
     (countryId: string, event: React.MouseEvent, displayName?: string) => {
       event?.stopPropagation?.();
+      hideMapTooltip(); // Hide tooltip immediately when clicked/tapped (especially on mobile!)
       if (activeCountry) {
         // In drilldown view, the ID is already prefixed by getRegionId
         setContextMenu({

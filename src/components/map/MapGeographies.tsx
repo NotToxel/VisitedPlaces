@@ -1,6 +1,6 @@
 import React, { memo } from 'react';
 import { Geographies, Geography } from 'react-simple-maps';
-import { getFillColor, getRegionId, showMapTooltip, hideMapTooltip } from '../../utils/mapUtils';
+import { getFillColor, getRegionId, showMapTooltip, hideMapTooltip, formatStatusLabel } from '../../utils/mapUtils';
 import type { GeoFeature, GeoProperties } from '../../utils/mapUtils';
 import { getCleanGbrName } from '../../data/gbrRegionData';
 import type { PlaceStatus } from '../../store/useStore';
@@ -116,7 +116,7 @@ const MapGeographiesBase: React.FC<MapGeographiesProps> = ({
 
           // Build tooltip text
           const tooltipParts = [countryName];
-          if (isSelected) tooltipParts.push(`— ${status}`);
+          if (isSelected) tooltipParts.push(`— ${formatStatusLabel(status)}`);
           const tooltipText = tooltipParts.join(' ');
 
           return (
