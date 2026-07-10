@@ -52,7 +52,7 @@ const MapGeographiesBase: React.FC<MapGeographiesProps> = ({
         const duplicateIsos = new Set<string>();
         const duplicateNames = new Set<string>();
         
-        if (activeCountry && activeCountry !== 'USA' && activeCountry !== 'GBR') {
+        if (activeCountry) {
           const isoCounts: Record<string, number> = {};
           const nameCounts: Record<string, number> = {};
           
@@ -98,7 +98,7 @@ const MapGeographiesBase: React.FC<MapGeographiesProps> = ({
 
           const iso = geo.properties?.iso_3166_2 || '';
           const typeEn = geo.properties?.type_en || '';
-          if (activeCountry && activeCountry !== 'USA' && activeCountry !== 'GBR') {
+          if (activeCountry) {
             const hasIsoDuplicate = iso && duplicateIsos.has(iso);
             const hasNameDuplicate = countryName && duplicateNames.has(countryName);
             if ((hasIsoDuplicate || hasNameDuplicate) && typeEn) {

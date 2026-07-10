@@ -100,7 +100,7 @@ const StandardMapBase: React.FC<StandardMapProps> = ({
       // Compute duplicateIsos and duplicateNames for NE getRegionId matching
       const duplicateIsos = new Set<string>();
       const duplicateNames = new Set<string>();
-      if (activeCountry && activeCountry !== 'USA' && activeCountry !== 'GBR') {
+      if (activeCountry) {
         const isoCounts: Record<string, number> = {};
         const nameCounts: Record<string, number> = {};
         features.forEach((f) => {

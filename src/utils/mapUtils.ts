@@ -71,16 +71,6 @@ export const getRegionId = (
     return numericToA3[rawId] || rawId;
   }
 
-  // Curated drill-down: GBR
-  if (activeCountry === 'GBR') {
-    const rawId = geo.properties?.AREACD || geo.properties?.areacd || geo.id?.toString() || '';
-    return `GBR-${rawId}`;
-  }
-
-  // Curated drill-down: USA
-  if (activeCountry === 'USA') {
-    return `USA-${geo.id?.toString() || ''}`;
-  }
 
   // NE admin-1 drill-down — use ISO 3166-2 code from NE properties
   const iso3166_2 = geo.properties?.iso_3166_2;
