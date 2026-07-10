@@ -40,7 +40,7 @@ const StandardMapBase: React.FC<StandardMapProps> = ({
   const { 
     mapCenter, setMapCenter, mapZoom, setMapZoom, 
     subRegionCenter, setSubRegionCenter, subRegionZoom, setSubRegionZoom, animateTo 
-  } = useMapAnimation();
+  } = useMapAnimation([0, 0], 1, !!activeCountry);
 
   const { geoData, isLoading, countryBBox } = useDrilldownGeography(activeCountry, setActiveCountry);
 

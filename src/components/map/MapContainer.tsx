@@ -176,8 +176,9 @@ export const MapContainer: React.FC = () => {
   const handleDrillDown = useCallback(
     (countryId: string) => {
       setActiveCountry(countryId);
+      setMapStyle('STANDARD');
     },
-    []
+    [setMapStyle]
   );
 
   // Search handlers

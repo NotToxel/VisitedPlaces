@@ -1,10 +1,11 @@
 import React, { useState, useMemo, useRef, useEffect } from 'react';
-import { Search, X, Hexagon, Globe, Zap, Map } from 'lucide-react';
+import { Search, X, Hexagon, Globe, Zap } from 'lucide-react';
 import { COUNTRIES } from '../../data/countries';
 import type { Country } from '../../data/countries';
 import { matchCountry } from '../../utils/searchUtils';
 import type { PlaceStatus } from '../../store/useStore';
 import type { TopoRegion } from '../../utils/topojsonCache';
+import { getPlaceFlagUrl, getParentCountryFlagUrl } from '../../utils/flagUtils';
 
 interface MapSearchBarProps {
   mapStyle: 'STANDARD' | 'HEXAGON';
@@ -211,9 +212,17 @@ export const MapSearchBar: React.FC<MapSearchBarProps> = ({
                 onMouseEnter={() => setKbIndex(idx)}
               >
                 {activeCountry ? (
-                  <div className="map-search-bar__dropdown-flag-placeholder flex items-center justify-center bg-primary/10 border border-primary/20 text-primary">
-                    <Map size={10} />
-                  </div>
+                  <img
+                    src={getPlaceFlagUrl(item.id) || getParentCountryFlagUrl(item.id) || ''}
+                    alt=""
+                    className="map-search-bar__dropdown-flag object-cover rounded-sm"
+                    onError={(e) => {
+                      const fallback = getParentCountryFlagUrl(item.id);
+                      if (fallback) {
+                        e.currentTarget.src = fallback;
+                      }
+                    }}
+                  />
                 ) : flag ? (
                   <img
                     src={flag}
@@ -224,7 +233,7 @@ export const MapSearchBar: React.FC<MapSearchBarProps> = ({
                   <div className="map-search-bar__dropdown-flag-placeholder" />
                 )}
                 <span className="map-search-bar__dropdown-name">{item.name}</span>
-                <span className="map-search-bar__dropdown-code">{item.id}</span>
+                {!activeCountry && <span className="map-search-bar__dropdown-code">{item.id}</span>}
               </li>
             );
           })}
