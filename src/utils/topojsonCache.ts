@@ -6,6 +6,7 @@ import { drilldownRegistry } from '../config/drilldownConfig';
 import type { TopologyData, TopologyGeometry } from '../config/drilldownConfig';
 import { getCountryRegions, hasNESubdivisionsSync } from '../data/naturalEarthAdmin1';
 import { getTerritoriesForCountry } from '../data/territoriesRegistry';
+import { getCleanGbrName } from '../data/gbrRegionData';
 
 export interface TopoRegion {
   id: string;     // Canonical store key: "{PARENT_A3}-{LOCAL_ID}"
@@ -90,6 +91,9 @@ async function fetchCuratedSubRegions(countryA3: string, url: string): Promise<T
       let name = (g.properties?.name || g.properties?.AREANM || g.properties?.areanm || localId).toString();
       if (name === 'Commonwealth of the Northern Mariana Islands') {
         name = 'Northern Mariana Islands';
+      }
+      if (countryA3 === 'GBR') {
+        name = getCleanGbrName(name);
       }
 
       return {

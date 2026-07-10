@@ -6,6 +6,7 @@
 import { ISO3166_FLAGS_BASE } from '../config/urls';
 import { COUNTRIES } from '../data/countries';
 import { getAllTerritories } from '../data/territoriesRegistry';
+import { getGbrIsoCode } from '../data/gbrRegionData';
 
 /**
  * Returns the flag URL for a sub-region given its ISO 3166-2 code.
@@ -63,6 +64,15 @@ export function getPlaceFlagUrl(placeId: string): string | null {
   const territory = allTerritories.find((t) => t.id === placeId);
   if (territory) {
     return `https://flagcdn.com/${territory.flagCode}.svg`;
+  }
+
+  // 2b. GBR curated drill-down: ONS codes → ISO 3166-2 → flag CDN
+  if (placeId.startsWith('GBR-')) {
+    const onsCode = placeId.substring(4);
+    const isoCode = getGbrIsoCode(onsCode);
+    if (isoCode) {
+      return getRegionFlagUrl(isoCode);
+    }
   }
 
   // 3. It's a sub-region — extract the ISO 3166-2 portion
