@@ -1,7 +1,7 @@
-import React, { useMemo, useState, useEffect } from 'react';
+import React, { useMemo, useState, useEffect, useRef } from 'react';
 import { useStore } from '../store/useStore';
 import { COUNTRIES } from '../data/countries';
-import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip as RechartsTooltip, Legend, ResponsiveContainer } from 'recharts';
+import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip as RechartsTooltip, Legend } from 'recharts';
 import { BarChart3, Globe, Award, Trophy, ShieldCheck, Compass, Heart, CheckCircle2, Lock, Milestone } from 'lucide-react';
 import { fetchSubRegions, hasDrilldownSupport } from '../utils/topojsonCache';
 
@@ -9,13 +9,18 @@ const Analytics: React.FC = () => {
   const { places } = useStore();
   const totalCountries = COUNTRIES.length;
 
-  const [chartReady, setChartReady] = useState(false);
+  const chartContainerRef = useRef<HTMLDivElement>(null);
+  const [chartDimensions, setChartDimensions] = useState({ width: 0, height: 0 });
 
   useEffect(() => {
-    const handle = requestAnimationFrame(() => {
-      setChartReady(true);
+    if (!chartContainerRef.current) return;
+    const resizeObserver = new ResizeObserver((entries) => {
+      if (!entries || entries.length === 0) return;
+      const { width, height } = entries[0].contentRect;
+      setChartDimensions({ width, height });
     });
-    return () => cancelAnimationFrame(handle);
+    resizeObserver.observe(chartContainerRef.current);
+    return () => resizeObserver.disconnect();
   }, []);
 
   const countryContinents = useMemo(() => {
@@ -31,9 +36,9 @@ const Analytics: React.FC = () => {
     let wishlist = 0;
     let revisit = 0;
     let avoid = 0;
-    
+
     const continentCounts: Record<string, { visited: number, wishlist: number, revisit: number, total: number }> = {};
-    
+
     Object.values(countryContinents).forEach(cont => {
       if (!continentCounts[cont]) {
         continentCounts[cont] = { visited: 0, wishlist: 0, revisit: 0, total: 0 };
@@ -61,8 +66,8 @@ const Analytics: React.FC = () => {
 
     const unselected = totalCountries - visited - wishlist - revisit;
 
-    return { 
-      stats: { visited, wishlist, revisit, avoid, unselected }, 
+    return {
+      stats: { visited, wishlist, revisit, avoid, unselected },
       continentCounts
     };
   }, [places, totalCountries, countryContinents]);
@@ -106,17 +111,17 @@ const Analytics: React.FC = () => {
   // Aggregate sub-region stats per country
   const subRegionStats = useMemo(() => {
     const statsMap: Record<string, { visited: number; wishlist: number; avoid: number; total: number }> = {};
-    
+
     Object.entries(places).forEach(([key, value]) => {
       // 1. Process flat keys
       if (key.includes('-')) {
         const [parentCode] = key.split('-');
         if (!hasDrilldownSupport(parentCode)) return;
-        
+
         if (!statsMap[parentCode]) {
           statsMap[parentCode] = { visited: 0, wishlist: 0, avoid: 0, total: subRegionTotals[parentCode] || 0 };
         }
-        
+
         if (value.status === 'VISITED' || value.status === 'REVISIT') statsMap[parentCode].visited++;
         if (value.status === 'WISHLIST') statsMap[parentCode].wishlist++;
         if (value.status === 'AVOID') statsMap[parentCode].avoid++;
@@ -124,15 +129,15 @@ const Analytics: React.FC = () => {
       // 2. Process nested keys
       else if (value.regions) {
         if (!hasDrilldownSupport(key)) return;
-        
+
         if (!statsMap[key]) {
           statsMap[key] = { visited: 0, wishlist: 0, avoid: 0, total: subRegionTotals[key] || 0 };
         }
-        
+
         Object.entries(value.regions).forEach(([regKey, regStatus]) => {
           // If the flat key was already counted above, skip it to avoid double-counting
           if (places[regKey]) return;
-          
+
           if (regStatus === 'VISITED' || regStatus === 'REVISIT') statsMap[key].visited++;
           if (regStatus === 'WISHLIST') statsMap[key].wishlist++;
           if (regStatus === 'AVOID') statsMap[key].avoid++;
@@ -147,7 +152,7 @@ const Analytics: React.FC = () => {
         const explored = item.visited;
         const total = item.total || explored; // fallback to explored if total not loaded yet
         const percent = total > 0 ? Math.round((explored / total) * 100) : 0;
-        
+
         return {
           countryId,
           countryName: country?.name || countryId,
@@ -340,16 +345,16 @@ const Analytics: React.FC = () => {
 
       {/* Scrollable Container */}
       <div className="flex-1 overflow-y-auto flex flex-col gap-5 pr-1 pb-4">
-        
+
         {/* Row 1: Traveler Level & Global Stats Grid */}
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-4 shrink-0 select-none">
-          
+
           {/* Traveler Level Gamified Widget */}
           <div className="lg:col-span-2 glass-panel border border-base-300/40 p-4.5 rounded-2xl bg-base-200/20 flex flex-col justify-between relative overflow-hidden">
             <div className="absolute right-0 top-0 translate-x-1/4 -translate-y-1/4 opacity-[0.03] text-primary select-none pointer-events-none">
               <Trophy size={180} />
             </div>
-            
+
             <div className="flex justify-between items-start gap-2">
               <div className="flex flex-col">
                 <span className="text-[10px] uppercase font-bold text-base-content/40 tracking-wider">Explorer Standing</span>
@@ -368,13 +373,13 @@ const Analytics: React.FC = () => {
               <div className="flex justify-between text-[10px] font-bold text-base-content/60 mb-1.5">
                 <span>Milestone Progress</span>
                 <span>
-                  {levelInfo.level === 6 
-                    ? `${totalExplored} countries explored` 
+                  {levelInfo.level === 6
+                    ? `${totalExplored} countries explored`
                     : `${totalExplored} / ${levelInfo.target} countries to Level ${levelInfo.level + 1}`}
                 </span>
               </div>
               <div className="w-full bg-base-300/45 border border-base-300/20 rounded-full h-3.5 overflow-hidden p-0.5">
-                <div 
+                <div
                   className="bg-gradient-to-r from-primary to-accent-visited h-full rounded-full transition-all duration-1000 shadow-[0_0_8px_rgba(122,162,247,0.3)]"
                   style={{ width: `${levelInfo.percent}%` }}
                 />
@@ -407,7 +412,7 @@ const Analytics: React.FC = () => {
 
         {/* Row 2: Continent Leaderboard & Grouped Stacked BarChart */}
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-4 shrink-0">
-          
+
           {/* Continent Progress Leaderboard */}
           <div className="glass-panel border border-base-300/40 p-4.5 rounded-2xl bg-base-200/20 flex flex-col gap-3 h-80 select-none overflow-hidden">
             <h3 className="flex items-center gap-2 font-bold text-xs text-base-content uppercase tracking-wider border-b border-base-300/30 pb-2">
@@ -436,7 +441,7 @@ const Analytics: React.FC = () => {
                     </div>
                   </div>
                   <div className="w-full bg-base-300/35 border border-base-300/15 rounded-full h-1.5 overflow-hidden">
-                    <div 
+                    <div
                       className={`h-full rounded-full transition-all duration-700
                         ${idx === 0 ? 'bg-amber-500' : 'bg-primary'}
                       `}
@@ -449,33 +454,31 @@ const Analytics: React.FC = () => {
           </div>
 
           {/* Regional Stacked Bar Chart comparing totals */}
-          <div className="glass-panel border border-base-300/40 p-4.5 rounded-2xl bg-base-200/20 flex flex-col gap-3 h-80 select-none overflow-hidden">
+          <div className="glass-panel border border-base-300/40 p-4.5 rounded-2xl bg-base-200/20 flex flex-col gap-3 h-80 select-none overflow-hidden min-h-0 min-w-0">
             <h3 className="flex items-center gap-2 font-bold text-xs text-base-content uppercase tracking-wider border-b border-base-300/30 pb-2">
               <BarChart3 size={14} className="text-primary shrink-0" />
               Regional Profile Comparison
             </h3>
-            <div className="w-full h-[240px] mt-2 relative">
-              {chartReady && (
-                <ResponsiveContainer width="100%" height="100%" minWidth={0} minHeight={0}>
-                  <BarChart data={barChartData} margin={{ top: 5, right: 5, left: -22, bottom: 0 }}>
-                    <CartesianGrid strokeDasharray="3 3" stroke="rgba(240, 240, 240, 0.04)" vertical={false} />
-                    <XAxis dataKey="name" stroke="var(--text-base-content)" opacity={0.6} fontSize={9} tickLine={false} />
-                    <YAxis stroke="var(--text-base-content)" opacity={0.6} fontSize={9} tickLine={false} />
-                    <RechartsTooltip 
-                      contentStyle={{ 
-                        backgroundColor: 'var(--bg-base-200)', 
-                        borderColor: 'var(--glass-border)', 
-                        borderRadius: '12px',
-                        color: 'var(--text-base-content)',
-                        fontSize: '11px'
-                      }} 
-                    />
-                    <Legend verticalAlign="top" height={32} iconSize={8} formatter={(value) => <span className="text-[10px] font-semibold text-base-content/85">{value}</span>} />
-                    <Bar dataKey="Visited" stackId="a" fill="var(--accent-visited)" />
-                    <Bar dataKey="Wishlist" stackId="a" fill="var(--accent-wishlist)" />
-                    <Bar dataKey="Unexplored" stackId="a" fill="var(--bg-base-300)" opacity={0.45} radius={[3, 3, 0, 0]} />
-                  </BarChart>
-                </ResponsiveContainer>
+            <div ref={chartContainerRef} className="w-full h-[240px] mt-2 relative min-h-0 min-w-0">
+              {chartDimensions.width > 0 && chartDimensions.height > 0 && (
+                <BarChart width={chartDimensions.width} height={chartDimensions.height} data={barChartData} margin={{ top: 5, right: 5, left: -22, bottom: 0 }}>
+                  <CartesianGrid strokeDasharray="3 3" stroke="rgba(240, 240, 240, 0.04)" vertical={false} />
+                  <XAxis dataKey="name" stroke="var(--text-base-content)" opacity={0.6} fontSize={9} tickLine={false} />
+                  <YAxis stroke="var(--text-base-content)" opacity={0.6} fontSize={9} tickLine={false} />
+                  <RechartsTooltip
+                    contentStyle={{
+                      backgroundColor: 'var(--bg-base-200)',
+                      borderColor: 'var(--glass-border)',
+                      borderRadius: '12px',
+                      color: 'var(--text-base-content)',
+                      fontSize: '11px'
+                    }}
+                  />
+                  <Legend verticalAlign="top" height={32} iconSize={8} formatter={(value) => <span className="text-[10px] font-semibold text-base-content/85">{value}</span>} />
+                  <Bar dataKey="Visited" stackId="a" fill="var(--accent-visited)" />
+                  <Bar dataKey="Wishlist" stackId="a" fill="var(--accent-wishlist)" />
+                  <Bar dataKey="Unexplored" stackId="a" fill="var(--bg-base-300)" opacity={0.45} radius={[3, 3, 0, 0]} />
+                </BarChart>
               )}
             </div>
           </div>
@@ -484,7 +487,7 @@ const Analytics: React.FC = () => {
 
         {/* Dynamic Sub-regions Exploration Progress */}
         {subRegionStats.length > 0 && (
-          <div className="glass-panel border border-base-300/40 p-4.5 rounded-2xl bg-base-200/20 flex flex-col gap-3 shrink-0">
+          <div className="glass-panel border border-base-300/40 p-4.5 rounded-2xl bg-base-200/20 flex flex-col gap-3 shrink-0 min-h-0 min-w-0">
             <h3 className="flex items-center gap-2 font-bold text-xs text-base-content uppercase tracking-wider border-b border-base-300/30 pb-2 select-none">
               <Milestone size={14} className="text-primary shrink-0" />
               Sub-regions Exploration
@@ -505,8 +508,8 @@ const Analytics: React.FC = () => {
                   </div>
 
                   <div className="w-full bg-base-300/35 border border-base-300/15 rounded-full h-2 overflow-hidden">
-                    <div 
-                      className="bg-primary h-full rounded-full transition-all duration-700" 
+                    <div
+                      className="bg-primary h-full rounded-full transition-all duration-700"
                       style={{ width: `${item.percent}%` }}
                     />
                   </div>
@@ -527,21 +530,21 @@ const Analytics: React.FC = () => {
             <Trophy size={16} className="text-primary shrink-0" />
             Milestones & Achievements
           </h3>
-          
+
           <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-3">
             {achievements.map((ach) => {
               const IconComp = ach.icon;
               return (
-                <div 
-                  key={ach.id} 
+                <div
+                  key={ach.id}
                   className={`glass-panel border p-3 rounded-xl flex items-center gap-3 relative transition-all duration-300 select-none
-                    ${ach.unlocked 
-                      ? 'bg-accent-visited/5 border-accent-visited/30 shadow-[0_2px_12px_-4px_rgba(158,206,106,0.15)]' 
+                    ${ach.unlocked
+                      ? 'bg-accent-visited/5 border-accent-visited/30 shadow-[0_2px_12px_-4px_rgba(158,206,106,0.15)]'
                       : 'bg-base-200/5 border-base-300/30 border-dashed opacity-55'}`}
                 >
                   <div className={`w-9 h-9 rounded-lg flex items-center justify-center shrink-0
-                    ${ach.unlocked 
-                      ? 'bg-accent-visited/10 text-accent-visited' 
+                    ${ach.unlocked
+                      ? 'bg-accent-visited/10 text-accent-visited'
                       : 'bg-base-300/30 text-base-content/30'}`}
                   >
                     <IconComp size={18} />
