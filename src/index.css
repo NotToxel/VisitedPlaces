@@ -1950,6 +1950,7 @@ path.rsm-geography:active {
   color: var(--text-base-content);
   opacity: 0.55;
   user-select: none;
+  text-align: center;
 }
 
 .compare-groups-grid {

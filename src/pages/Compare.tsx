@@ -189,15 +189,19 @@ const Compare: React.FC = () => {
 
   const removeFriend = (friendId: string) => {
     if (!activeGroup) return;
-    setGroups(prev => prev.map(g => {
-      if (g.id === activeGroup.id) {
-        return {
-          ...g,
-          friends: g.friends.filter(f => f.id !== friendId)
-        };
-      }
-      return g;
-    }));
+    setGroups(prev => {
+      const updated = prev.map(g => {
+        if (g.id === activeGroup.id) {
+          return {
+            ...g,
+            friends: g.friends.filter(f => f.id !== friendId)
+          };
+        }
+        return g;
+      });
+      // Filter out any groups that now have 0 friends to self-delete
+      return updated.filter(g => g.friends.length > 0);
+    });
   };
 
   const renameFriend = (friendId: string, newName: string) => {
@@ -580,15 +584,13 @@ const Compare: React.FC = () => {
                       >
                         <Pencil size={12} />
                       </button>
-                      {groups.length > 1 && (
-                        <button
-                          className="compare-group-card__btn compare-group-card__btn--danger"
-                          onClick={() => setDeletingGroupId(g.id)}
-                          title="Delete Group"
-                        >
-                          <Trash2 size={12} />
-                        </button>
-                      )}
+                      <button
+                        className="compare-group-card__btn compare-group-card__btn--danger"
+                        onClick={() => setDeletingGroupId(g.id)}
+                        title="Delete Group"
+                      >
+                        <Trash2 size={12} />
+                      </button>
                     </div>
                   </>
                 )}
@@ -847,15 +849,13 @@ const Compare: React.FC = () => {
                           >
                             <Pencil size={12} />
                           </button>
-                          {groups.length > 1 && (
-                            <button
-                              className="compare-group-tab__action-btn compare-group-tab__action-btn--danger"
-                              onClick={() => setDeletingGroupId(g.id)}
-                              title="Delete Group"
-                            >
-                              <Trash2 size={12} />
-                            </button>
-                          )}
+                          <button
+                            className="compare-group-tab__action-btn compare-group-tab__action-btn--danger"
+                            onClick={() => setDeletingGroupId(g.id)}
+                            title="Delete Group"
+                          >
+                            <Trash2 size={12} />
+                          </button>
                         </div>
                       )}
                     </>
