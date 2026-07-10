@@ -1256,6 +1256,10 @@ path.rsm-geography:active {
     top: 8px;
   }
 
+  .map-search-bar.map-search-bar--drilldown {
+    top: 52px;
+  }
+
   .map-filter-bar {
     bottom: 10px;
     gap: 4px;
