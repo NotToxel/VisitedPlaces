@@ -131,6 +131,20 @@ function shiftRussiaCoords(coords: unknown): void {
   }
 }
 
+function shiftUsaCoords(coords: unknown): void {
+  if (!Array.isArray(coords)) return;
+  if (typeof coords[0] === 'number' && typeof coords[1] === 'number') {
+    const arr = coords as [number, number];
+    if (arr[0] > 0) {
+      arr[0] -= 360;
+    }
+    return;
+  }
+  for (const item of coords) {
+    shiftUsaCoords(item);
+  }
+}
+
 /**
  * Filters the subdivisions of a country, excluding far-flung overseas departments or autonomous islands.
  * This ensures the map bounding box zoom and centering are tight and focused on the main landmass.
@@ -168,6 +182,14 @@ function getCountryMainlandFeatures(countryA3: string, data: NEFeatureCollection
     features.forEach((f) => {
       if (f.geometry?.coordinates) {
         shiftRussiaCoords(f.geometry.coordinates);
+      }
+    });
+  } else if (countryA3 === 'USA') {
+    // USA (Alaska Aleutian Islands) spans the antimeridian.
+    // Shift any positive longitudes by -360 degrees so they sit contiguously in the negative range.
+    features.forEach((f) => {
+      if (f.geometry?.coordinates) {
+        shiftUsaCoords(f.geometry.coordinates);
       }
     });
   } else if (countryA3 === 'MUS') {

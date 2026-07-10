@@ -244,11 +244,12 @@ const StandardMapBase: React.FC<StandardMapProps> = ({
       drilldownDefaultZoom: 1,
     };
   }, [currentConfig, activeCountry, countryBBox]);
-
   const customStrokeWidth = useMemo(() => {
-    if (!activeCountry) return undefined;
-    return Math.max(0.15, Math.min(0.7, 1000 / projectionScale));
-  }, [activeCountry, projectionScale]);
+    if (activeCountry) {
+      return Math.max(0.06, 0.3 / subRegionZoom);
+    }
+    return Math.max(0.12, 0.45 / mapZoom);
+  }, [activeCountry, subRegionZoom, mapZoom]);
 
   // Reset sub-region view when entering a new drill-down
   useEffect(() => {

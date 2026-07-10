@@ -1,6 +1,6 @@
 # AGENTS.MD — VisitedPlaces Project Guide
 
-> **Version**: 2.1.0  
+> **Version**: 2.1.1  
 > **Last Updated**: 2026-07-10  
 > **Status**: Active Development
 
@@ -252,7 +252,7 @@ We use [Semantic Versioning](https://semver.org/):
 
 ### Current Version
 
-`2.1.0` — Minor release introducing offline-first CacheStorage persistent caching for maps, background flag preloading during country drilldowns, proactive CDN flag verification (2,843 sub-national flags), and USA/GBR standardizations to Natural Earth baselines with backwards-compatible legacy key migrations.
+`2.1.1` — Patch release introducing mobile layout fixes for the overseas territories panel (preventing overlap with the search bar) and dynamic zoom-responsive map border scaling for sub-regions. Includes version 2.1.0 offline-first caching optimizations.
 
 ### Display
 
