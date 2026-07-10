@@ -2091,29 +2091,169 @@ path.rsm-geography:active {
   gap: 6px;
 }
 
-/* Active Comparison Horizontal Cards Deck */
-.compare-groups-deck-container {
-  width: 100%;
-  background: var(--bg-base-200);
-  border-bottom: 1px solid var(--glass-border);
-  flex-shrink: 0;
-}
-
-.compare-groups-deck {
-  display: flex;
+/* ── Group selector tabs & forms inside Active Members Bar ───────────── */
+.compare-group-tab {
+  display: inline-flex;
   align-items: center;
-  gap: 8px;
-  padding: 8px 20px;
-  max-width: 1100px;
-  margin: 0 auto;
-  overflow-x: auto;
-  scrollbar-width: none;
-  width: 100%;
+  gap: 5px;
+  padding: 3px 10px;
+  border-radius: 9999px;
+  font-size: 0.7rem;
+  font-weight: 600;
+  white-space: nowrap;
+  border: 1px solid var(--glass-border);
+  background: var(--bg-base-300);
+  color: var(--text-base-content);
+  opacity: 0.65;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  user-select: none;
   box-sizing: border-box;
 }
 
-.compare-groups-deck::-webkit-scrollbar {
-  display: none;
+.compare-group-tab:hover {
+  opacity: 1;
+  background: var(--bg-base-100);
+  border-color: var(--accent-primary);
+}
+
+.compare-group-tab--active {
+  opacity: 1;
+  background: rgba(122, 162, 247, 0.1);
+  border-color: rgba(122, 162, 247, 0.35);
+  color: var(--accent-primary);
+}
+
+[data-theme="light"] .compare-group-tab--active {
+  background: rgba(59, 130, 246, 0.08);
+  border-color: rgba(59, 130, 246, 0.25);
+  color: var(--accent-primary);
+}
+
+.compare-group-tab__count {
+  font-size: 0.55rem;
+  font-weight: 700;
+  padding: 1px 4px;
+  border-radius: 5px;
+  background: rgba(122, 162, 247, 0.15);
+  color: var(--accent-primary);
+  line-height: 1.1;
+  display: inline-block;
+  margin-left: 2px;
+}
+
+.compare-group-tab__actions {
+  display: flex;
+  align-items: center;
+  gap: 2px;
+  margin-left: 2px;
+}
+
+.compare-group-tab__action-btn {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 14px;
+  height: 14px;
+  border-radius: 3px;
+  background: transparent;
+  border: none;
+  color: inherit;
+  opacity: 0.45;
+  cursor: pointer;
+  transition: all 0.15s ease;
+  padding: 0;
+}
+
+.compare-group-tab__action-btn:hover {
+  opacity: 1;
+  background: var(--bg-base-200);
+}
+
+.compare-group-tab__action-btn--danger:hover {
+  background: rgba(239, 68, 68, 0.15);
+  color: var(--accent-error);
+}
+
+.compare-group-tab__rename-input {
+  width: 70px;
+  padding: 0 4px;
+  border-radius: 3px;
+  border: 1px solid var(--accent-primary);
+  background: var(--bg-base-100);
+  color: var(--text-base-content);
+  font-size: 0.65rem;
+  font-weight: 600;
+  outline: none;
+}
+
+/* Inline create group in active bar */
+.compare-group-create {
+  display: inline-flex;
+  align-items: center;
+  gap: 3px;
+}
+
+.compare-group-create__input {
+  width: 80px;
+  padding: 2px 6px;
+  border-radius: 6px;
+  border: 1px solid rgba(122, 162, 247, 0.4);
+  background: var(--bg-base-100);
+  color: var(--text-base-content);
+  font-size: 0.65rem;
+  font-weight: 600;
+  outline: none;
+}
+
+.compare-group-create__input:focus {
+  border-color: var(--accent-primary);
+}
+
+.compare-group-create__btn {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 18px;
+  height: 18px;
+  border-radius: 4px;
+  border: none;
+  cursor: pointer;
+  transition: all 0.15s ease;
+  padding: 0;
+}
+
+.compare-group-create__btn--confirm {
+  background: rgba(122, 162, 247, 0.15);
+  color: var(--accent-primary);
+}
+
+.compare-group-create__btn--cancel {
+  background: transparent;
+  color: var(--text-base-content);
+  opacity: 0.4;
+}
+
+.compare-group-add-btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 22px;
+  height: 22px;
+  border-radius: 50%;
+  border: 1px dashed var(--glass-border);
+  background: transparent;
+  color: var(--text-base-content);
+  opacity: 0.4;
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.compare-group-add-btn:hover {
+  opacity: 0.8;
+  border-color: var(--accent-primary);
+  color: var(--accent-primary);
+  border-style: solid;
 }
 
 /* Centered Wrapper inside Scrollable Dashboard */
@@ -2165,6 +2305,7 @@ path.rsm-geography:active {
   gap: 6px;
   flex-shrink: 0;
 }
+
 
 /* ── Member Chips Row ───────────────────────────────────────────────── */
 .compare-members-bar {

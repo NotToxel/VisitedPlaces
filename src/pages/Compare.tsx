@@ -60,22 +60,18 @@ const Compare: React.FC = () => {
   const newGroupInputRef = useRef<HTMLInputElement>(null);
   const editGroupInputRef = useRef<HTMLInputElement>(null);
 
-  // Load groups from localStorage, or initialize with a default group
+  // Load groups from localStorage, or initialize with an empty list
   const [groups, setGroups] = useState<CompareGroup[]>(() => {
     try {
       const saved = localStorage.getItem('visited-places-compare-groups');
       if (saved) {
         const parsed = JSON.parse(saved);
-        if (Array.isArray(parsed) && parsed.length > 0) return parsed;
+        if (Array.isArray(parsed)) return parsed;
       }
     } catch (e) {
       console.warn("Could not load compare groups", e);
     }
-    return [{
-      id: 'default',
-      name: 'Default Group',
-      friends: []
-    }];
+    return [];
   });
 
   const [activeGroupId, setActiveGroupId] = useState<string>(() => {
@@ -85,7 +81,7 @@ const Compare: React.FC = () => {
     } catch {
       // Ignore
     }
-    return 'default';
+    return '';
   });
 
   // Save to localStorage when groups/activeGroup change
@@ -98,10 +94,20 @@ const Compare: React.FC = () => {
   }, [activeGroupId]);
 
   const activeGroup = useMemo(() => {
+    if (groups.length === 0) return null;
     return groups.find(g => g.id === activeGroupId) || groups[0];
   }, [groups, activeGroupId]);
 
-  const friends = activeGroup.friends;
+  // Sync activeGroupId if it points to nothing or is empty
+  useEffect(() => {
+    if (activeGroup && activeGroup.id !== activeGroupId) {
+      setActiveGroupId(activeGroup.id);
+    }
+  }, [activeGroup, activeGroupId]);
+
+  const friends = useMemo(() => {
+    return activeGroup ? activeGroup.friends : [];
+  }, [activeGroup]);
 
   const myShareCode = useMemo(() => serializePlaces(myPlaces), [myPlaces]);
 
@@ -115,19 +121,39 @@ const Compare: React.FC = () => {
     if (!friendInput.trim()) return;
     const deserialized = deserializePlaces(friendInput.trim());
     if (deserialized) {
-      setGroups(prev => prev.map(g => {
-        if (g.id === activeGroup.id) {
-          return {
-            ...g,
-            friends: [...g.friends, {
+      setGroups(prev => {
+        // If there are no groups, create the first group
+        if (prev.length === 0) {
+          const newGroupId = Math.random().toString(36).substring(7);
+          const newGroup: CompareGroup = {
+            id: newGroupId,
+            name: 'Group 1',
+            friends: [{
               id: Math.random().toString(36).substring(7),
-              name: `Friend ${g.friends.length + 1}`,
+              name: 'Friend 1',
               places: deserialized
             }]
           };
+          setActiveGroupId(newGroupId);
+          return [newGroup];
         }
-        return g;
-      }));
+
+        // If active group is not found, default to first group
+        const targetGroupId = activeGroupId || prev[0].id;
+        return prev.map(g => {
+          if (g.id === targetGroupId) {
+            return {
+              ...g,
+              friends: [...g.friends, {
+                id: Math.random().toString(36).substring(7),
+                name: `Friend ${g.friends.length + 1}`,
+                places: deserialized
+              }]
+            };
+          }
+          return g;
+        });
+      });
       setFriendInput('');
     } else {
       alert("Invalid share code. Please check and try again.");
@@ -135,6 +161,7 @@ const Compare: React.FC = () => {
   };
 
   const removeFriend = (friendId: string) => {
+    if (!activeGroup) return;
     setGroups(prev => prev.map(g => {
       if (g.id === activeGroup.id) {
         return {
@@ -147,6 +174,7 @@ const Compare: React.FC = () => {
   };
 
   const renameFriend = (friendId: string, newName: string) => {
+    if (!activeGroup) return;
     setGroups(prev => prev.map(g => {
       if (g.id === activeGroup.id) {
         return {
@@ -452,6 +480,8 @@ const Compare: React.FC = () => {
 
   // ── Groups Grid (Landing Page Cards View) ─────────────────────────
   const renderGroupsSection = () => {
+    if (groups.length === 0) return null;
+
     return (
       <div className="compare-groups-section">
         <span className="compare-groups-section__title">Comparison Groups</span>
@@ -571,105 +601,6 @@ const Compare: React.FC = () => {
                 <span>Create Group</span>
               </div>
             </div>
-          )}
-        </div>
-      </div>
-    );
-  };
-
-  // ── Groups Deck (Active Comparison Mode Horizontal Deck) ──────────
-  const renderGroupsDeck = () => {
-    return (
-      <div className="compare-groups-deck-container">
-        <div className="compare-groups-deck">
-          {groups.map(g => {
-            const isActive = g.id === activeGroupId;
-            const isEditing = editingGroupId === g.id;
-
-            return (
-              <div
-                key={g.id}
-                className={`compare-group-tab ${isActive ? 'compare-group-tab--active' : ''}`}
-                onClick={() => !isEditing && setActiveGroupId(g.id)}
-                style={{ paddingBlock: '6px' }}
-              >
-                {isEditing ? (
-                  <input
-                    ref={editGroupInputRef}
-                    type="text"
-                    value={editGroupName}
-                    onChange={e => setEditGroupName(e.target.value)}
-                    onBlur={handleConfirmRenameGroup}
-                    onKeyDown={e => {
-                      if (e.key === 'Enter') handleConfirmRenameGroup();
-                      if (e.key === 'Escape') setEditingGroupId(null);
-                    }}
-                    className="compare-group-tab__rename-input"
-                    onClick={e => e.stopPropagation()}
-                  />
-                ) : (
-                  <>
-                    <span>{g.name}</span>
-                    <span className="compare-group-tab__count">{g.friends.length + 1}</span>
-                    {isActive && (
-                      <div className="compare-group-tab__actions" onClick={e => e.stopPropagation()}>
-                        <button
-                          className="compare-group-tab__action-btn"
-                          onClick={() => handleStartRenameGroup(g.id, g.name)}
-                          title="Rename Group"
-                        >
-                          <Pencil size={10} />
-                        </button>
-                        {groups.length > 1 && (
-                          <button
-                            className="compare-group-tab__action-btn compare-group-tab__action-btn--danger"
-                            onClick={() => setDeletingGroupId(g.id)}
-                            title="Delete Group"
-                          >
-                            <Trash2 size={10} />
-                          </button>
-                        )}
-                      </div>
-                    )}
-                  </>
-                )}
-              </div>
-            );
-          })}
-
-          {isCreatingGroup ? (
-            <div className="compare-group-create" onClick={e => e.stopPropagation()}>
-              <input
-                ref={newGroupInputRef}
-                type="text"
-                placeholder="Group name..."
-                value={newGroupName}
-                onChange={e => setNewGroupName(e.target.value)}
-                onKeyDown={e => {
-                  if (e.key === 'Enter') handleConfirmCreateGroup();
-                  if (e.key === 'Escape') setIsCreatingGroup(false);
-                }}
-                className="compare-group-create__input"
-              />
-              <button
-                className="compare-group-create__btn compare-group-create__btn--confirm"
-                onClick={handleConfirmCreateGroup}
-                title="Create Group"
-              >
-                <Check size={10} />
-              </button>
-              <button
-                className="compare-group-create__btn compare-group-create__btn--cancel"
-                onClick={() => setIsCreatingGroup(false)}
-                title="Cancel"
-              >
-                <X size={10} />
-              </button>
-            </div>
-          ) : (
-            <button className="compare-group-add-btn" onClick={handleStartCreateGroup}>
-              <Plus size={10} /> Add Group
-            </button>
           )}
         </div>
       </div>
@@ -813,11 +744,100 @@ const Compare: React.FC = () => {
         </div>
       )}
 
-      {/* Groups tab chips bar deck */}
-      {renderGroupsDeck()}
-
-      {/* ── Member Chips Bar ────────────────────────────────────────── */}
+      {/* ── Groups & Members Bar (Space Optimized Single Line Layout) ── */}
       <div className="compare-members-bar">
+        <span className="compare-members-bar__label">Groups</span>
+        {groups.map(g => {
+          const isActive = g.id === activeGroupId;
+          const isEditing = editingGroupId === g.id;
+
+          return (
+            <div
+              key={g.id}
+              className={`compare-group-tab ${isActive ? 'compare-group-tab--active' : ''}`}
+              onClick={() => !isEditing && setActiveGroupId(g.id)}
+            >
+              {isEditing ? (
+                <input
+                  ref={editGroupInputRef}
+                  type="text"
+                  value={editGroupName}
+                  onChange={e => setEditGroupName(e.target.value)}
+                  onBlur={handleConfirmRenameGroup}
+                  onKeyDown={e => {
+                    if (e.key === 'Enter') handleConfirmRenameGroup();
+                    if (e.key === 'Escape') setEditingGroupId(null);
+                  }}
+                  className="compare-group-tab__rename-input"
+                  onClick={e => e.stopPropagation()}
+                />
+              ) : (
+                <>
+                  <span>{g.name}</span>
+                  <span className="compare-group-tab__count">{g.friends.length + 1}</span>
+                  {isActive && (
+                    <div className="compare-group-tab__actions" onClick={e => e.stopPropagation()}>
+                      <button
+                        className="compare-group-tab__action-btn"
+                        onClick={() => handleStartRenameGroup(g.id, g.name)}
+                        title="Rename Group"
+                      >
+                        <Pencil size={10} />
+                      </button>
+                      {groups.length > 1 && (
+                        <button
+                          className="compare-group-tab__action-btn compare-group-tab__action-btn--danger"
+                          onClick={() => setDeletingGroupId(g.id)}
+                          title="Delete Group"
+                        >
+                          <Trash2 size={10} />
+                        </button>
+                      )}
+                    </div>
+                  )}
+                </>
+              )}
+            </div>
+          );
+        })}
+
+        {isCreatingGroup ? (
+          <div className="compare-group-create" onClick={e => e.stopPropagation()}>
+            <input
+              ref={newGroupInputRef}
+              type="text"
+              placeholder="Group name..."
+              value={newGroupName}
+              onChange={e => setNewGroupName(e.target.value)}
+              onKeyDown={e => {
+                if (e.key === 'Enter') handleConfirmCreateGroup();
+                if (e.key === 'Escape') setIsCreatingGroup(false);
+              }}
+              className="compare-group-create__input"
+            />
+            <button
+              className="compare-group-create__btn compare-group-create__btn--confirm"
+              onClick={handleConfirmCreateGroup}
+              title="Create Group"
+            >
+              <Check size={10} />
+            </button>
+            <button
+              className="compare-group-create__btn compare-group-create__btn--cancel"
+              onClick={() => setIsCreatingGroup(false)}
+              title="Cancel"
+            >
+              <X size={10} />
+            </button>
+          </div>
+        ) : (
+          <button className="compare-group-add-btn" onClick={handleStartCreateGroup}>
+            <Plus size={10} />
+          </button>
+        )}
+
+        <div className="compare-topbar__divider" style={{ height: '18px', marginInline: '8px' }} />
+
         <span className="compare-members-bar__label">Members</span>
         <div className="compare-member-chip compare-member-chip--me">
           <span className="compare-member-chip__name">Me</span>
