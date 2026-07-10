@@ -121,8 +121,21 @@ const Compare: React.FC = () => {
   };
 
   const handleAddFriend = () => {
-    if (!friendInput.trim()) return;
-    const deserialized = deserializePlaces(friendInput.trim());
+    const inputCode = friendInput.trim();
+    if (!inputCode) return;
+
+    if (inputCode === myShareCode) {
+      alert("This is your own share code! You don't need to add yourself to the comparison.");
+      return;
+    }
+
+    const isAlreadyAdded = friends.some(f => serializePlaces(f.places) === inputCode);
+    if (isAlreadyAdded) {
+      alert("This friend has already been added to this comparison group.");
+      return;
+    }
+
+    const deserialized = deserializePlaces(inputCode);
     if (deserialized) {
       setGroups(prev => {
         // If there are no groups, create the first group
@@ -707,15 +720,15 @@ const Compare: React.FC = () => {
         <div className="compare-topbar__section compare-topbar__section--input">
           <input
             type="text"
-            className="input input-bordered input-xs"
+            className="input input-bordered input-sm"
             placeholder="Paste a friend's share code..."
             value={friendInput}
             onChange={e => setFriendInput(e.target.value)}
             onKeyDown={e => e.key === 'Enter' && handleAddFriend()}
-            style={{ flex: 1, fontSize: '0.72rem' }}
+            style={{ flex: 1, fontSize: '0.8rem' }}
           />
-          <button className="btn btn-secondary btn-xs" onClick={handleAddFriend} style={{ gap: '4px' }}>
-            <Plus size={12} /> Add
+          <button className="btn btn-secondary btn-sm" onClick={handleAddFriend} style={{ gap: '4px' }}>
+            <Plus size={14} /> Add
           </button>
         </div>
 
@@ -723,8 +736,8 @@ const Compare: React.FC = () => {
 
         {/* Share code copy */}
         <div className="compare-topbar__section compare-topbar__section--share">
-          <button onClick={handleCopyCode} className="btn btn-primary btn-xs" style={{ gap: '4px' }}>
-            {copied ? <Check size={12} /> : <Copy size={12} />}
+          <button onClick={handleCopyCode} className="btn btn-primary btn-sm" style={{ gap: '4px' }}>
+            {copied ? <Check size={14} /> : <Copy size={14} />}
             {copied ? 'Copied!' : 'My Code'}
           </button>
         </div>
@@ -787,7 +800,7 @@ const Compare: React.FC = () => {
                         onClick={() => handleStartRenameGroup(g.id, g.name)}
                         title="Rename Group"
                       >
-                        <Pencil size={10} />
+                        <Pencil size={12} />
                       </button>
                       {groups.length > 1 && (
                         <button
@@ -795,7 +808,7 @@ const Compare: React.FC = () => {
                           onClick={() => setDeletingGroupId(g.id)}
                           title="Delete Group"
                         >
-                          <Trash2 size={10} />
+                          <Trash2 size={12} />
                         </button>
                       )}
                     </div>
@@ -825,19 +838,19 @@ const Compare: React.FC = () => {
               onClick={handleConfirmCreateGroup}
               title="Create Group"
             >
-              <Check size={10} />
+              <Check size={12} />
             </button>
             <button
               className="compare-group-create__btn compare-group-create__btn--cancel"
               onClick={() => setIsCreatingGroup(false)}
               title="Cancel"
             >
-              <X size={10} />
+              <X size={12} />
             </button>
           </div>
         ) : (
           <button className="compare-group-add-btn" onClick={handleStartCreateGroup}>
-            <Plus size={10} />
+            <Plus size={12} />
           </button>
         )}
 
@@ -861,7 +874,7 @@ const Compare: React.FC = () => {
               className="compare-member-chip__remove"
               title="Remove"
             >
-              <X size={10} />
+              <X size={12} />
             </button>
           </div>
         ))}
