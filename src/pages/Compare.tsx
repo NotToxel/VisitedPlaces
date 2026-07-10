@@ -709,61 +709,59 @@ const Compare: React.FC = () => {
 
   // ── ACTIVE COMPARISON STATE ───────────────────────────────────────
   return (
-    <div className="compare-page">
-      {/* ── Zone 1: Top Control Bar ─────────────────────────────────── */}
-      <div className="compare-topbar">
-        <span className="font-bold text-sm text-base-content tracking-wide flex-shrink-0">Compare Maps</span>
-
-        <div className="compare-topbar__divider" />
-
-        {/* Friend code input */}
-        <div className="compare-topbar__section compare-topbar__section--input">
-          <input
-            type="text"
-            className="input input-bordered input-sm"
-            placeholder="Paste a friend's share code..."
-            value={friendInput}
-            onChange={e => setFriendInput(e.target.value)}
-            onKeyDown={e => e.key === 'Enter' && handleAddFriend()}
-            style={{ flex: 1, fontSize: '0.8rem' }}
-          />
-          <button className="btn btn-secondary btn-sm" onClick={handleAddFriend} style={{ gap: '4px' }}>
-            <Plus size={14} /> Add
-          </button>
-        </div>
-
-        <div className="compare-topbar__divider" />
-
-        {/* Share code copy */}
-        <div className="compare-topbar__section compare-topbar__section--share">
-          <button onClick={handleCopyCode} className="btn btn-primary btn-sm" style={{ gap: '4px' }}>
-            {copied ? <Check size={14} /> : <Copy size={14} />}
-            {copied ? 'Copied!' : 'My Code'}
-          </button>
-        </div>
-      </div>
-
-      {/* Delete confirmation banner */}
-      {deletingGroupId && (
-        <div className="compare-delete-banner">
-          <div className="compare-delete-banner__content">
-            <span className="compare-delete-banner__text">
-              Are you sure you want to delete the group <strong>"{groups.find(g => g.id === deletingGroupId)?.name}"</strong>? All comparisons in this group will be lost.
-            </span>
-            <div className="compare-delete-banner__actions">
-              <button className="btn btn-error btn-xs" onClick={handleConfirmDelete}>
-                Delete Group
-              </button>
-              <button className="btn btn-outline btn-xs" onClick={() => setDeletingGroupId(null)}>
-                Cancel
-              </button>
+    <div className="compare-page compare-page--scrollable">
+      <div className="compare-dashboard__container compare-dashboard__container--active">
+        {/* Delete confirmation banner */}
+        {deletingGroupId && (
+          <div className="compare-delete-banner compare-delete-banner--contained">
+            <div className="compare-delete-banner__content">
+              <span className="compare-delete-banner__text">
+                Are you sure you want to delete the group <strong>"{groups.find(g => g.id === deletingGroupId)?.name}"</strong>? All comparisons in this group will be lost.
+              </span>
+              <div className="compare-delete-banner__actions">
+                <button className="btn btn-error btn-xs" onClick={handleConfirmDelete}>
+                  Delete Group
+                </button>
+                <button className="btn btn-outline btn-xs" onClick={() => setDeletingGroupId(null)}>
+                  Cancel
+                </button>
+              </div>
             </div>
           </div>
-        </div>
-      )}
+        )}
 
-      {/* ── Groups & Members Bar (Space Optimized Single Line Layout) ── */}
-      <div className="compare-members-bar">
+        {/* ── Zone 1: Header Control Card ────────────────────────────── */}
+        <div className="compare-header-card">
+          <div className="compare-header-card__top">
+            <span className="compare-header-card__title">Compare Maps</span>
+
+            {/* Centered Search/Paste input */}
+            <div className="compare-header-card__input-wrapper">
+              <input
+                type="text"
+                className="input input-bordered input-sm"
+                placeholder="Paste a friend's share code..."
+                value={friendInput}
+                onChange={e => setFriendInput(e.target.value)}
+                onKeyDown={e => e.key === 'Enter' && handleAddFriend()}
+                style={{ flex: 1, fontSize: '0.8rem' }}
+              />
+              <button className="btn btn-secondary btn-sm" onClick={handleAddFriend} style={{ gap: '4px' }}>
+                <Plus size={14} /> Add
+              </button>
+            </div>
+
+            {/* Share code copy */}
+            <button onClick={handleCopyCode} className="btn btn-primary btn-sm compare-header-card__share-btn" style={{ gap: '4px' }}>
+              {copied ? <Check size={14} /> : <Copy size={14} />}
+              {copied ? 'Copied!' : 'My Code'}
+            </button>
+          </div>
+
+          <div className="compare-header-card__divider" />
+
+          {/* Groups & Members Bar (Space Optimized Single Line Layout) ── */}
+          <div className="compare-members-bar">
         <span className="compare-members-bar__label">Groups</span>
         {groups.map(g => {
           const isActive = g.id === activeGroupId;
@@ -879,9 +877,10 @@ const Compare: React.FC = () => {
           </div>
         ))}
       </div>
+    </div>
 
-      {/* ── Zone 2: Map Band ────────────────────────────────────────── */}
-      <div className="compare-map-band">
+      {/* ── Zone 2: Map Card ────────────────────────────────────────── */}
+      <div className="compare-map-card">
         <CompareMap mergedData={mergedData} numericToA3={NUMERIC_TO_A3} />
 
         {/* Floating Legend */}
@@ -910,12 +909,10 @@ const Compare: React.FC = () => {
         </div>
       </div>
 
-      {/* ── Zone 3: Analytics Dashboard ─────────────────────────────── */}
-      <div className="compare-dashboard">
-        <div className="compare-dashboard__container">
-          {/* Stat Cards */}
-          <span className="compare-dashboard__section-title">Overview</span>
-          <div className="compare-stats-grid">
+      {/* ── Zone 3: Analytics Dashboard Content ─────────────────────── */}
+      {/* Stat Cards */}
+      <span className="compare-dashboard__section-title">Overview</span>
+      <div className="compare-stats-grid">
             <div className="compare-stat-card compare-stat-card--visited">
               <div className="compare-stat-card__icon"><Globe size={28} /></div>
               <div className="compare-stat-card__value" style={{ color: 'var(--color-both)' }}>
@@ -1089,7 +1086,6 @@ const Compare: React.FC = () => {
               </div>
             </>
           )}
-        </div>
       </div>
     </div>
   );
