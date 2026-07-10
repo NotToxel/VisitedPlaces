@@ -1406,10 +1406,12 @@ path.rsm-geography:active {
 
 .territory-list-panel__list {
   overflow-y: auto;
+  -webkit-overflow-scrolling: touch;
   padding: 6px;
   display: flex;
   flex-direction: column;
   gap: 2px;
+  min-height: 0;
 }
 
 .territory-list-panel__item {
@@ -1800,6 +1802,7 @@ path.rsm-geography:active {
     width: 200px;
     right: 8px;
     top: 108px;
+    max-height: calc(100% - 140px);
   }
 
   .map-reset-zoom {

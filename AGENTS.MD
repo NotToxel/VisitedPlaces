@@ -1,6 +1,6 @@
 # AGENTS.MD — VisitedPlaces Project Guide
 
-> **Version**: 2.1.2  
+> **Version**: 2.1.3  
 > **Last Updated**: 2026-07-10  
 > **Status**: Active Development
 
@@ -252,7 +252,7 @@ We use [Semantic Versioning](https://semver.org/):
 
 ### Current Version
 
-`2.1.2` — Patch release fixing regional and state map rendering for the USA and UK by aligning getRegionId and duplicate detection logic with the Natural Earth baseline schema. Includes version 2.1.1 border and mobile layout fixes.
+`2.1.3` — Patch release fixing mobile scrolling and flexbox clipping on the overseas territories panel list. Includes touch-scroll overrides.
 
 ### Display
 
