@@ -6,11 +6,11 @@ import { deserializePlaces, serializePlaces } from '../utils/serialization';
 import { CompareMap } from '../components/map/CompareMap';
 import { MICROSTATES } from '../data/mapData';
 import { getAllTerritories } from '../data/territoriesRegistry';
-import { 
-  Plus, 
-  Trash2, 
-  Copy, 
-  Check, 
+import {
+  Plus,
+  Trash2,
+  Copy,
+  Check,
   Users,
   Heart,
   Globe,
@@ -272,8 +272,8 @@ const Compare: React.FC = () => {
     const allCountryCodes = new Set<string>();
     const allTerritories = getAllTerritories();
     allUsers.forEach(u => Object.keys(u.places).forEach(code => {
-      const isMicrostateOrTerritory = 
-        MICROSTATES.some(m => m.id === code) || 
+      const isMicrostateOrTerritory =
+        MICROSTATES.some(m => m.id === code) ||
         allTerritories.some(t => t.id === code);
       if (!code.includes('-') || isMicrostateOrTerritory) {
         allCountryCodes.add(code);
@@ -343,7 +343,7 @@ const Compare: React.FC = () => {
 
   // Redefined countryData lookup map to also support territories and microstates
   const countryData = useMemo(() => {
-    const map: Record<string, {name: string, flag: string}> = {};
+    const map: Record<string, { name: string, flag: string }> = {};
     COUNTRIES.forEach(c => {
       map[c.id] = { name: c.name, flag: c.flag };
     });
@@ -423,23 +423,23 @@ const Compare: React.FC = () => {
         const whoVisited: string[] = [];
         const whoWants: string[] = [];
 
-        if (myPlaces[code]?.status === 'VISITED' || myPlaces[code]?.status === 'REVISIT') { 
-          visited++; 
-          whoVisited.push('Me'); 
+        if (myPlaces[code]?.status === 'VISITED' || myPlaces[code]?.status === 'REVISIT') {
+          visited++;
+          whoVisited.push('Me');
         }
-        if (myPlaces[code]?.status === 'WISHLIST') { 
-          wlist++; 
-          whoWants.push('Me'); 
+        if (myPlaces[code]?.status === 'WISHLIST') {
+          wlist++;
+          whoWants.push('Me');
         }
 
         friends.forEach(f => {
-          if (f.places[code]?.status === 'VISITED' || f.places[code]?.status === 'REVISIT') { 
-            visited++; 
-            whoVisited.push(f.name); 
+          if (f.places[code]?.status === 'VISITED' || f.places[code]?.status === 'REVISIT') {
+            visited++;
+            whoVisited.push(f.name);
           }
-          if (f.places[code]?.status === 'WISHLIST') { 
-            wlist++; 
-            whoWants.push(f.name); 
+          if (f.places[code]?.status === 'WISHLIST') {
+            wlist++;
+            whoWants.push(f.name);
           }
         });
 
@@ -458,10 +458,10 @@ const Compare: React.FC = () => {
     return (
       <span key={code} className="compare-country-pill">
         {data?.flag && (
-          <img 
-            src={data.flag} 
-            alt="" 
-            className="compare-country-pill__flag" 
+          <img
+            src={data.flag}
+            alt=""
+            className="compare-country-pill__flag"
             onError={(e) => {
               e.currentTarget.src = "data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='16' height='11'><rect width='16' height='11' fill='%23333333' opacity='0.15'/></svg>";
             }}
@@ -474,9 +474,9 @@ const Compare: React.FC = () => {
 
   // ── Country pills section renderer ────────────────────────────────
   const renderPillsSection = (
-    title: string, 
-    color: string, 
-    items: [string, MapCompareResult][], 
+    title: string,
+    color: string,
+    items: [string, MapCompareResult][],
     emptyText: string
   ) => (
     <div className="compare-pills-section">
@@ -486,7 +486,7 @@ const Compare: React.FC = () => {
         <span className="compare-pills-section__count">{items.length}</span>
       </div>
       <div className="compare-country-pills">
-        {items.length > 0 
+        {items.length > 0
           ? items.map(([code]) => renderCountryPill(code))
           : <span className="compare-country-pill__empty">{emptyText}</span>
         }
@@ -641,9 +641,7 @@ const Compare: React.FC = () => {
     return (
       <div className="compare-page" style={{ overflowY: 'auto' }}>
         {/* Top bar — minimal when empty */}
-        <div className="compare-topbar">
-          <span className="font-bold text-sm text-base-content tracking-wide">Compare Maps</span>
-        </div>
+
 
         {/* Delete confirmation banner */}
         {deletingGroupId && (
@@ -672,8 +670,8 @@ const Compare: React.FC = () => {
                 <AlertCircle size={14} />
                 <span>{errorMsg}</span>
               </div>
-              <button 
-                className="compare-warning-banner__close" 
+              <button
+                className="compare-warning-banner__close"
                 onClick={() => setErrorMsg(null)}
                 title="Dismiss"
               >
@@ -690,7 +688,7 @@ const Compare: React.FC = () => {
           </div>
           <h2 className="compare-empty__title">Compare Travel Maps</h2>
           <p className="compare-empty__subtitle">
-            Discover mutual destinations, shared wishlists, and travel compatibility 
+            Discover mutual destinations, shared wishlists, and travel compatibility
             by comparing your map with friends.
           </p>
 
@@ -768,8 +766,8 @@ const Compare: React.FC = () => {
                 <AlertCircle size={14} />
                 <span>{errorMsg}</span>
               </div>
-              <button 
-                className="compare-warning-banner__close" 
+              <button
+                className="compare-warning-banner__close"
                 onClick={() => setErrorMsg(null)}
                 title="Dismiss"
               >
@@ -811,270 +809,306 @@ const Compare: React.FC = () => {
 
           {/* Groups & Members Bar (Space Optimized Single Line Layout) ── */}
           <div className="compare-members-bar">
-        <span className="compare-members-bar__label">Groups</span>
-        {groups.map(g => {
-          const isActive = g.id === activeGroupId;
-          const isEditing = editingGroupId === g.id;
+            <span className="compare-members-bar__label">Groups</span>
+            {groups.map(g => {
+              const isActive = g.id === activeGroupId;
+              const isEditing = editingGroupId === g.id;
 
-          return (
-            <div
-              key={g.id}
-              className={`compare-group-tab ${isActive ? 'compare-group-tab--active' : ''}`}
-              onClick={() => !isEditing && setActiveGroupId(g.id)}
-            >
-              {isEditing ? (
-                <input
-                  ref={editGroupInputRef}
-                  type="text"
-                  value={editGroupName}
-                  onChange={e => setEditGroupName(e.target.value)}
-                  onBlur={handleConfirmRenameGroup}
-                  onKeyDown={e => {
-                    if (e.key === 'Enter') handleConfirmRenameGroup();
-                    if (e.key === 'Escape') setEditingGroupId(null);
-                  }}
-                  className="compare-group-tab__rename-input"
-                  onClick={e => e.stopPropagation()}
-                />
-              ) : (
-                <>
-                  <span>{g.name}</span>
-                  <span className="compare-group-tab__count">{g.friends.length + 1}</span>
-                  {isActive && (
-                    <div className="compare-group-tab__actions" onClick={e => e.stopPropagation()}>
-                      <button
-                        className="compare-group-tab__action-btn"
-                        onClick={() => handleStartRenameGroup(g.id, g.name)}
-                        title="Rename Group"
-                      >
-                        <Pencil size={12} />
-                      </button>
-                      {groups.length > 1 && (
-                        <button
-                          className="compare-group-tab__action-btn compare-group-tab__action-btn--danger"
-                          onClick={() => setDeletingGroupId(g.id)}
-                          title="Delete Group"
-                        >
-                          <Trash2 size={12} />
-                        </button>
+              return (
+                <div
+                  key={g.id}
+                  className={`compare-group-tab ${isActive ? 'compare-group-tab--active' : ''}`}
+                  onClick={() => !isEditing && setActiveGroupId(g.id)}
+                >
+                  {isEditing ? (
+                    <input
+                      ref={editGroupInputRef}
+                      type="text"
+                      value={editGroupName}
+                      onChange={e => setEditGroupName(e.target.value)}
+                      onBlur={handleConfirmRenameGroup}
+                      onKeyDown={e => {
+                        if (e.key === 'Enter') handleConfirmRenameGroup();
+                        if (e.key === 'Escape') setEditingGroupId(null);
+                      }}
+                      className="compare-group-tab__rename-input"
+                      onClick={e => e.stopPropagation()}
+                    />
+                  ) : (
+                    <>
+                      <span>{g.name}</span>
+                      <span className="compare-group-tab__count">{g.friends.length + 1}</span>
+                      {isActive && (
+                        <div className="compare-group-tab__actions" onClick={e => e.stopPropagation()}>
+                          <button
+                            className="compare-group-tab__action-btn"
+                            onClick={() => handleStartRenameGroup(g.id, g.name)}
+                            title="Rename Group"
+                          >
+                            <Pencil size={12} />
+                          </button>
+                          {groups.length > 1 && (
+                            <button
+                              className="compare-group-tab__action-btn compare-group-tab__action-btn--danger"
+                              onClick={() => setDeletingGroupId(g.id)}
+                              title="Delete Group"
+                            >
+                              <Trash2 size={12} />
+                            </button>
+                          )}
+                        </div>
                       )}
-                    </div>
+                    </>
                   )}
-                </>
-              )}
-            </div>
-          );
-        })}
+                </div>
+              );
+            })}
 
-        {isCreatingGroup ? (
-          <div className="compare-group-create" onClick={e => e.stopPropagation()}>
-            <input
-              ref={newGroupInputRef}
-              type="text"
-              placeholder="Group name..."
-              value={newGroupName}
-              onChange={e => setNewGroupName(e.target.value)}
-              onKeyDown={e => {
-                if (e.key === 'Enter') handleConfirmCreateGroup();
-                if (e.key === 'Escape') setIsCreatingGroup(false);
-              }}
-              className="compare-group-create__input"
-            />
-            <button
-              className="compare-group-create__btn compare-group-create__btn--confirm"
-              onClick={handleConfirmCreateGroup}
-              title="Create Group"
-            >
-              <Check size={12} />
-            </button>
-            <button
-              className="compare-group-create__btn compare-group-create__btn--cancel"
-              onClick={() => setIsCreatingGroup(false)}
-              title="Cancel"
-            >
-              <X size={12} />
-            </button>
+            {isCreatingGroup ? (
+              <div className="compare-group-create" onClick={e => e.stopPropagation()}>
+                <input
+                  ref={newGroupInputRef}
+                  type="text"
+                  placeholder="Group name..."
+                  value={newGroupName}
+                  onChange={e => setNewGroupName(e.target.value)}
+                  onKeyDown={e => {
+                    if (e.key === 'Enter') handleConfirmCreateGroup();
+                    if (e.key === 'Escape') setIsCreatingGroup(false);
+                  }}
+                  className="compare-group-create__input"
+                />
+                <button
+                  className="compare-group-create__btn compare-group-create__btn--confirm"
+                  onClick={handleConfirmCreateGroup}
+                  title="Create Group"
+                >
+                  <Check size={12} />
+                </button>
+                <button
+                  className="compare-group-create__btn compare-group-create__btn--cancel"
+                  onClick={() => setIsCreatingGroup(false)}
+                  title="Cancel"
+                >
+                  <X size={12} />
+                </button>
+              </div>
+            ) : (
+              <button className="compare-group-add-btn" onClick={handleStartCreateGroup}>
+                <Plus size={12} />
+              </button>
+            )}
+
+            <div className="compare-topbar__divider" style={{ height: '18px', marginInline: '8px' }} />
+
+            <span className="compare-members-bar__label">Members</span>
+            <div className="compare-member-chip compare-member-chip--me">
+              <span className="compare-member-chip__name">Me</span>
+            </div>
+            {friends.map(f => (
+              <div key={f.id} className="compare-member-chip">
+                <input
+                  type="text"
+                  value={f.name}
+                  onChange={(e) => renameFriend(f.id, e.target.value)}
+                  className="compare-member-chip__edit"
+                  title="Click to rename"
+                />
+                <button
+                  onClick={() => removeFriend(f.id)}
+                  className="compare-member-chip__remove"
+                  title="Remove"
+                >
+                  <X size={12} />
+                </button>
+              </div>
+            ))}
           </div>
-        ) : (
-          <button className="compare-group-add-btn" onClick={handleStartCreateGroup}>
-            <Plus size={12} />
-          </button>
+        </div>
+
+        {/* ── Zone 2: Map Card ────────────────────────────────────────── */}
+        <div className="compare-map-card">
+          <CompareMap mergedData={mergedData} numericToA3={NUMERIC_TO_A3} />
+
+          {/* Floating Legend */}
+          <div className="compare-legend">
+            <button
+              className="compare-legend__toggle"
+              onClick={() => setLegendOpen(!legendOpen)}
+            >
+              <Palette size={12} />
+              Legend
+              <ChevronDown size={10} style={{
+                transform: legendOpen ? 'rotate(180deg)' : 'rotate(0)',
+                transition: 'transform 0.2s ease'
+              }} />
+            </button>
+            {legendOpen && (
+              <div className="compare-legend__panel">
+                {legendItems.map(item => (
+                  <div key={item.label} className="compare-legend__item">
+                    <div className="compare-legend__dot" style={{ background: item.color }} />
+                    {item.label}
+                  </div>
+                ))}
+              </div>
+            )}
+          </div>
+        </div>
+
+        {/* ── Zone 3: Analytics Dashboard Content ─────────────────────── */}
+        {/* Stat Cards */}
+        <span className="compare-dashboard__section-title">Overview</span>
+        <div className="compare-stats-grid">
+          <div className="compare-stat-card compare-stat-card--visited">
+            <div className="compare-stat-card__icon"><Globe size={32} /></div>
+            <div className="compare-stat-card__value" style={{ color: 'var(--color-both)' }}>
+              {commonVisited.length}
+            </div>
+            <div className="compare-stat-card__label">Both Visited</div>
+          </div>
+
+          <div className="compare-stat-card compare-stat-card--wishlist">
+            <div className="compare-stat-card__icon"><Heart size={32} /></div>
+            <div className="compare-stat-card__value" style={{ color: 'var(--color-wishlist-both)' }}>
+              {commonWishlist.length}
+            </div>
+            <div className="compare-stat-card__label">Mutual Wishlist</div>
+          </div>
+
+          <div className="compare-stat-card compare-stat-card--me-only">
+            <div className="compare-stat-card__icon"><Eye size={32} /></div>
+            <div className="compare-stat-card__value" style={{ color: 'var(--color-me-only)' }}>
+              {onlyMeVisited.length}
+            </div>
+            <div className="compare-stat-card__label">Only I Visited</div>
+          </div>
+
+          <div className="compare-stat-card compare-stat-card--compat">
+            <div className="compare-stat-card__icon"><Sparkles size={32} /></div>
+            <div className="compare-stat-card__value" style={{ color: 'var(--accent-primary)' }}>
+              {compatibilityScore}%
+            </div>
+            <div className="compare-stat-card__label">Travel Compatibility</div>
+          </div>
+
+          <div className="compare-stat-card compare-stat-card--revisit">
+            <div className="compare-stat-card__icon"><RefreshCw size={32} /></div>
+            <div className="compare-stat-card__value" style={{ color: 'var(--color-revisit-both)' }}>
+              {commonRevisit.length}
+            </div>
+            <div className="compare-stat-card__label">Mutual Revisit</div>
+          </div>
+
+          <div className="compare-stat-card compare-stat-card--avoid">
+            <div className="compare-stat-card__icon"><ShieldAlert size={32} /></div>
+            <div className="compare-stat-card__value" style={{ color: 'var(--color-avoid)' }}>
+              {commonAvoid.length}
+            </div>
+            <div className="compare-stat-card__label">Mutual Avoid</div>
+          </div>
+        </div>
+
+        {/* Country Lists as Pill Chips */}
+        <span className="compare-dashboard__section-title">Country Breakdown</span>
+
+        {renderPillsSection(
+          "We've All Visited",
+          'var(--color-both)',
+          commonVisited,
+          'No mutually visited countries yet.'
         )}
 
-        <div className="compare-topbar__divider" style={{ height: '18px', marginInline: '8px' }} />
+        {renderPillsSection(
+          'Mutual Wishlist',
+          'var(--color-wishlist-both)',
+          commonWishlist,
+          'No shared wishlists yet.'
+        )}
 
-        <span className="compare-members-bar__label">Members</span>
-        <div className="compare-member-chip compare-member-chip--me">
-          <span className="compare-member-chip__name">Me</span>
-        </div>
-        {friends.map(f => (
-          <div key={f.id} className="compare-member-chip">
-            <input
-              type="text"
-              value={f.name}
-              onChange={(e) => renameFriend(f.id, e.target.value)}
-              className="compare-member-chip__edit"
-              title="Click to rename"
-            />
-            <button
-              onClick={() => removeFriend(f.id)}
-              className="compare-member-chip__remove"
-              title="Remove"
-            >
-              <X size={12} />
-            </button>
-          </div>
-        ))}
-      </div>
-    </div>
+        {renderPillsSection(
+          'Only I Visited',
+          'var(--color-me-only)',
+          onlyMeVisited,
+          'None — your friends have been everywhere you have!'
+        )}
 
-      {/* ── Zone 2: Map Card ────────────────────────────────────────── */}
-      <div className="compare-map-card">
-        <CompareMap mergedData={mergedData} numericToA3={NUMERIC_TO_A3} />
+        {renderPillsSection(
+          'They Visited (Not Me)',
+          'var(--color-they-only)',
+          theyVisited,
+          'You\'ve been everywhere they have!'
+        )}
 
-        {/* Floating Legend */}
-        <div className="compare-legend">
-          <button 
-            className="compare-legend__toggle" 
-            onClick={() => setLegendOpen(!legendOpen)}
-          >
-            <Palette size={12} />
-            Legend
-            <ChevronDown size={10} style={{ 
-              transform: legendOpen ? 'rotate(180deg)' : 'rotate(0)', 
-              transition: 'transform 0.2s ease' 
-            }} />
-          </button>
-          {legendOpen && (
-            <div className="compare-legend__panel">
-              {legendItems.map(item => (
-                <div key={item.label} className="compare-legend__item">
-                  <div className="compare-legend__dot" style={{ background: item.color }} />
-                  {item.label}
+        {commonRevisit.length > 0 && renderPillsSection(
+          'Mutual Revisit',
+          'var(--color-revisit-both)',
+          commonRevisit,
+          ''
+        )}
+
+        {commonAvoid.length > 0 && renderPillsSection(
+          'Everyone Avoids',
+          'var(--color-avoid)',
+          commonAvoid,
+          ''
+        )}
+
+        {/* Insight Cards */}
+        {(topWantedUnvisited.length > 0 || wantedButVisited.length > 0) && (
+          <>
+            <span className="compare-dashboard__section-title">Insights</span>
+            <div className="compare-insights-grid">
+              {/* Most Wanted */}
+              {topWantedUnvisited.length > 0 && (
+                <div className="compare-insight-card">
+                  <div className="compare-insight-card__header">
+                    <Heart size={14} className="compare-insight-card__icon" style={{ color: 'var(--accent-wishlist)' }} />
+                    Most Wanted Destinations
+                  </div>
+                  <ul className="compare-insight-card__list">
+                    {topWantedUnvisited.map(({ code, wishlist }) => (
+                      <li key={code} className="compare-insight-card__item">
+                        {countryData[code]?.flag && (
+                          <img
+                            src={countryData[code]?.flag}
+                            alt=""
+                            className="compare-insight-card__item-flag"
+                            onError={(e) => {
+                              e.currentTarget.src = "data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='18' height='13'><rect width='18' height='13' fill='%23333333' opacity='0.15'/></svg>";
+                            }}
+                          />
+                        )}
+                        <span className="compare-insight-card__item-name">
+                          {countryData[code]?.name || code}
+                        </span>
+                        <span
+                          className="compare-insight-card__item-badge"
+                          style={{ background: 'rgba(187, 154, 247, 0.15)', color: 'var(--accent-wishlist)' }}
+                        >
+                          {wishlist} ❤️
+                        </span>
+                      </li>
+                    ))}
+                  </ul>
                 </div>
-              ))}
-            </div>
-          )}
-        </div>
-      </div>
+              )}
 
-      {/* ── Zone 3: Analytics Dashboard Content ─────────────────────── */}
-      {/* Stat Cards */}
-      <span className="compare-dashboard__section-title">Overview</span>
-      <div className="compare-stats-grid">
-            <div className="compare-stat-card compare-stat-card--visited">
-              <div className="compare-stat-card__icon"><Globe size={28} /></div>
-              <div className="compare-stat-card__value" style={{ color: 'var(--color-both)' }}>
-                {commonVisited.length}
-              </div>
-              <div className="compare-stat-card__label">Both Visited</div>
-            </div>
-
-            <div className="compare-stat-card compare-stat-card--wishlist">
-              <div className="compare-stat-card__icon"><Heart size={28} /></div>
-              <div className="compare-stat-card__value" style={{ color: 'var(--color-wishlist-both)' }}>
-                {commonWishlist.length}
-              </div>
-              <div className="compare-stat-card__label">Mutual Wishlist</div>
-            </div>
-
-            <div className="compare-stat-card compare-stat-card--me-only">
-              <div className="compare-stat-card__icon"><Eye size={28} /></div>
-              <div className="compare-stat-card__value" style={{ color: 'var(--color-me-only)' }}>
-                {onlyMeVisited.length}
-              </div>
-              <div className="compare-stat-card__label">Only I Visited</div>
-            </div>
-
-            <div className="compare-stat-card compare-stat-card--compat">
-              <div className="compare-stat-card__icon"><Sparkles size={28} /></div>
-              <div className="compare-stat-card__value" style={{ color: 'var(--accent-primary)' }}>
-                {compatibilityScore}%
-              </div>
-              <div className="compare-stat-card__label">Travel Compatibility</div>
-            </div>
-
-            <div className="compare-stat-card compare-stat-card--revisit">
-              <div className="compare-stat-card__icon"><RefreshCw size={28} /></div>
-              <div className="compare-stat-card__value" style={{ color: 'var(--color-revisit-both)' }}>
-                {commonRevisit.length}
-              </div>
-              <div className="compare-stat-card__label">Mutual Revisit</div>
-            </div>
-
-            <div className="compare-stat-card compare-stat-card--avoid">
-              <div className="compare-stat-card__icon"><ShieldAlert size={28} /></div>
-              <div className="compare-stat-card__value" style={{ color: 'var(--color-avoid)' }}>
-                {commonAvoid.length}
-              </div>
-              <div className="compare-stat-card__label">Mutual Avoid</div>
-            </div>
-          </div>
-
-          {/* Country Lists as Pill Chips */}
-          <span className="compare-dashboard__section-title">Country Breakdown</span>
-
-          {renderPillsSection(
-            "We've All Visited",
-            'var(--color-both)',
-            commonVisited,
-            'No mutually visited countries yet.'
-          )}
-
-          {renderPillsSection(
-            'Mutual Wishlist',
-            'var(--color-wishlist-both)',
-            commonWishlist,
-            'No shared wishlists yet.'
-          )}
-
-          {renderPillsSection(
-            'Only I Visited',
-            'var(--color-me-only)',
-            onlyMeVisited,
-            'None — your friends have been everywhere you have!'
-          )}
-
-          {renderPillsSection(
-            'They Visited (Not Me)',
-            'var(--color-they-only)',
-            theyVisited,
-            'You\'ve been everywhere they have!'
-          )}
-
-          {commonRevisit.length > 0 && renderPillsSection(
-            'Mutual Revisit',
-            'var(--color-revisit-both)',
-            commonRevisit,
-            ''
-          )}
-
-          {commonAvoid.length > 0 && renderPillsSection(
-            'Everyone Avoids',
-            'var(--color-avoid)',
-            commonAvoid,
-            ''
-          )}
-
-          {/* Insight Cards */}
-          {(topWantedUnvisited.length > 0 || wantedButVisited.length > 0) && (
-            <>
-              <span className="compare-dashboard__section-title">Insights</span>
-              <div className="compare-insights-grid">
-                {/* Most Wanted */}
-                {topWantedUnvisited.length > 0 && (
-                  <div className="compare-insight-card">
-                    <div className="compare-insight-card__header">
-                      <Heart size={14} className="compare-insight-card__icon" style={{ color: 'var(--accent-wishlist)' }} />
-                      Most Wanted Destinations
-                    </div>
-                    <ul className="compare-insight-card__list">
-                      {topWantedUnvisited.map(({ code, wishlist }) => (
-                        <li key={code} className="compare-insight-card__item">
+              {/* Travel Mentorships */}
+              {wantedButVisited.length > 0 && (
+                <div className="compare-insight-card">
+                  <div className="compare-insight-card__header">
+                    <GraduationCap size={14} className="compare-insight-card__icon" style={{ color: 'var(--color-me-only)' }} />
+                    Travel Mentorships
+                  </div>
+                  <ul className="compare-insight-card__list">
+                    {wantedButVisited.map(({ code, whoVisited, whoWants }) => (
+                      <li key={code}>
+                        <div className="compare-insight-card__item">
                           {countryData[code]?.flag && (
-                            <img 
-                              src={countryData[code]?.flag} 
-                              alt="" 
+                            <img
+                              src={countryData[code]?.flag}
+                              alt=""
                               className="compare-insight-card__item-flag"
                               onError={(e) => {
                                 e.currentTarget.src = "data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='18' height='13'><rect width='18' height='13' fill='%23333333' opacity='0.15'/></svg>";
@@ -1084,57 +1118,21 @@ const Compare: React.FC = () => {
                           <span className="compare-insight-card__item-name">
                             {countryData[code]?.name || code}
                           </span>
-                          <span 
-                            className="compare-insight-card__item-badge" 
-                            style={{ background: 'rgba(187, 154, 247, 0.15)', color: 'var(--accent-wishlist)' }}
-                          >
-                            {wishlist} ❤️
-                          </span>
-                        </li>
-                      ))}
-                    </ul>
-                  </div>
-                )}
-
-                {/* Travel Mentorships */}
-                {wantedButVisited.length > 0 && (
-                  <div className="compare-insight-card">
-                    <div className="compare-insight-card__header">
-                      <GraduationCap size={14} className="compare-insight-card__icon" style={{ color: 'var(--color-me-only)' }} />
-                      Travel Mentorships
-                    </div>
-                    <ul className="compare-insight-card__list">
-                      {wantedButVisited.map(({ code, whoVisited, whoWants }) => (
-                        <li key={code}>
-                          <div className="compare-insight-card__item">
-                            {countryData[code]?.flag && (
-                              <img 
-                                src={countryData[code]?.flag} 
-                                alt="" 
-                                className="compare-insight-card__item-flag"
-                                onError={(e) => {
-                                  e.currentTarget.src = "data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='18' height='13'><rect width='18' height='13' fill='%23333333' opacity='0.15'/></svg>";
-                                }}
-                              />
-                            )}
-                            <span className="compare-insight-card__item-name">
-                              {countryData[code]?.name || code}
-                            </span>
-                          </div>
-                          <div className="compare-insight-card__item-detail">
-                            <span style={{ color: 'var(--accent-visited)' }}>{whoVisited.join(', ')}</span>
-                            {' visited · '}
-                            <span style={{ color: 'var(--accent-wishlist)' }}>{whoWants.join(', ')}</span>
-                            {' wants to go'}
-                          </div>
-                        </li>
-                      ))}
-                    </ul>
-                  </div>
-                )}
-              </div>
-            </>
-          )}
+                        </div>
+                        <div className="compare-insight-card__item-detail">
+                          <span style={{ color: 'var(--accent-visited)' }}>{whoVisited.join(', ')}</span>
+                          {' visited · '}
+                          <span style={{ color: 'var(--accent-wishlist)' }}>{whoWants.join(', ')}</span>
+                          {' wants to go'}
+                        </div>
+                      </li>
+                    ))}
+                  </ul>
+                </div>
+              )}
+            </div>
+          </>
+        )}
       </div>
     </div>
   );

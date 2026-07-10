@@ -1954,7 +1954,8 @@ path.rsm-geography:active {
 
 .compare-groups-grid {
   display: grid;
-  grid-template-columns: repeat(auto-fill, minmax(260px, 1fr));
+  grid-template-columns: repeat(auto-fit, minmax(260px, 320px));
+  justify-content: center;
   gap: 16px;
   width: 100%;
 }
@@ -2626,14 +2627,14 @@ path.rsm-geography:active {
 /* ── Stat Cards Grid ────────────────────────────────────────────────── */
 .compare-stats-grid {
   display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
-  gap: 12px;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 20px;
 }
 
 .compare-stat-card {
   position: relative;
-  padding: 16px 18px;
-  border-radius: 14px;
+  padding: 24px 28px;
+  border-radius: 18px;
   background: var(--glass-bg);
   backdrop-filter: blur(8px);
   -webkit-backdrop-filter: blur(8px);
@@ -2648,8 +2649,8 @@ path.rsm-geography:active {
   top: 0;
   left: 0;
   right: 0;
-  height: 3px;
-  border-radius: 14px 14px 0 0;
+  height: 4px;
+  border-radius: 18px 18px 0 0;
 }
 
 .compare-stat-card:hover {
@@ -2666,15 +2667,15 @@ path.rsm-geography:active {
 .compare-stat-card--avoid::before { background: var(--color-avoid); }
 
 .compare-stat-card__value {
-  font-size: 1.75rem;
+  font-size: 2.4rem;
   font-weight: 800;
   line-height: 1;
-  margin-bottom: 4px;
+  margin-bottom: 8px;
   letter-spacing: -0.02em;
 }
 
 .compare-stat-card__label {
-  font-size: 0.7rem;
+  font-size: 0.85rem;
   font-weight: 600;
   opacity: 0.55;
   letter-spacing: 0.02em;
@@ -2682,9 +2683,9 @@ path.rsm-geography:active {
 
 .compare-stat-card__icon {
   position: absolute;
-  top: 14px;
-  right: 14px;
-  opacity: 0.12;
+  top: 20px;
+  right: 20px;
+  opacity: 0.16;
 }
 
 /* ── Country Pills Section ──────────────────────────────────────────── */
