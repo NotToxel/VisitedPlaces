@@ -1,6 +1,7 @@
 import { describe, it, expect } from 'vitest';
 import { getCleanGbrName, getGbrIsoCode } from '../data/gbrRegionData';
 import { getPlaceFlagUrl } from './flagUtils';
+import { getRegionId } from './mapUtils';
 
 describe('GBR Region Helper Logic', () => {
   describe('getCleanGbrName', () => {
@@ -38,6 +39,26 @@ describe('GBR Region Helper Logic', () => {
     it('should fall back to country flag URL (gb.svg) for unmatched GBR keys', () => {
       const url = getPlaceFlagUrl('GBR-GB-XYZ');
       expect(url).toBe('https://flagcdn.com/gb.svg');
+    });
+
+    it('should resolve the Isle of Man territory flag code directly', () => {
+      const url = getPlaceFlagUrl('GBR-IM');
+      expect(url).toBe('https://flagcdn.com/im.svg');
+    });
+  });
+
+  describe('getRegionId for GBR Isle of Man', () => {
+    it('should map Isle of Man features to canonical GBR-IM ID', () => {
+      const imFeature = {
+        id: 'IM-X01~',
+        properties: {
+          iso_3166_2: 'IM-X01~',
+          name: 'Isle of Man',
+          adm0_a3: 'IMN'
+        }
+      };
+      const result = getRegionId(imFeature, {}, 'GBR');
+      expect(result).toBe('GBR-IM');
     });
   });
 });

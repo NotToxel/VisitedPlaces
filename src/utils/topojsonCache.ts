@@ -34,8 +34,13 @@ export const getSubRegionUrl = (countryA3: string): string | null => {
  */
 export const hasDrilldownSupport = (countryA3: string): boolean => {
   if (countryA3.includes('-')) return false;
+  if (drilldownRegistry[countryA3]) return true;
   return hasNESubdivisionsSync(countryA3);
 };
+
+function titleCase(str: string): string {
+  return str.toLowerCase().replace(/(?:^|\s|-)\S/g, (match) => match.toUpperCase());
+}
 
 /**
  * Fetches the list of sub-regions for a country.
@@ -60,47 +65,89 @@ export const fetchSubRegions = async (countryA3: string): Promise<TopoRegion[]> 
 
 // ── Curated TopoJSON fetching (USA, GBR) ──────────────────────────────────
 
+interface GeoJsonFeature {
+  type: 'Feature';
+  id?: string | number;
+  properties?: Record<string, string | number | boolean>;
+  geometry?: unknown;
+}
+
+interface GeoJsonFeatureCollection {
+  type: 'FeatureCollection';
+  features: GeoJsonFeature[];
+}
+
 async function fetchCuratedSubRegions(countryA3: string, url: string): Promise<TopoRegion[]> {
   try {
     const res = await fetch(url);
     if (!res.ok) throw new Error(`Failed to fetch topology for ${countryA3}`);
-    const data = await res.json() as TopologyData;
-
-    if (!data.objects) throw new Error('Invalid topojson structure');
+    const rawData = await res.json() as unknown;
 
     let regions: TopoRegion[] = [];
     const config = drilldownRegistry[countryA3];
 
-    // Process through the config's processTopology if available
-    const processed = config?.processTopology ? config.processTopology(JSON.parse(JSON.stringify(data))) : data;
+    if (
+      rawData &&
+      typeof rawData === 'object' &&
+      'type' in rawData &&
+      (rawData as Record<string, unknown>).type === 'FeatureCollection' &&
+      'features' in rawData &&
+      Array.isArray((rawData as Record<string, unknown>).features)
+    ) {
+      const data = rawData as GeoJsonFeatureCollection;
+      regions = data.features.map((f: GeoJsonFeature) => {
+        let localId: string;
+        if (config?.regionIdExtractor) {
+          localId = config.regionIdExtractor(f as unknown as TopologyGeometry);
+        } else {
+          localId = (f.properties?.iso_3166_2 || f.id?.toString() || '').toString();
+        }
 
-    // Find the first object layer
-    const objectKey = Object.keys(processed.objects)[0];
-    if (!objectKey) return [];
+        let name = (f.properties?.name || f.properties?.NAME || localId).toString();
+        if (countryA3 === 'SGP') {
+          name = titleCase(name);
+        }
 
-    const geometries = processed.objects[objectKey].geometries;
+        return {
+          id: `${countryA3}-${localId}`,
+          name,
+        };
+      });
+    } else {
+      const data = rawData as TopologyData;
+      if (!data.objects) throw new Error('Invalid topojson structure');
 
-    regions = geometries.map((g: TopologyGeometry) => {
-      let localId: string;
-      if (config?.regionIdExtractor) {
-        localId = config.regionIdExtractor(g);
-      } else {
-        localId = (g.id?.toString() || '');
-      }
+      // Process through the config's processTopology if available
+      const processed = config?.processTopology ? config.processTopology(JSON.parse(JSON.stringify(data))) : data;
 
-      let name = (g.properties?.name || g.properties?.AREANM || g.properties?.areanm || localId).toString();
-      if (name === 'Commonwealth of the Northern Mariana Islands') {
-        name = 'Northern Mariana Islands';
-      }
-      if (countryA3 === 'GBR') {
-        name = getCleanGbrName(name);
-      }
+      // Find the first object layer
+      const objectKey = Object.keys(processed.objects)[0];
+      if (!objectKey) return [];
 
-      return {
-        id: `${countryA3}-${localId}`,
-        name,
-      };
-    });
+      const geometries = processed.objects[objectKey].geometries;
+
+      regions = geometries.map((g: TopologyGeometry) => {
+        let localId: string;
+        if (config?.regionIdExtractor) {
+          localId = config.regionIdExtractor(g);
+        } else {
+          localId = (g.id?.toString() || '');
+        }
+
+        let name = (g.properties?.name || g.properties?.AREANM || g.properties?.areanm || localId).toString();
+        if (name === 'Commonwealth of the Northern Mariana Islands') {
+          name = 'Northern Mariana Islands';
+        }
+        if (countryA3 === 'GBR') {
+          name = getCleanGbrName(name);
+        }
+
+        return {
+          id: `${countryA3}-${localId}`,
+          name,
+        };
+      });
+    }
 
     // Inject territories from the registry
     const territories = getTerritoriesForCountry(countryA3);

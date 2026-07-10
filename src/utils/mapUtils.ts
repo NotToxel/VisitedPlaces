@@ -77,6 +77,10 @@ export const getRegionId = (
   const name = geo.properties?.name || '';
   const typeEn = geo.properties?.type_en || '';
 
+  if (activeCountry === 'GBR' && (iso3166_2?.startsWith('IM-') || name === 'Isle of Man')) {
+    return 'GBR-IM';
+  }
+
   if (iso3166_2) {
     let regionId = iso3166_2;
     const hasIsoDuplicate = duplicateIsos?.has(iso3166_2) || false;

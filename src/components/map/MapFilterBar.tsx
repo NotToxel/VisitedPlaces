@@ -12,6 +12,8 @@ interface MapFilterBarProps {
   setShowWishlist: (show: boolean) => void;
   setShowAvoid: (show: boolean) => void;
   setShowRevisit: (show: boolean) => void;
+  activeCountry?: string | null;
+  subRegions?: { id: string; name: string }[];
 }
 
 export const MapFilterBar: React.FC<MapFilterBarProps> = ({
@@ -23,20 +25,37 @@ export const MapFilterBar: React.FC<MapFilterBarProps> = ({
   setShowWishlist,
   setShowAvoid,
   setShowRevisit,
+  activeCountry = null,
+  subRegions = [],
 }) => {
   const { places } = useStore();
 
   const counts = useMemo(() => {
     const result = { visited: 0, wishlist: 0, revisit: 0, avoid: 0 };
-    COUNTRIES.forEach((c) => {
-      const status = places[c.id]?.status;
-      if (status === 'VISITED') result.visited++;
-      else if (status === 'WISHLIST') result.wishlist++;
-      else if (status === 'REVISIT') result.revisit++;
-      else if (status === 'AVOID') result.avoid++;
-    });
+
+    if (activeCountry && subRegions && subRegions.length > 0) {
+      // Drilldown view — count statuses for active country's sub-regions
+      subRegions.forEach((r) => {
+        let status = places[activeCountry]?.regions?.[r.id];
+        if (status === undefined) status = places[r.id]?.status;
+
+        if (status === 'VISITED') result.visited++;
+        else if (status === 'WISHLIST') result.wishlist++;
+        else if (status === 'REVISIT') result.revisit++;
+        else if (status === 'AVOID') result.avoid++;
+      });
+    } else {
+      // World view — count statuses for all countries
+      COUNTRIES.forEach((c) => {
+        const status = places[c.id]?.status;
+        if (status === 'VISITED') result.visited++;
+        else if (status === 'WISHLIST') result.wishlist++;
+        else if (status === 'REVISIT') result.revisit++;
+        else if (status === 'AVOID') result.avoid++;
+      });
+    }
     return result;
-  }, [places]);
+  }, [places, activeCountry, subRegions]);
 
   const pills: {
     label: string;

@@ -151,7 +151,8 @@ function shiftUsaCoords(coords: unknown): void {
  */
 function getCountryMainlandFeatures(countryA3: string, data: NEFeatureCollection): NEFeature[] {
   let features = data.features.filter(
-    (f) => f.properties?.adm0_a3 === countryA3 &&
+    (f) => (f.properties?.adm0_a3 === countryA3 ||
+           (countryA3 === 'GBR' && f.properties?.adm0_a3 === 'IMN')) &&
            f.properties?.name !== null &&
            f.properties?.name !== undefined &&
            f.properties?.name !== ''
@@ -219,7 +220,10 @@ export async function getCountryRegions(countryA3: string): Promise<NERegion[]> 
   for (const f of features) {
     const props = f.properties;
     if (props) {
-      const iso = props.iso_3166_2 || '';
+      let iso = props.iso_3166_2 || '';
+      if (countryA3 === 'GBR' && props.adm0_a3 === 'IMN') {
+        iso = 'IM';
+      }
       const name = props.name || '';
       if (iso) isoCounts[iso] = (isoCounts[iso] || 0) + 1;
       if (name) nameCounts[name] = (nameCounts[name] || 0) + 1;
@@ -231,7 +235,10 @@ export async function getCountryRegions(countryA3: string): Promise<NERegion[]> 
 
   for (const f of features) {
     const props = f.properties;
-    const iso = props?.iso_3166_2 || '';
+    let iso = props?.iso_3166_2 || '';
+    if (countryA3 === 'GBR' && props?.adm0_a3 === 'IMN') {
+      iso = 'IM';
+    }
     const name = props?.name || 'Unknown';
     const typeEn = props?.type_en || '';
 

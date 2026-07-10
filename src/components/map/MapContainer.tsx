@@ -285,6 +285,7 @@ export const MapContainer: React.FC = () => {
           territoryLabel={territoryLabel}
           places={places}
           onSetStatus={handleSetStatus}
+          highlightedTerritoryId={highlightedCountryA3}
         />
       )}
 
@@ -332,6 +333,8 @@ export const MapContainer: React.FC = () => {
         setShowWishlist={setShowWishlist}
         setShowAvoid={setShowAvoid}
         setShowRevisit={setShowRevisit}
+        activeCountry={activeCountry}
+        subRegions={subRegions}
       />
 
       {/* Country Context Menu */}

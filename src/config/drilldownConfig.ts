@@ -33,4 +33,25 @@ export interface DrilldownConfig {
   regionIdExtractor?: (geometry: TopologyGeometry) => string;
 }
 
-export const drilldownRegistry: Record<string, DrilldownConfig> = {};
+const slugify = (name: string): string => {
+  return name
+    .toLowerCase()
+    .normalize('NFD')
+    .replace(/[\u0300-\u036f]/g, '')
+    .replace(/[^a-z0-9]+/g, '-')
+    .replace(/^-+|-+$/g, '');
+};
+
+export const drilldownRegistry: Record<string, DrilldownConfig> = {
+  'SGP': {
+    id: 'SGP',
+    topoJsonUrl: 'https://raw.githubusercontent.com/yinshanyang/singapore/master/maps/2-planning-area.geojson',
+    scale: 110000,
+    center: [103.82, 1.352],
+    defaultView: { center: [103.82, 1.352], zoom: 1 },
+    regionIdExtractor: (f) => {
+      const name = (f.properties?.name || f.properties?.NAME || '').toString();
+      return slugify(name);
+    }
+  }
+};

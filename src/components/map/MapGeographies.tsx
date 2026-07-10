@@ -95,6 +95,9 @@ const MapGeographiesBase: React.FC<MapGeographiesProps> = ({
           if (activeCountry === 'GBR') {
             countryName = getCleanGbrName(countryName);
           }
+          if (activeCountry === 'SGP') {
+            countryName = countryName.toLowerCase().replace(/(?:^|\s|-)\S/g, (match) => match.toUpperCase());
+          }
 
           const iso = geo.properties?.iso_3166_2 || '';
           const typeEn = geo.properties?.type_en || '';

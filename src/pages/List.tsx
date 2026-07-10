@@ -165,6 +165,25 @@ const List: React.FC = () => {
     return COUNTRIES.find(c => c.id === selectedCountryId) || null;
   }, [selectedCountryId]);
 
+  // Compute status counts for sub-regions of selected country
+  const subRegionCounts = useMemo(() => {
+    const counts = { ALL: 0, VISITED: 0, WISHLIST: 0, REVISIT: 0, AVOID: 0, UNSELECTED: 0 };
+    if (!selectedCountry) return counts;
+    const list = subRegionsByCountry[selectedCountry.id] || [];
+    counts.ALL = list.length;
+    list.forEach((r) => {
+      let status = places[selectedCountry.id]?.regions?.[r.id];
+      if (status === undefined) status = places[r.id]?.status || 'NONE';
+
+      if (status === 'VISITED') counts.VISITED++;
+      else if (status === 'WISHLIST') counts.WISHLIST++;
+      else if (status === 'REVISIT') counts.REVISIT++;
+      else if (status === 'AVOID') counts.AVOID++;
+      else counts.UNSELECTED++;
+    });
+    return counts;
+  }, [selectedCountry, subRegionsByCountry, places]);
+
   // Toggle continent filter
   const toggleContinent = (continent: string) => {
     setContinentFilter(prev => {
@@ -450,7 +469,7 @@ const List: React.FC = () => {
           </div>
           <button 
             onClick={() => selectCountry(null)}
-            className="btn btn-ghost btn-xs btn-circle text-base-content/50 hover:text-base-content shrink-0"
+            className="btn btn-ghost btn-xs btn-square text-base-content/50 hover:text-base-content shrink-0"
             title="Close details"
           >
             <X size={15} />
@@ -578,6 +597,9 @@ const List: React.FC = () => {
                              mode === 'UNSELECTED' ? 'Unselected' : 
                              mode.charAt(0) + mode.slice(1).toLowerCase()}
                           </span>
+                          <span className="opacity-55 ml-0.5 font-mono text-[8px] bg-black/15 px-1 rounded-sm">
+                            {subRegionCounts[mode]}
+                          </span>
                         </button>
                       );
                     })}
@@ -640,28 +662,28 @@ const List: React.FC = () => {
                             <div className="flex gap-1 shrink-0">
                               <button
                                 onClick={() => handleStatusChange(state.id, 'VISITED')}
-                                className={`btn btn-square btn-circle btn-sm h-7.5 w-7.5 ${stateStatus === 'VISITED' ? 'btn-success text-white border-none' : 'btn-ghost text-base-content/30 hover:text-accent-visited hover:bg-accent-visited/10'}`}
+                                className={`btn btn-square btn-sm h-7.5 w-7.5 ${stateStatus === 'VISITED' ? 'btn-success text-white border-none' : 'btn-ghost text-base-content/30 hover:text-accent-visited hover:bg-accent-visited/10'}`}
                                 title="Visited"
                               >
                                 <Check size={13} />
                               </button>
                               <button
                                 onClick={() => handleStatusChange(state.id, 'WISHLIST')}
-                                className={`btn btn-square btn-circle btn-sm h-7.5 w-7.5 ${stateStatus === 'WISHLIST' ? 'btn-secondary text-white border-none' : 'btn-ghost text-base-content/30 hover:text-accent-wishlist hover:bg-accent-wishlist/10'}`}
+                                className={`btn btn-square btn-sm h-7.5 w-7.5 ${stateStatus === 'WISHLIST' ? 'btn-secondary text-white border-none' : 'btn-ghost text-base-content/30 hover:text-accent-wishlist hover:bg-accent-wishlist/10'}`}
                                 title="Wishlist"
                               >
                                 <Heart size={13} fill={stateStatus === 'WISHLIST' ? 'currentColor' : 'none'} />
                               </button>
                               <button
                                 onClick={() => handleStatusChange(state.id, 'REVISIT')}
-                                className={`btn btn-square btn-circle btn-sm h-7.5 w-7.5 ${stateStatus === 'REVISIT' ? 'btn-warning text-white border-none' : 'btn-ghost text-base-content/30 hover:text-accent-revisit hover:bg-accent-revisit/10'}`}
+                                className={`btn btn-square btn-sm h-7.5 w-7.5 ${stateStatus === 'REVISIT' ? 'btn-warning text-white border-none' : 'btn-ghost text-base-content/30 hover:text-accent-revisit hover:bg-accent-revisit/10'}`}
                                 title="Revisit"
                               >
                                 <RotateCcw size={13} />
                               </button>
                               <button
                                 onClick={() => handleStatusChange(state.id, 'AVOID')}
-                                className={`btn btn-square btn-circle btn-sm h-7.5 w-7.5 ${stateStatus === 'AVOID' ? 'btn-error text-white border-none' : 'btn-ghost text-base-content/30 hover:text-accent-avoid hover:bg-accent-avoid/10'}`}
+                                className={`btn btn-square btn-sm h-7.5 w-7.5 ${stateStatus === 'AVOID' ? 'btn-error text-white border-none' : 'btn-ghost text-base-content/30 hover:text-accent-avoid hover:bg-accent-avoid/10'}`}
                                 title="Avoid"
                               >
                                 <Ban size={13} />
@@ -862,7 +884,7 @@ const List: React.FC = () => {
                                 <div className="flex-1" />
                               )}
                               
-                              <div className="flex gap-1.5 shrink-0">
+                              <div className="flex gap-1 shrink-0">
                                 <button 
                                   onClick={(e) => {
                                     e.stopPropagation();

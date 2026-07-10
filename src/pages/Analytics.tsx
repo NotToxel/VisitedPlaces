@@ -64,7 +64,8 @@ const Analytics: React.FC = () => {
   // Sub-region dynamic totals loader
   const [subRegionTotals, setSubRegionTotals] = useState<Record<string, number>>({
     'USA': 51,
-    'GBR': 124
+    'GBR': 124,
+    'SGP': 55
   });
 
   // Load sub-regions dynamically to get total counts
@@ -445,7 +446,7 @@ const Analytics: React.FC = () => {
               Regional Profile Comparison
             </h3>
             <div className="flex-1 min-h-0 mt-2">
-              <ResponsiveContainer width="100%" height="100%">
+              <ResponsiveContainer width="100%" height="100%" minWidth={0} minHeight={0}>
                 <BarChart data={barChartData} margin={{ top: 5, right: 5, left: -22, bottom: 0 }}>
                   <CartesianGrid strokeDasharray="3 3" stroke="rgba(240, 240, 240, 0.04)" vertical={false} />
                   <XAxis dataKey="name" stroke="var(--text-base-content)" opacity={0.6} fontSize={9} tickLine={false} />
