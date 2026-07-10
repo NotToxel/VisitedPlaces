@@ -81,6 +81,19 @@ const HexagonMapBase: React.FC<HexagonMapProps> = ({
     moved: boolean;
   } | null>(null);
 
+  // Touch tracking (pan and pinch-to-zoom)
+  const touchRef = useRef<{
+    startX: number; startY: number;
+    startTx: number; startTy: number;
+    startDistance: number;
+    startZoom: number;
+    midVx: number; midVy: number;
+    moved: boolean;
+  } | null>(null);
+
+  // Global drag-moved tracker to prevent clicks on drag release
+  const hasMovedRef = useRef(false);
+
   // --- Animation ---
   const animateTo = useCallback((targetTx: number, targetTy: number, targetZoom: number) => {
     if (animRef.current) cancelAnimationFrame(animRef.current);
@@ -159,6 +172,7 @@ const HexagonMapBase: React.FC<HexagonMapProps> = ({
   const handleMouseDown = useCallback((e: React.MouseEvent<SVGSVGElement>) => {
     if (e.button !== 0) return;
     setIsDragging(true);
+    hasMovedRef.current = false;
     dragRef.current = {
       startX: e.clientX,
       startY: e.clientY,
@@ -174,7 +188,10 @@ const HexagonMapBase: React.FC<HexagonMapProps> = ({
     // Convert screen delta → viewbox delta → group delta
     const dx = (e.clientX - dragRef.current.startX) * (SVG_W / rect.width) / liveRef.current.zoom;
     const dy = (e.clientY - dragRef.current.startY) * (SVG_H / rect.height) / liveRef.current.zoom;
-    if (Math.abs(dx) > 2 || Math.abs(dy) > 2) dragRef.current.moved = true;
+    if (Math.abs(dx) > 2 || Math.abs(dy) > 2) {
+      dragRef.current.moved = true;
+      hasMovedRef.current = true;
+    }
     const newTx = dragRef.current.startTx + dx;
     const newTy = dragRef.current.startTy + dy;
     if (animRef.current) cancelAnimationFrame(animRef.current);
@@ -189,9 +206,114 @@ const HexagonMapBase: React.FC<HexagonMapProps> = ({
     dragRef.current = null; 
   }, []);
 
+  // --- Touch event handlers ---
+  const handleTouchStart = useCallback((e: React.TouchEvent<SVGSVGElement>) => {
+    hasMovedRef.current = false;
+    if (e.touches.length === 1) {
+      const t = e.touches[0];
+      touchRef.current = {
+        startX: t.clientX,
+        startY: t.clientY,
+        startTx: liveRef.current.tx,
+        startTy: liveRef.current.ty,
+        startDistance: 0,
+        startZoom: liveRef.current.zoom,
+        midVx: 0,
+        midVy: 0,
+        moved: false
+      };
+    } else if (e.touches.length === 2) {
+      const t1 = e.touches[0];
+      const t2 = e.touches[1];
+      const dist = Math.hypot(t1.clientX - t2.clientX, t1.clientY - t2.clientY);
+      const midX = (t1.clientX + t2.clientX) / 2;
+      const midY = (t1.clientY + t2.clientY) / 2;
+      const { vx, vy } = clientToViewbox(midX, midY);
+
+      touchRef.current = {
+        startX: 0,
+        startY: 0,
+        startTx: liveRef.current.tx,
+        startTy: liveRef.current.ty,
+        startDistance: dist,
+        startZoom: liveRef.current.zoom,
+        midVx: vx,
+        midVy: vy,
+        moved: true
+      };
+      hasMovedRef.current = true;
+    }
+  }, [clientToViewbox]);
+
+  const handleTouchMove = useCallback((e: React.TouchEvent<SVGSVGElement>) => {
+    if (!touchRef.current || !svgRef.current) return;
+
+    if (e.touches.length === 1 && touchRef.current.startDistance === 0) {
+      const t = e.touches[0];
+      const rect = svgRef.current.getBoundingClientRect();
+      const dx = (t.clientX - touchRef.current.startX) * (SVG_W / rect.width) / liveRef.current.zoom;
+      const dy = (t.clientY - touchRef.current.startY) * (SVG_H / rect.height) / liveRef.current.zoom;
+      
+      if (Math.abs(dx) > 2 || Math.abs(dy) > 2) {
+        touchRef.current.moved = true;
+        hasMovedRef.current = true;
+      }
+
+      const newTx = touchRef.current.startTx + dx;
+      const newTy = touchRef.current.startTy + dy;
+
+      if (animRef.current) cancelAnimationFrame(animRef.current);
+      liveRef.current.tx = newTx;
+      liveRef.current.ty = newTy;
+      setTx(newTx);
+      setTy(newTy);
+    } else if (e.touches.length === 2 && touchRef.current.startDistance > 0) {
+      const t1 = e.touches[0];
+      const t2 = e.touches[1];
+      const dist = Math.hypot(t1.clientX - t2.clientX, t1.clientY - t2.clientY);
+      if (dist === 0) return;
+
+      const factor = dist / touchRef.current.startDistance;
+      const startZoom = touchRef.current.startZoom;
+      const newZoom = Math.max(0.4, Math.min(12, startZoom * factor));
+
+      const vx = touchRef.current.midVx;
+      const vy = touchRef.current.midVy;
+      const newTx = touchRef.current.startTx + vx * (1 / newZoom - 1 / startZoom);
+      const newTy = touchRef.current.startTy + vy * (1 / newZoom - 1 / startZoom);
+
+      if (animRef.current) cancelAnimationFrame(animRef.current);
+      liveRef.current.zoom = newZoom;
+      liveRef.current.tx = newTx;
+      liveRef.current.ty = newTy;
+      setZoom(newZoom);
+      setTx(newTx);
+      setTy(newTy);
+    }
+  }, []);
+
+  const handleTouchEnd = useCallback((e: React.TouchEvent<SVGSVGElement>) => {
+    if (e.touches.length === 1 && touchRef.current) {
+      const t = e.touches[0];
+      touchRef.current = {
+        startX: t.clientX,
+        startY: t.clientY,
+        startTx: liveRef.current.tx,
+        startTy: liveRef.current.ty,
+        startDistance: 0,
+        startZoom: liveRef.current.zoom,
+        midVx: 0,
+        midVy: 0,
+        moved: touchRef.current.moved
+      };
+    } else if (e.touches.length === 0) {
+      touchRef.current = null;
+    }
+  }, []);
+
   const handleCountryClick = useCallback((countryId: string, event: React.MouseEvent) => {
-    // Ignore if we were dragging
-    if (dragRef.current?.moved) return;
+    // Ignore if we were dragging/panning/zooming
+    if (hasMovedRef.current) return;
     if (!countryId) return;
     onCountryClick(countryId, event);
   }, [onCountryClick]);
@@ -200,12 +322,22 @@ const HexagonMapBase: React.FC<HexagonMapProps> = ({
     <svg
       ref={svgRef}
       viewBox={`0 0 ${SVG_W} ${SVG_H}`}
-      style={{ width: '100%', height: '100%', outline: 'none', cursor: isDragging ? 'grabbing' : 'grab' }}
+      style={{
+        width: '100%',
+        height: '100%',
+        outline: 'none',
+        cursor: isDragging ? 'grabbing' : 'grab',
+        touchAction: 'none'
+      }}
       onWheel={handleWheel}
       onMouseDown={handleMouseDown}
       onMouseMove={handleMouseMove}
       onMouseUp={handleMouseUp}
       onMouseLeave={handleMouseUp}
+      onTouchStart={handleTouchStart}
+      onTouchMove={handleTouchMove}
+      onTouchEnd={handleTouchEnd}
+      onTouchCancel={handleTouchEnd}
     >
       <g transform={`scale(${zoom}) translate(${tx}, ${ty})`}>
         {Object.entries(hexGridData)
