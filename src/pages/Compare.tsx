@@ -1,4 +1,4 @@
-import React, { useState, useMemo, useEffect } from 'react';
+import React, { useState, useMemo, useEffect, useRef, useCallback } from 'react';
 import { useStore } from '../store/useStore';
 import type { UserPlacesMap } from '../store/useStore';
 import { COUNTRIES, NUMERIC_TO_A3 } from '../data/countries';
@@ -11,9 +11,19 @@ import {
   Trash2, 
   Copy, 
   Check, 
-  Menu, 
-  ChevronLeft, 
-  Users
+  Users,
+  Heart,
+  Globe,
+  Eye,
+  ShieldAlert,
+  Sparkles,
+  GraduationCap,
+  X,
+  Palette,
+  ChevronDown,
+  Share2,
+  RefreshCw,
+  Pencil
 } from 'lucide-react';
 
 export interface MapCompareResult {
@@ -38,8 +48,17 @@ interface CompareGroup {
 const Compare: React.FC = () => {
   const { places: myPlaces } = useStore();
   const [copied, setCopied] = useState(false);
-  const [isSidebarCollapsed, setIsSidebarCollapsed] = useState(false);
   const [friendInput, setFriendInput] = useState('');
+  const [legendOpen, setLegendOpen] = useState(false);
+
+  // Inline group management states (no browser dialogs)
+  const [isCreatingGroup, setIsCreatingGroup] = useState(false);
+  const [newGroupName, setNewGroupName] = useState('');
+  const [editingGroupId, setEditingGroupId] = useState<string | null>(null);
+  const [editGroupName, setEditGroupName] = useState('');
+  const [deletingGroupId, setDeletingGroupId] = useState<string | null>(null);
+  const newGroupInputRef = useRef<HTMLInputElement>(null);
+  const editGroupInputRef = useRef<HTMLInputElement>(null);
 
   // Load groups from localStorage, or initialize with a default group
   const [groups, setGroups] = useState<CompareGroup[]>(() => {
@@ -139,27 +158,55 @@ const Compare: React.FC = () => {
     }));
   };
 
-  const handleCreateGroup = () => {
-    const name = prompt("Enter new group name:");
-    if (!name || !name.trim()) return;
+  const handleStartCreateGroup = useCallback(() => {
+    setIsCreatingGroup(true);
+    setNewGroupName('');
+    setTimeout(() => newGroupInputRef.current?.focus(), 50);
+  }, []);
+
+  const handleConfirmCreateGroup = useCallback(() => {
+    const name = newGroupName.trim();
+    if (!name) {
+      setIsCreatingGroup(false);
+      return;
+    }
     const newId = Math.random().toString(36).substring(7);
     const newGroup: CompareGroup = {
       id: newId,
-      name: name.trim(),
+      name,
       friends: []
     };
-    setGroups([...groups, newGroup]);
+    setGroups(prev => [...prev, newGroup]);
     setActiveGroupId(newId);
-  };
+    setIsCreatingGroup(false);
+    setNewGroupName('');
+  }, [newGroupName]);
 
-  const handleDeleteGroup = () => {
-    if (groups.length <= 1) return;
-    if (confirm(`Are you sure you want to delete group "${activeGroup.name}"?`)) {
-      const remaining = groups.filter(g => g.id !== activeGroup.id);
-      setGroups(remaining);
+  const handleStartRenameGroup = useCallback((groupId: string, currentName: string) => {
+    setEditingGroupId(groupId);
+    setEditGroupName(currentName);
+    setTimeout(() => editGroupInputRef.current?.focus(), 50);
+  }, []);
+
+  const handleConfirmRenameGroup = useCallback(() => {
+    if (!editingGroupId) return;
+    const name = editGroupName.trim();
+    if (name) {
+      setGroups(prev => prev.map(g => g.id === editingGroupId ? { ...g, name } : g));
+    }
+    setEditingGroupId(null);
+    setEditGroupName('');
+  }, [editingGroupId, editGroupName]);
+
+  const handleConfirmDelete = useCallback(() => {
+    if (!deletingGroupId || groups.length <= 1) return;
+    const remaining = groups.filter(g => g.id !== deletingGroupId);
+    setGroups(remaining);
+    if (activeGroupId === deletingGroupId) {
       setActiveGroupId(remaining[0].id);
     }
-  };
+    setDeletingGroupId(null);
+  }, [deletingGroupId, groups, activeGroupId]);
 
   const mergedData = useMemo(() => {
     const allUsers = [{ name: 'Me', places: myPlaces }, ...friends];
@@ -239,7 +286,7 @@ const Compare: React.FC = () => {
     return result;
   }, [myPlaces, friends]);
 
-  // Redefined countryData lookup map to also support territories and microstates!
+  // Redefined countryData lookup map to also support territories and microstates
   const countryData = useMemo(() => {
     const map: Record<string, {name: string, flag: string}> = {};
     COUNTRIES.forEach(c => {
@@ -272,6 +319,27 @@ const Compare: React.FC = () => {
   const commonRevisit = Object.entries(mergedData).filter(([, r]) => r.type === 'EVERYONE_REVISIT');
   const commonWishlist = Object.entries(mergedData).filter(([, r]) => r.type === 'EVERYONE_WISHLIST');
   const commonAvoid = Object.entries(mergedData).filter(([, r]) => r.type === 'EVERYONE_AVOID');
+  const onlyMeVisited = Object.entries(mergedData).filter(([, r]) => r.type === 'ONLY_ME_VISITED');
+  const theyVisited = Object.entries(mergedData).filter(([, r]) => r.type === 'THEY_VISITED');
+
+  // Travel compatibility score
+  const compatibilityScore = useMemo(() => {
+    if (friends.length === 0) return 0;
+    const allUsers = [{ name: 'Me', places: myPlaces }, ...friends];
+    const allCodes = new Set<string>();
+    allUsers.forEach(u => Object.keys(u.places).forEach(code => {
+      const status = u.places[code]?.status;
+      if (status && status !== 'NONE') allCodes.add(code);
+    }));
+    if (allCodes.size === 0) return 0;
+    let mutualCount = 0;
+    allCodes.forEach(code => {
+      const statuses = allUsers.map(u => u.places[code]?.status).filter(Boolean);
+      const allSame = statuses.length === allUsers.length && statuses.every(s => s === statuses[0]);
+      if (allSame) mutualCount++;
+    });
+    return Math.round((mutualCount / allCodes.size) * 100);
+  }, [myPlaces, friends]);
 
   // Complex Analytics
   const topWantedUnvisited = useMemo(() => {
@@ -327,325 +395,660 @@ const Compare: React.FC = () => {
       .slice(0, 5);
   }, [mergedData, myPlaces, friends]);
 
-  const renderCountryItem = (code: string, data: { name: string, flag: string } | undefined) => (
-    <li key={code} className="compare-list-item">
-      {data?.flag ? (
-        <img src={data.flag} alt="" className="country-flag" style={{ width: '1.25rem', height: '0.95rem', borderRadius: '2px', objectFit: 'cover', flexShrink: 0 }} />
-      ) : (
-        <div className="country-flag-placeholder" style={{ width: '1.25rem', height: '0.95rem', borderRadius: '2px', flexShrink: 0 }} />
-      )}
-      <span className="truncate flex-1 font-semibold">{data?.name || code}</span>
-    </li>
-  );
-
   const hasImportedFriend = friends.length > 0;
 
-  return (
-    <div className="flex flex-col md:flex-row h-full w-full relative overflow-hidden bg-transparent select-none">
-      {/* Sidebar Controls */}
-      <aside className={`glass-panel border-r border-base-300 flex flex-col transition-all duration-300 shrink-0 z-30 
-        ${isSidebarCollapsed 
-          ? 'w-0 h-0 overflow-hidden opacity-0 border-r-0' 
-          : 'w-full md:w-80 h-[45vh] md:h-full opacity-100'
-        }`}>
-        {/* Header */}
-        <div className="flex justify-between items-center p-4 border-b border-base-300/50 shrink-0">
-          <span className="font-bold text-sm text-base-content tracking-wide">Comparison Panel</span>
-          <button 
-            className="btn btn-ghost btn-xs btn-circle text-base-content/60 hover:text-base-content" 
-            onClick={() => setIsSidebarCollapsed(true)}
-            title="Collapse Sidebar"
-          >
-            <ChevronLeft size={16} />
-          </button>
-        </div>
-
-        {/* Scrollable controls */}
-        <div className="flex-1 overflow-y-auto p-4 flex flex-col gap-3">
-          {/* Group Management Selector */}
-          <div className="card card-compact bg-base-200/40 border border-base-300/40 p-3.5 rounded-xl flex flex-col gap-2 shrink-0 animate-fade-in">
-            <span className="text-[10px] font-bold tracking-wider text-base-content/50 uppercase">
-              Comparison Group
-            </span>
-            <div className="flex gap-1.5 w-full">
-              <select
-                value={activeGroupId}
-                onChange={(e) => setActiveGroupId(e.target.value)}
-                className="select select-bordered select-xs flex-1 text-xs font-semibold cursor-pointer bg-base-300/10"
-              >
-                {groups.map(g => (
-                  <option key={g.id} value={g.id}>
-                    {g.name} ({g.friends.length + 1} users)
-                  </option>
-                ))}
-              </select>
-              <button 
-                onClick={handleDeleteGroup}
-                className="btn btn-square btn-outline btn-error btn-xs border-error/30"
-                title="Delete Group"
-                disabled={groups.length <= 1}
-              >
-                <Trash2 size={13} />
-              </button>
-            </div>
-            <button 
-              onClick={handleCreateGroup} 
-              className="btn btn-primary btn-xs w-full gap-1 mt-0.5"
-            >
-              <Plus size={12} /> Create New Group
-            </button>
-          </div>
-
-          {/* Share Code Accordion */}
-          <details className="accordion accordion-arrow bg-base-200/40 border border-base-300/40 rounded-xl shrink-0" open>
-            <summary className="accordion-title text-[10px] font-bold tracking-wider text-base-content/50 uppercase select-none cursor-pointer py-3 min-h-0">
-              Your Share Code
-            </summary>
-            <div className="accordion-content flex flex-col text-xs">
-              <div className="join w-full mt-0.5">
-                <input 
-                  readOnly 
-                  value={myShareCode} 
-                  className="input input-bordered input-xs join-item flex-1 font-mono text-[9px] select-all bg-base-300/10"
-                />
-                <button 
-                  className="btn btn-primary btn-xs join-item px-2.5" 
-                  onClick={handleCopyCode}
-                  title="Copy share code"
-                >
-                  {copied ? <Check size={12} /> : <Copy size={12} />}
-                </button>
-              </div>
-            </div>
-          </details>
-
-          {/* Group Members Accordion */}
-          <details className="accordion accordion-arrow bg-base-200/40 border border-base-300/40 rounded-xl shrink-0" open>
-            <summary className="accordion-title text-[10px] font-bold tracking-wider text-base-content/50 uppercase select-none cursor-pointer py-3 min-h-0">
-              Group Members ({friends.length + 1})
-            </summary>
-            <div className="accordion-content flex flex-col gap-2.5 text-xs">
-              <div className="join w-full mt-0.5">
-                <input 
-                  type="text" 
-                  className="input input-bordered input-xs join-item flex-1 text-xs bg-base-300/10" 
-                  placeholder="Friend's share code..."
-                  value={friendInput}
-                  onChange={e => setFriendInput(e.target.value)}
-                  onKeyDown={e => e.key === 'Enter' && handleAddFriend()}
-                />
-                <button className="btn btn-secondary btn-xs join-item px-2.5" onClick={handleAddFriend}>
-                  <Plus size={12} />
-                </button>
-              </div>
-
-              <div className="flex flex-col gap-1.5 overflow-y-auto max-h-36 border border-base-300 rounded-xl p-2 bg-base-300/10">
-                <div className="p-1.5 px-2.5 rounded-lg border border-primary/20 bg-primary/5 text-primary text-xs font-semibold select-none">
-                  Me (Base Profile)
-                </div>
-                {friends.map(f => (
-                  <div key={f.id} className="p-1.5 px-2 rounded-lg border border-base-300/40 bg-base-200/40 text-base-content text-xs flex items-center justify-between gap-2 transition-all">
-                    <input
-                      type="text"
-                      value={f.name}
-                      onChange={(e) => renameFriend(f.id, e.target.value)}
-                      className="input input-bordered input-xs flex-1 text-xs font-semibold px-2 py-0.5 bg-base-300/30"
-                      title="Click to rename"
-                    />
-                    <button 
-                      onClick={() => removeFriend(f.id)} 
-                      className="btn btn-ghost btn-xs btn-circle text-error/60 hover:text-error hover:bg-error/10"
-                      title="Remove Friend"
-                    >
-                      <Trash2 size={11} />
-                    </button>
-                  </div>
-                ))}
-              </div>
-            </div>
-          </details>
-
-          {/* Redesigned comparison layout flow: Hide Map Legend and Analytics lists until friend code is loaded */}
-          {hasImportedFriend && (
-            <>
-              {/* Map Legend Accordion */}
-              <details className="accordion accordion-arrow bg-base-200/40 border border-base-300/40 rounded-xl shrink-0" open>
-                <summary className="accordion-title text-[10px] font-bold tracking-wider text-base-content/50 uppercase select-none cursor-pointer py-3 min-h-0">
-                  Map Legend
-                </summary>
-                <div className="accordion-content grid grid-cols-2 gap-2 text-[10px] p-1 select-none font-semibold text-base-content/85">
-                  <div className="flex items-center gap-1.5"><div className="w-2.5 h-2.5 rounded-full shrink-0" style={{ background: 'var(--color-both)' }}></div> Both Visited</div>
-                  <div className="flex items-center gap-1.5"><div className="w-2.5 h-2.5 rounded-full shrink-0" style={{ background: 'var(--accent-visited)' }}></div> Most Visited</div>
-                  <div className="flex items-center gap-1.5"><div className="w-2.5 h-2.5 rounded-full shrink-0" style={{ background: 'var(--color-me-only)' }}></div> Me Only</div>
-                  <div className="flex items-center gap-1.5"><div className="w-2.5 h-2.5 rounded-full shrink-0" style={{ background: 'var(--color-they-only)' }}></div> Others Only</div>
-                  <div className="flex items-center gap-1.5"><div className="w-2.5 h-2.5 rounded-full shrink-0" style={{ background: 'var(--color-revisit-both)' }}></div> Both Revisit</div>
-                  <div className="flex items-center gap-1.5"><div className="w-2.5 h-2.5 rounded-full shrink-0" style={{ background: 'var(--color-revisit-mixed)' }}></div> Some Revisit</div>
-                  <div className="flex items-center gap-1.5"><div className="w-2.5 h-2.5 rounded-full shrink-0" style={{ background: 'var(--color-wishlist-both)' }}></div> Both Wishlist</div>
-                  <div className="flex items-center gap-1.5"><div className="w-2.5 h-2.5 rounded-full shrink-0" style={{ background: 'var(--accent-wishlist)' }}></div> Some Wishlist</div>
-                  <div className="flex items-center gap-1.5 col-span-2"><div className="w-2.5 h-2.5 rounded-full shrink-0" style={{ background: 'var(--color-avoid)' }}></div> Everyone Avoids</div>
-                </div>
-              </details>
-
-              {/* Comparison Mutual Lists */}
-              <div className="flex flex-col gap-3 border-t border-base-300/45 pt-4 mt-1 select-none">
-                <span className="text-[10px] font-bold tracking-wider text-base-content/50 uppercase select-none mb-1">
-                  Comparison Analytics
-                </span>
-                
-                {/* Mutual Visited Accordion */}
-                <details className="accordion accordion-arrow bg-base-200/40 border border-base-300/40 rounded-xl shrink-0" open>
-                  <summary className="accordion-title text-[10px] font-bold tracking-wider text-color-both uppercase select-none cursor-pointer py-3 min-h-0">
-                    We've All Visited ({commonVisited.length})
-                  </summary>
-                  <div className="accordion-content flex flex-col text-xs">
-                    <ul className="compare-list border border-base-300 rounded-xl p-2 bg-base-300/10 max-h-36 overflow-y-auto">
-                      {commonVisited.map(([code]) => renderCountryItem(code, countryData[code]))}
-                      {commonVisited.length === 0 && <li className="text-[10px] text-base-content/50 px-2 py-1 italic font-medium">No mutually visited places.</li>}
-                    </ul>
-                  </div>
-                </details>
-
-                {/* Mutual Wishlisted Accordion */}
-                <details className="accordion accordion-arrow bg-base-200/40 border border-base-300/40 rounded-xl shrink-0">
-                  <summary className="accordion-title text-[10px] font-bold tracking-wider text-color-wishlist-both uppercase select-none cursor-pointer py-3 min-h-0">
-                    Mutual Wishlists ({commonWishlist.length})
-                  </summary>
-                  <div className="accordion-content flex flex-col text-xs">
-                    <ul className="compare-list border border-base-300 rounded-xl p-2 bg-base-300/10 max-h-36 overflow-y-auto">
-                      {commonWishlist.map(([code]) => renderCountryItem(code, countryData[code]))}
-                      {commonWishlist.length === 0 && <li className="text-[10px] text-base-content/50 px-2 py-1 italic font-medium">No mutually wishlisted places.</li>}
-                    </ul>
-                  </div>
-                </details>
-
-                {/* Mutual Revisit Accordion */}
-                <details className="accordion accordion-arrow bg-base-200/40 border border-base-300/40 rounded-xl shrink-0">
-                  <summary className="accordion-title text-[10px] font-bold tracking-wider text-accent-revisit uppercase select-none cursor-pointer py-3 min-h-0">
-                    Mutual Revisit ({commonRevisit.length})
-                  </summary>
-                  <div className="accordion-content flex flex-col text-xs">
-                    <ul className="compare-list border border-base-300 rounded-xl p-2 bg-base-300/10 max-h-36 overflow-y-auto">
-                      {commonRevisit.map(([code]) => renderCountryItem(code, countryData[code]))}
-                      {commonRevisit.length === 0 && <li className="text-[10px] text-base-content/50 px-2 py-1 italic font-medium">No mutually revisited places.</li>}
-                    </ul>
-                  </div>
-                </details>
-
-                {/* Mutual Avoids Accordion */}
-                <details className="accordion accordion-arrow bg-base-200/40 border border-base-300/40 rounded-xl shrink-0">
-                  <summary className="accordion-title text-[10px] font-bold tracking-wider text-accent-avoid uppercase select-none cursor-pointer py-3 min-h-0">
-                    Mutual Avoids ({commonAvoid.length})
-                  </summary>
-                  <div className="accordion-content flex flex-col text-xs">
-                    <ul className="compare-list border border-base-300 rounded-xl p-2 bg-base-300/10 max-h-36 overflow-y-auto">
-                      {commonAvoid.map(([code]) => renderCountryItem(code, countryData[code]))}
-                      {commonAvoid.length === 0 && <li className="text-[10px] text-base-content/50 px-2 py-1 italic font-medium">No mutually avoided places.</li>}
-                    </ul>
-                  </div>
-                </details>
-
-                {/* Most Wanted Accordion */}
-                <details className="accordion accordion-arrow bg-base-200/40 border border-base-300/40 rounded-xl shrink-0">
-                  <summary className="accordion-title text-[10px] font-bold tracking-wider text-primary uppercase select-none cursor-pointer py-3 min-h-0">
-                    Most Wanted ({topWantedUnvisited.length})
-                  </summary>
-                  <div className="accordion-content flex flex-col text-xs">
-                    <ul className="compare-list border border-base-300 rounded-xl p-2 bg-base-300/10 max-h-36 overflow-y-auto">
-                      {topWantedUnvisited.map(({code, wishlist}) => (
-                        <li key={code} className="compare-list-item compare-list-item--flex flex items-center justify-between p-1.5 px-2.5 rounded-lg text-xs gap-2 border border-transparent hover:bg-base-200/50">
-                          <div className="flex items-center gap-2 min-width-0">
-                            {countryData[code]?.flag ? (
-                              <img src={countryData[code]?.flag} alt="" className="w-5 h-3.5 object-cover rounded-sm border border-base-300/20 shrink-0" />
-                            ) : (
-                              <div className="w-5 h-3.5 bg-base-300 rounded-sm border border-base-300/20 shrink-0" />
-                            )}
-                            <span className="truncate font-semibold">{countryData[code]?.name || code}</span>
-                          </div>
-                          <span className="text-accent-wishlist flex items-center gap-0.5 shrink-0 text-[10px] font-bold">{wishlist} ❤️</span>
-                        </li>
-                      ))}
-                      {topWantedUnvisited.length === 0 && <li className="text-[10px] text-base-content/50 px-2 py-1 italic font-medium">Not enough data.</li>}
-                    </ul>
-                  </div>
-                </details>
-
-                {/* Travel Mentorships Accordion */}
-                <details className="accordion accordion-arrow bg-base-200/40 border border-base-300/40 rounded-xl shrink-0">
-                  <summary className="accordion-title text-[10px] font-bold tracking-wider text-color-me-only uppercase select-none cursor-pointer py-3 min-h-0">
-                    Travel Mentorships ({wantedButVisited.length})
-                  </summary>
-                  <div className="accordion-content flex flex-col gap-2 max-h-44 overflow-y-auto pr-1">
-                    {wantedButVisited.map(({code, whoVisited, whoWants}) => (
-                      <div key={code} className="mentorship-card">
-                        <div className="mentorship-card-header">
-                          {countryData[code]?.flag ? (
-                            <img src={countryData[code]?.flag} alt="" className="w-5 h-3.5 object-cover rounded-sm border border-base-300/20 shrink-0" style={{ objectFit: 'cover' }} />
-                          ) : (
-                            <div className="w-5 h-3.5 bg-base-300 rounded-sm border border-base-300/20 shrink-0" />
-                          )}
-                          <span className="mentorship-card-title">{countryData[code]?.name || code}</span>
-                        </div>
-                        <div className="mentorship-card-body text-[10px] opacity-80 leading-relaxed text-base-content/70">
-                          Visited: <span className="text-accent-visited font-semibold">{whoVisited.join(', ')}</span><br/>
-                          Wants: <span className="text-accent-wishlist font-semibold">{whoWants.join(', ')}</span>
-                        </div>
-                      </div>
-                    ))}
-                    {wantedButVisited.length === 0 && <span className="text-[10px] text-base-content/50 px-2 py-1 italic font-medium">No mentorship combinations found.</span>}
-                  </div>
-                </details>
-              </div>
-            </>
-          )}
-        </div>
-      </aside>
-
-      {/* Map Viewport Area */}
-      <main className="flex-1 h-full w-full relative overflow-hidden flex flex-col">
-        {/* Toggle Sidebar Trigger if Collapsed */}
-        {isSidebarCollapsed && (
-          <button 
-            className="absolute top-4 left-4 btn btn-neutral btn-sm shadow-lg gap-1.5 z-40"
-            onClick={() => setIsSidebarCollapsed(false)}
-            title="Expand Controls"
-          >
-            <Menu size={14} /> 
-            <span className="hidden sm:inline text-xs font-semibold">Compare Panel</span>
-          </button>
+  // ── Country pill renderer ──────────────────────────────────────────
+  const renderCountryPill = (code: string) => {
+    const data = countryData[code];
+    return (
+      <span key={code} className="compare-country-pill">
+        {data?.flag && (
+          <img 
+            src={data.flag} 
+            alt="" 
+            className="compare-country-pill__flag" 
+            onError={(e) => { (e.target as HTMLImageElement).style.display = 'none'; }}
+          />
         )}
+        {data?.name || code}
+      </span>
+    );
+  };
 
-        <div className="flex-1 w-full h-full relative overflow-hidden">
-          {hasImportedFriend ? (
-            <CompareMap mergedData={mergedData} numericToA3={NUMERIC_TO_A3} />
-          ) : (
-            <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[90%] max-w-lg card bg-base-200/50 border border-base-300 shadow-2xl p-6 text-center select-none backdrop-blur-md flex flex-col gap-4">
-              <div className="w-16 h-16 bg-primary/10 rounded-full flex items-center justify-center mx-auto text-primary">
-                <Users size={32} />
+  // ── Country pills section renderer ────────────────────────────────
+  const renderPillsSection = (
+    title: string, 
+    color: string, 
+    items: [string, MapCompareResult][], 
+    emptyText: string
+  ) => (
+    <div className="compare-pills-section">
+      <div className="compare-pills-section__header">
+        <div className="compare-pills-section__dot" style={{ background: color }} />
+        <span className="compare-pills-section__title">{title}</span>
+        <span className="compare-pills-section__count">{items.length}</span>
+      </div>
+      <div className="compare-country-pills">
+        {items.length > 0 
+          ? items.map(([code]) => renderCountryPill(code))
+          : <span className="compare-country-pill__empty">{emptyText}</span>
+        }
+      </div>
+    </div>
+  );
+
+  // ── Legend items ──────────────────────────────────────────────────
+  const legendItems = [
+    { color: 'var(--color-both)', label: 'Both Visited' },
+    { color: 'var(--accent-visited)', label: 'Most Visited' },
+    { color: 'var(--color-me-only)', label: 'Me Only' },
+    { color: 'var(--color-they-only)', label: 'Others Only' },
+    { color: 'var(--color-revisit-both)', label: 'Both Revisit' },
+    { color: 'var(--color-revisit-mixed)', label: 'Some Revisit' },
+    { color: 'var(--color-wishlist-both)', label: 'Both Wishlist' },
+    { color: 'var(--accent-wishlist)', label: 'Some Wishlist' },
+    { color: 'var(--color-avoid)', label: 'Everyone Avoids' },
+  ];
+
+  // ── Groups Grid (Landing Page Cards View) ─────────────────────────
+  const renderGroupsSection = () => {
+    return (
+      <div className="compare-groups-section">
+        <span className="compare-groups-section__title">Comparison Groups</span>
+        <div className="compare-groups-grid">
+          {groups.map(g => {
+            const isActive = g.id === activeGroupId;
+            const isEditing = editingGroupId === g.id;
+
+            return (
+              <div
+                key={g.id}
+                className={`compare-group-card ${isActive ? 'compare-group-card--active' : ''}`}
+                onClick={() => !isEditing && setActiveGroupId(g.id)}
+              >
+                {isEditing ? (
+                  <div className="compare-group-card__inline-create" onClick={e => e.stopPropagation()}>
+                    <input
+                      ref={editGroupInputRef}
+                      type="text"
+                      value={editGroupName}
+                      onChange={e => setEditGroupName(e.target.value)}
+                      onKeyDown={e => {
+                        if (e.key === 'Enter') handleConfirmRenameGroup();
+                        if (e.key === 'Escape') setEditingGroupId(null);
+                      }}
+                      className="compare-group-card__input"
+                    />
+                    <div className="compare-group-card__inline-create-actions">
+                      <button className="btn btn-primary btn-xs" onClick={handleConfirmRenameGroup}>
+                        Save
+                      </button>
+                      <button className="btn btn-outline btn-xs" onClick={() => setEditingGroupId(null)}>
+                        Cancel
+                      </button>
+                    </div>
+                  </div>
+                ) : (
+                  <>
+                    <div className="compare-group-card__header">
+                      <span className="compare-group-card__name" title={g.name}>
+                        {g.name}
+                      </span>
+                      <span className="compare-group-card__count">
+                        {g.friends.length + 1}
+                      </span>
+                    </div>
+
+                    <div className="compare-group-card__members">
+                      <span className="compare-group-card__member-chip compare-group-card__member-chip--me">
+                        Me
+                      </span>
+                      {g.friends.map(f => (
+                        <span key={f.id} className="compare-group-card__member-chip">
+                          {f.name}
+                        </span>
+                      ))}
+                      {g.friends.length === 0 && (
+                        <span className="text-[10px] italic opacity-40">Only you</span>
+                      )}
+                    </div>
+
+                    <div className="compare-group-card__footer" onClick={e => e.stopPropagation()}>
+                      <button
+                        className="compare-group-card__btn"
+                        onClick={() => handleStartRenameGroup(g.id, g.name)}
+                        title="Rename Group"
+                      >
+                        <Pencil size={12} />
+                      </button>
+                      {groups.length > 1 && (
+                        <button
+                          className="compare-group-card__btn compare-group-card__btn--danger"
+                          onClick={() => setDeletingGroupId(g.id)}
+                          title="Delete Group"
+                        >
+                          <Trash2 size={12} />
+                        </button>
+                      )}
+                    </div>
+                  </>
+                )}
               </div>
-              <h3 className="text-lg font-bold text-base-content">Compare Travel Maps</h3>
-              <p className="text-xs text-base-content/60 leading-relaxed max-w-sm mx-auto">
-                Visualize intersecting travel paths, mutual dream destinations, and travel compatibility stats by grouping with friends.
-              </p>
-              
-              <div className="bg-base-300/35 border border-base-300/50 rounded-xl p-4 text-left flex flex-col gap-2 text-xs text-base-content/80 mt-2 animate-fade-in">
-                <h4 className="font-bold text-base-content">How to get started:</h4>
-                <ol className="list-decimal list-inside flex flex-col gap-1.5 pl-1 leading-relaxed text-base-content/70">
-                  <li>Copy your own share code below and send it to your friend.</li>
-                  <li>Collect your friend's travel share code.</li>
-                  <li>Paste their code into the **Group Members** input box on the left, then click <strong>Add (+)</strong> to begin comparing.</li>
-                </ol>
-                
-                <div className="flex justify-center mt-3">
-                  <button onClick={handleCopyCode} className="btn btn-primary btn-sm gap-1.5 px-4 font-semibold shadow-md">
-                    {copied ? <Check size={14} /> : <Copy size={14} />}
-                    {copied ? 'Copied Share Code!' : 'Copy My Share Code'}
+            );
+          })}
+
+          {isCreatingGroup ? (
+            <div className="compare-group-card" onClick={e => e.stopPropagation()}>
+              <div className="compare-group-card__inline-create">
+                <input
+                  ref={newGroupInputRef}
+                  type="text"
+                  placeholder="New group name..."
+                  value={newGroupName}
+                  onChange={e => setNewGroupName(e.target.value)}
+                  onKeyDown={e => {
+                    if (e.key === 'Enter') handleConfirmCreateGroup();
+                    if (e.key === 'Escape') setIsCreatingGroup(false);
+                  }}
+                  className="compare-group-card__input"
+                />
+                <div className="compare-group-card__inline-create-actions">
+                  <button className="btn btn-primary btn-xs" onClick={handleConfirmCreateGroup}>
+                    Create
+                  </button>
+                  <button className="btn btn-outline btn-xs" onClick={() => setIsCreatingGroup(false)}>
+                    Cancel
                   </button>
                 </div>
               </div>
             </div>
+          ) : (
+            <div className="compare-group-card compare-group-card--add" onClick={handleStartCreateGroup}>
+              <div className="compare-group-card__add-content">
+                <div className="compare-group-card__add-ring">
+                  <Plus size={16} />
+                </div>
+                <span>Create Group</span>
+              </div>
+            </div>
           )}
         </div>
-      </main>
+      </div>
+    );
+  };
+
+  // ── Groups Deck (Active Comparison Mode Horizontal Deck) ──────────
+  const renderGroupsDeck = () => {
+    return (
+      <div className="compare-groups-deck-container">
+        <div className="compare-groups-deck">
+          {groups.map(g => {
+            const isActive = g.id === activeGroupId;
+            const isEditing = editingGroupId === g.id;
+
+            return (
+              <div
+                key={g.id}
+                className={`compare-group-tab ${isActive ? 'compare-group-tab--active' : ''}`}
+                onClick={() => !isEditing && setActiveGroupId(g.id)}
+                style={{ paddingBlock: '6px' }}
+              >
+                {isEditing ? (
+                  <input
+                    ref={editGroupInputRef}
+                    type="text"
+                    value={editGroupName}
+                    onChange={e => setEditGroupName(e.target.value)}
+                    onBlur={handleConfirmRenameGroup}
+                    onKeyDown={e => {
+                      if (e.key === 'Enter') handleConfirmRenameGroup();
+                      if (e.key === 'Escape') setEditingGroupId(null);
+                    }}
+                    className="compare-group-tab__rename-input"
+                    onClick={e => e.stopPropagation()}
+                  />
+                ) : (
+                  <>
+                    <span>{g.name}</span>
+                    <span className="compare-group-tab__count">{g.friends.length + 1}</span>
+                    {isActive && (
+                      <div className="compare-group-tab__actions" onClick={e => e.stopPropagation()}>
+                        <button
+                          className="compare-group-tab__action-btn"
+                          onClick={() => handleStartRenameGroup(g.id, g.name)}
+                          title="Rename Group"
+                        >
+                          <Pencil size={10} />
+                        </button>
+                        {groups.length > 1 && (
+                          <button
+                            className="compare-group-tab__action-btn compare-group-tab__action-btn--danger"
+                            onClick={() => setDeletingGroupId(g.id)}
+                            title="Delete Group"
+                          >
+                            <Trash2 size={10} />
+                          </button>
+                        )}
+                      </div>
+                    )}
+                  </>
+                )}
+              </div>
+            );
+          })}
+
+          {isCreatingGroup ? (
+            <div className="compare-group-create" onClick={e => e.stopPropagation()}>
+              <input
+                ref={newGroupInputRef}
+                type="text"
+                placeholder="Group name..."
+                value={newGroupName}
+                onChange={e => setNewGroupName(e.target.value)}
+                onKeyDown={e => {
+                  if (e.key === 'Enter') handleConfirmCreateGroup();
+                  if (e.key === 'Escape') setIsCreatingGroup(false);
+                }}
+                className="compare-group-create__input"
+              />
+              <button
+                className="compare-group-create__btn compare-group-create__btn--confirm"
+                onClick={handleConfirmCreateGroup}
+                title="Create Group"
+              >
+                <Check size={10} />
+              </button>
+              <button
+                className="compare-group-create__btn compare-group-create__btn--cancel"
+                onClick={() => setIsCreatingGroup(false)}
+                title="Cancel"
+              >
+                <X size={10} />
+              </button>
+            </div>
+          ) : (
+            <button className="compare-group-add-btn" onClick={handleStartCreateGroup}>
+              <Plus size={10} /> Add Group
+            </button>
+          )}
+        </div>
+      </div>
+    );
+  };
+
+  // ── EMPTY STATE ───────────────────────────────────────────────────
+  if (!hasImportedFriend) {
+    return (
+      <div className="compare-page" style={{ overflowY: 'auto' }}>
+        {/* Top bar — minimal when empty */}
+        <div className="compare-topbar">
+          <span className="font-bold text-sm text-base-content tracking-wide">Compare Maps</span>
+        </div>
+
+        {/* Delete confirmation banner */}
+        {deletingGroupId && (
+          <div className="compare-delete-banner">
+            <div className="compare-delete-banner__content">
+              <span className="compare-delete-banner__text">
+                Are you sure you want to delete the group <strong>"{groups.find(g => g.id === deletingGroupId)?.name}"</strong>? All comparisons in this group will be lost.
+              </span>
+              <div className="compare-delete-banner__actions">
+                <button className="btn btn-error btn-xs" onClick={handleConfirmDelete}>
+                  Delete Group
+                </button>
+                <button className="btn btn-outline btn-xs" onClick={() => setDeletingGroupId(null)}>
+                  Cancel
+                </button>
+              </div>
+            </div>
+          </div>
+        )}
+
+        {/* Empty state hero */}
+        <div className="compare-empty" style={{ flex: 'none', paddingBottom: '20px' }}>
+          <div className="compare-empty__icon-ring">
+            <Users size={36} strokeWidth={1.5} style={{ color: 'var(--accent-primary)' }} />
+          </div>
+          <h2 className="compare-empty__title">Compare Travel Maps</h2>
+          <p className="compare-empty__subtitle">
+            Discover mutual destinations, shared wishlists, and travel compatibility 
+            by comparing your map with friends.
+          </p>
+
+          <div className="compare-empty__steps">
+            <div className="compare-empty__step">
+              <div className="compare-empty__step-number">1</div>
+              <span className="compare-empty__step-text">Copy your share code and send it to a friend</span>
+            </div>
+            <div className="compare-empty__step">
+              <div className="compare-empty__step-number">2</div>
+              <span className="compare-empty__step-text">Ask your friend to send you their share code</span>
+            </div>
+            <div className="compare-empty__step">
+              <div className="compare-empty__step-number">3</div>
+              <span className="compare-empty__step-text">Paste their code below to start comparing</span>
+            </div>
+          </div>
+
+          <div className="compare-empty__actions">
+            <button onClick={handleCopyCode} className="btn btn-primary btn-sm" style={{ gap: '6px', paddingInline: '20px' }}>
+              {copied ? <Check size={14} /> : <Share2 size={14} />}
+              {copied ? 'Copied!' : 'Copy My Share Code'}
+            </button>
+            <div className="compare-empty__code-input">
+              <input
+                type="text"
+                className="input input-bordered input-sm"
+                placeholder="Paste a friend's share code here..."
+                value={friendInput}
+                onChange={e => setFriendInput(e.target.value)}
+                onKeyDown={e => e.key === 'Enter' && handleAddFriend()}
+                style={{ fontSize: '0.78rem' }}
+              />
+              <button className="btn btn-secondary btn-sm" onClick={handleAddFriend} style={{ gap: '4px' }}>
+                <Plus size={14} /> Add
+              </button>
+            </div>
+          </div>
+        </div>
+
+        {/* Premium Groups Grid in the empty state */}
+        {renderGroupsSection()}
+      </div>
+    );
+  }
+
+  // ── ACTIVE COMPARISON STATE ───────────────────────────────────────
+  return (
+    <div className="compare-page">
+      {/* ── Zone 1: Top Control Bar ─────────────────────────────────── */}
+      <div className="compare-topbar">
+        <span className="font-bold text-sm text-base-content tracking-wide flex-shrink-0">Compare Maps</span>
+
+        <div className="compare-topbar__divider" />
+
+        {/* Friend code input */}
+        <div className="compare-topbar__section compare-topbar__section--input">
+          <input
+            type="text"
+            className="input input-bordered input-xs"
+            placeholder="Paste a friend's share code..."
+            value={friendInput}
+            onChange={e => setFriendInput(e.target.value)}
+            onKeyDown={e => e.key === 'Enter' && handleAddFriend()}
+            style={{ flex: 1, fontSize: '0.72rem' }}
+          />
+          <button className="btn btn-secondary btn-xs" onClick={handleAddFriend} style={{ gap: '4px' }}>
+            <Plus size={12} /> Add
+          </button>
+        </div>
+
+        <div className="compare-topbar__divider" />
+
+        {/* Share code copy */}
+        <div className="compare-topbar__section compare-topbar__section--share">
+          <button onClick={handleCopyCode} className="btn btn-primary btn-xs" style={{ gap: '4px' }}>
+            {copied ? <Check size={12} /> : <Copy size={12} />}
+            {copied ? 'Copied!' : 'My Code'}
+          </button>
+        </div>
+      </div>
+
+      {/* Delete confirmation banner */}
+      {deletingGroupId && (
+        <div className="compare-delete-banner">
+          <div className="compare-delete-banner__content">
+            <span className="compare-delete-banner__text">
+              Are you sure you want to delete the group <strong>"{groups.find(g => g.id === deletingGroupId)?.name}"</strong>? All comparisons in this group will be lost.
+            </span>
+            <div className="compare-delete-banner__actions">
+              <button className="btn btn-error btn-xs" onClick={handleConfirmDelete}>
+                Delete Group
+              </button>
+              <button className="btn btn-outline btn-xs" onClick={() => setDeletingGroupId(null)}>
+                Cancel
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Groups tab chips bar deck */}
+      {renderGroupsDeck()}
+
+      {/* ── Member Chips Bar ────────────────────────────────────────── */}
+      <div className="compare-members-bar">
+        <span className="compare-members-bar__label">Members</span>
+        <div className="compare-member-chip compare-member-chip--me">
+          <span className="compare-member-chip__name">Me</span>
+        </div>
+        {friends.map(f => (
+          <div key={f.id} className="compare-member-chip">
+            <input
+              type="text"
+              value={f.name}
+              onChange={(e) => renameFriend(f.id, e.target.value)}
+              className="compare-member-chip__edit"
+              title="Click to rename"
+            />
+            <button
+              onClick={() => removeFriend(f.id)}
+              className="compare-member-chip__remove"
+              title="Remove"
+            >
+              <X size={10} />
+            </button>
+          </div>
+        ))}
+      </div>
+
+      {/* ── Zone 2: Map Band ────────────────────────────────────────── */}
+      <div className="compare-map-band">
+        <CompareMap mergedData={mergedData} numericToA3={NUMERIC_TO_A3} />
+
+        {/* Floating Legend */}
+        <div className="compare-legend">
+          <button 
+            className="compare-legend__toggle" 
+            onClick={() => setLegendOpen(!legendOpen)}
+          >
+            <Palette size={12} />
+            Legend
+            <ChevronDown size={10} style={{ 
+              transform: legendOpen ? 'rotate(180deg)' : 'rotate(0)', 
+              transition: 'transform 0.2s ease' 
+            }} />
+          </button>
+          {legendOpen && (
+            <div className="compare-legend__panel">
+              {legendItems.map(item => (
+                <div key={item.label} className="compare-legend__item">
+                  <div className="compare-legend__dot" style={{ background: item.color }} />
+                  {item.label}
+                </div>
+              ))}
+            </div>
+          )}
+        </div>
+      </div>
+
+      {/* ── Zone 3: Analytics Dashboard ─────────────────────────────── */}
+      <div className="compare-dashboard">
+        <div className="compare-dashboard__container">
+          {/* Stat Cards */}
+          <span className="compare-dashboard__section-title">Overview</span>
+          <div className="compare-stats-grid">
+            <div className="compare-stat-card compare-stat-card--visited">
+              <div className="compare-stat-card__icon"><Globe size={28} /></div>
+              <div className="compare-stat-card__value" style={{ color: 'var(--color-both)' }}>
+                {commonVisited.length}
+              </div>
+              <div className="compare-stat-card__label">Both Visited</div>
+            </div>
+
+            <div className="compare-stat-card compare-stat-card--wishlist">
+              <div className="compare-stat-card__icon"><Heart size={28} /></div>
+              <div className="compare-stat-card__value" style={{ color: 'var(--color-wishlist-both)' }}>
+                {commonWishlist.length}
+              </div>
+              <div className="compare-stat-card__label">Mutual Wishlist</div>
+            </div>
+
+            <div className="compare-stat-card compare-stat-card--me-only">
+              <div className="compare-stat-card__icon"><Eye size={28} /></div>
+              <div className="compare-stat-card__value" style={{ color: 'var(--color-me-only)' }}>
+                {onlyMeVisited.length}
+              </div>
+              <div className="compare-stat-card__label">Only I Visited</div>
+            </div>
+
+            <div className="compare-stat-card compare-stat-card--compat">
+              <div className="compare-stat-card__icon"><Sparkles size={28} /></div>
+              <div className="compare-stat-card__value" style={{ color: 'var(--accent-primary)' }}>
+                {compatibilityScore}%
+              </div>
+              <div className="compare-stat-card__label">Travel Compatibility</div>
+            </div>
+
+            <div className="compare-stat-card compare-stat-card--revisit">
+              <div className="compare-stat-card__icon"><RefreshCw size={28} /></div>
+              <div className="compare-stat-card__value" style={{ color: 'var(--color-revisit-both)' }}>
+                {commonRevisit.length}
+              </div>
+              <div className="compare-stat-card__label">Mutual Revisit</div>
+            </div>
+
+            <div className="compare-stat-card compare-stat-card--avoid">
+              <div className="compare-stat-card__icon"><ShieldAlert size={28} /></div>
+              <div className="compare-stat-card__value" style={{ color: 'var(--color-avoid)' }}>
+                {commonAvoid.length}
+              </div>
+              <div className="compare-stat-card__label">Mutual Avoid</div>
+            </div>
+          </div>
+
+          {/* Country Lists as Pill Chips */}
+          <span className="compare-dashboard__section-title">Country Breakdown</span>
+
+          {renderPillsSection(
+            "We've All Visited",
+            'var(--color-both)',
+            commonVisited,
+            'No mutually visited countries yet.'
+          )}
+
+          {renderPillsSection(
+            'Mutual Wishlist',
+            'var(--color-wishlist-both)',
+            commonWishlist,
+            'No shared wishlists yet.'
+          )}
+
+          {renderPillsSection(
+            'Only I Visited',
+            'var(--color-me-only)',
+            onlyMeVisited,
+            'None — your friends have been everywhere you have!'
+          )}
+
+          {renderPillsSection(
+            'They Visited (Not Me)',
+            'var(--color-they-only)',
+            theyVisited,
+            'You\'ve been everywhere they have!'
+          )}
+
+          {commonRevisit.length > 0 && renderPillsSection(
+            'Mutual Revisit',
+            'var(--color-revisit-both)',
+            commonRevisit,
+            ''
+          )}
+
+          {commonAvoid.length > 0 && renderPillsSection(
+            'Everyone Avoids',
+            'var(--color-avoid)',
+            commonAvoid,
+            ''
+          )}
+
+          {/* Insight Cards */}
+          {(topWantedUnvisited.length > 0 || wantedButVisited.length > 0) && (
+            <>
+              <span className="compare-dashboard__section-title">Insights</span>
+              <div className="compare-insights-grid">
+                {/* Most Wanted */}
+                {topWantedUnvisited.length > 0 && (
+                  <div className="compare-insight-card">
+                    <div className="compare-insight-card__header">
+                      <Heart size={14} className="compare-insight-card__icon" style={{ color: 'var(--accent-wishlist)' }} />
+                      Most Wanted Destinations
+                    </div>
+                    <ul className="compare-insight-card__list">
+                      {topWantedUnvisited.map(({ code, wishlist }) => (
+                        <li key={code} className="compare-insight-card__item">
+                          {countryData[code]?.flag && (
+                            <img 
+                              src={countryData[code]?.flag} 
+                              alt="" 
+                              className="compare-insight-card__item-flag"
+                              onError={(e) => { (e.target as HTMLImageElement).style.display = 'none'; }}
+                            />
+                          )}
+                          <span className="compare-insight-card__item-name">
+                            {countryData[code]?.name || code}
+                          </span>
+                          <span 
+                            className="compare-insight-card__item-badge" 
+                            style={{ background: 'rgba(187, 154, 247, 0.15)', color: 'var(--accent-wishlist)' }}
+                          >
+                            {wishlist} ❤️
+                          </span>
+                        </li>
+                      ))}
+                    </ul>
+                  </div>
+                )}
+
+                {/* Travel Mentorships */}
+                {wantedButVisited.length > 0 && (
+                  <div className="compare-insight-card">
+                    <div className="compare-insight-card__header">
+                      <GraduationCap size={14} className="compare-insight-card__icon" style={{ color: 'var(--color-me-only)' }} />
+                      Travel Mentorships
+                    </div>
+                    <ul className="compare-insight-card__list">
+                      {wantedButVisited.map(({ code, whoVisited, whoWants }) => (
+                        <li key={code}>
+                          <div className="compare-insight-card__item">
+                            {countryData[code]?.flag && (
+                              <img 
+                                src={countryData[code]?.flag} 
+                                alt="" 
+                                className="compare-insight-card__item-flag"
+                                onError={(e) => { (e.target as HTMLImageElement).style.display = 'none'; }}
+                              />
+                            )}
+                            <span className="compare-insight-card__item-name">
+                              {countryData[code]?.name || code}
+                            </span>
+                          </div>
+                          <div className="compare-insight-card__item-detail">
+                            <span style={{ color: 'var(--accent-visited)' }}>{whoVisited.join(', ')}</span>
+                            {' visited · '}
+                            <span style={{ color: 'var(--accent-wishlist)' }}>{whoWants.join(', ')}</span>
+                            {' wants to go'}
+                          </div>
+                        </li>
+                      ))}
+                    </ul>
+                  </div>
+                )}
+              </div>
+            </>
+          )}
+        </div>
+      </div>
     </div>
   );
 };

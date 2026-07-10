@@ -49,16 +49,18 @@ const List: React.FC = () => {
     setLoadingSubRegions(prev => ({ ...prev, [id]: false }));
   }, [subRegionsByCountry, loadingSubRegions]);
 
-  // Pre-load supporting sub-regions if the user wants to search by them
+  // When sub-region search is enabled, bulk-load sub-regions for every country.
+  // The NE admin-1 GeoJSON is already cached in memory after the initial fetch,
+  // so each fetchSubRegions call is just an in-memory filter — effectively free.
+  // We re-run whenever neDataLoaded flips to true so countries loaded after the
+  // toggle is set also get their sub-regions populated.
   useEffect(() => {
-    if (searchSubRegions) {
-      const timer = setTimeout(() => {
-        loadSubRegions('USA');
-        loadSubRegions('GBR');
-      }, 0);
-      return () => clearTimeout(timer);
-    }
-  }, [searchSubRegions, loadSubRegions]);
+    if (!searchSubRegions) return;
+    const timer = setTimeout(() => {
+      COUNTRIES.forEach(c => loadSubRegions(c.id));
+    }, 0);
+    return () => clearTimeout(timer);
+  }, [searchSubRegions, neDataLoaded, loadSubRegions]);
 
   // Trigger sub-regions load when a country with sub-regions is selected
   useEffect(() => {
