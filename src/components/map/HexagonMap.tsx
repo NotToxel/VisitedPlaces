@@ -61,6 +61,7 @@ const HexagonMapBase: React.FC<HexagonMapProps> = ({
 }) => {
   const { places } = useStore();
   const [hoveredId, setHoveredId] = useState<string | null>(null);
+  const baseHighlighted = highlightedCountry ? highlightedCountry.split('-')[0] : null;
   const [isDragging, setIsDragging] = useState(false);
 
   // Viewport transform: the SVG group gets  scale(zoom) translate(tx, ty)
@@ -108,11 +109,11 @@ const HexagonMapBase: React.FC<HexagonMapProps> = ({
 
   // --- Pan to highlighted country ---
   useEffect(() => {
-    if (!highlightedCountry) {
+    if (!baseHighlighted) {
       animateTo(INITIAL_TX, INITIAL_TY, INITIAL_ZOOM);
       return;
     }
-    const dot = (hexGridData as Record<string, { x: number; y: number; name: string }>)[highlightedCountry];
+    const dot = (hexGridData as Record<string, { x: number; y: number; name: string }>)[baseHighlighted];
     if (!dot) return;
     const { cx, cy } = hexCenter(dot);
     const targetZoom = 3.5;
@@ -120,7 +121,7 @@ const HexagonMapBase: React.FC<HexagonMapProps> = ({
     const targetTx = SVG_W / 2 / targetZoom - cx;
     const targetTy = SVG_H / 2 / targetZoom - cy;
     animateTo(targetTx, targetTy, targetZoom);
-  }, [highlightedCountry, animateTo]);
+  }, [baseHighlighted, animateTo]);
 
   // --- Helper: client pixel → SVG viewBox coords ---
   const clientToViewbox = useCallback((clientX: number, clientY: number) => {
@@ -207,22 +208,30 @@ const HexagonMapBase: React.FC<HexagonMapProps> = ({
       onMouseLeave={handleMouseUp}
     >
       <g transform={`scale(${zoom}) translate(${tx}, ${ty})`}>
-        {Object.entries(hexGridData).map(([countryId, dot]) => {
-          const status = places[countryId]?.status || 'NONE';
-          const isHovered = hoveredId === countryId;
-          const isHighlighted = highlightedCountry === countryId;
-          const isSelected = status !== 'NONE';
-          const { cx, cy } = hexCenter(dot);
+        {Object.entries(hexGridData)
+          .sort(([idA], [idB]) => {
+            const isAActive = idA === baseHighlighted || idA === hoveredId;
+            const isBActive = idB === baseHighlighted || idB === hoveredId;
+            if (isAActive && !isBActive) return 1;
+            if (!isAActive && isBActive) return -1;
+            return 0;
+          })
+          .map(([countryId, dot]) => {
+            const status = places[countryId]?.status || 'NONE';
+            const isHovered = hoveredId === countryId;
+            const isHighlighted = baseHighlighted === countryId;
+            const isSelected = status !== 'NONE';
+            const { cx, cy } = hexCenter(dot);
 
-          return (
-            <g key={countryId}>
-              <path
-                d={HEX_PATH}
-                transform={`translate(${cx}, ${cy}) ${isHighlighted ? 'scale(1.15)' : isHovered ? 'scale(1.05)' : 'scale(1)'}`}
-                fill={getFillColor(status, isHovered || isHighlighted, false, showVisited, showWishlist, showAvoid, showRevisit)}
-                stroke="var(--map-stroke)"
-                strokeWidth={0.8}
-                style={{ cursor: 'pointer', outline: 'none', transition: 'fill 0.2s ease, transform 0.2s ease' }}
+            return (
+              <g key={countryId}>
+                <path
+                  d={HEX_PATH}
+                  transform={`translate(${cx}, ${cy}) ${isHighlighted ? 'scale(1.15)' : isHovered ? 'scale(1.05)' : 'scale(1)'}`}
+                  fill={getFillColor(status, isHovered || isHighlighted, false, showVisited, showWishlist, showAvoid, showRevisit)}
+                  stroke={isHighlighted ? "var(--accent-highlight)" : "var(--map-stroke)"}
+                  strokeWidth={isHighlighted ? 1.6 : 0.8}
+                  style={{ cursor: 'pointer', outline: 'none', transition: 'fill 0.2s ease, stroke 0.2s ease, stroke-width 0.2s ease, transform 0.2s ease' }}
                 onMouseEnter={(e) => {
                   if (window.matchMedia('(hover: hover)').matches) {
                     setHoveredId(countryId);

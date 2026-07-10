@@ -1,5 +1,5 @@
 import React, { useState, useMemo, useEffect, useRef, useCallback } from 'react';
-import { useStore } from '../store/useStore';
+import { useStore, migrateLegacyPlaces } from '../store/useStore';
 import type { UserPlacesMap, PlaceStatus } from '../store/useStore';
 import { COUNTRIES, NUMERIC_TO_A3 } from '../data/countries';
 import { deserializePlaces, serializePlaces } from '../utils/serialization';
@@ -82,10 +82,18 @@ const Compare: React.FC = () => {
     try {
       const saved = localStorage.getItem('visited-places-compare-groups');
       if (saved) {
-        const parsed = JSON.parse(saved);
+        const parsed = JSON.parse(saved) as CompareGroup[];
         if (Array.isArray(parsed)) {
           // Filter out legacy empty default groups to prevent showing them by default
-          return parsed.filter(g => g.id !== 'default' || g.friends.length > 0);
+          const filtered = parsed.filter(g => g.id !== 'default' || g.friends.length > 0);
+          // Migrate places of each friend in each group to clean legacy codes
+          return filtered.map(g => ({
+            ...g,
+            friends: g.friends.map(f => ({
+              ...f,
+              places: migrateLegacyPlaces(f.places)
+            }))
+          }));
         }
       }
     } catch (e) {
@@ -927,6 +935,11 @@ const Compare: React.FC = () => {
                   type="text"
                   value={f.name}
                   onChange={(e) => renameFriend(f.id, e.target.value)}
+                  onKeyDown={(e) => {
+                    if (e.key === 'Enter') {
+                      (e.target as HTMLInputElement).blur();
+                    }
+                  }}
                   className="compare-member-chip__edit"
                   title="Click to rename"
                 />
@@ -1185,7 +1198,7 @@ const CompareSubRegionsDrawer: React.FC<CompareSubRegionsDrawerProps> = ({
   const [regions, setRegions] = useState<TopoRegion[]>([]);
   const [loading, setLoading] = useState(true);
   const [searchQuery, setSearchQuery] = useState('');
-  const [activeFilter, setActiveFilter] = useState<'all' | 'diffs' | 'mutual' | 'wishlist'>('all');
+  const [activeFilter, setActiveFilter] = useState<'all' | 'diffs' | 'mutual' | 'mutual-wishlist' | 'wishlist' | 'avoid'>('all');
 
   const countryInfo = countryData[countryId];
   const allUsers = useMemo(() => [{ name: 'Me', places: myPlaces }, ...friends], [myPlaces, friends]);
@@ -1224,7 +1237,6 @@ const CompareSubRegionsDrawer: React.FC<CompareSubRegionsDrawerProps> = ({
       
       const total = regions.length;
       const percent = total > 0 ? Math.round((visited / total) * 100) : 0;
-      
       return {
         name: u.name,
         visited,
@@ -1233,6 +1245,31 @@ const CompareSubRegionsDrawer: React.FC<CompareSubRegionsDrawerProps> = ({
         percent
       };
     });
+  }, [regions, allUsers, countryId]);
+
+  // Count matching sub-regions for each filter
+  const filterCounts = useMemo(() => {
+    let diffs = 0;
+    let mutual = 0;
+    let mutualWishlist = 0;
+    let anyWishlist = 0;
+    let anyAvoid = 0;
+
+    regions.forEach((reg) => {
+      const statuses = allUsers.map(u => {
+        let status = u.places[countryId]?.regions?.[reg.id];
+        if (status === undefined) status = u.places[reg.id]?.status;
+        return status || 'NONE';
+      });
+
+      if (new Set(statuses).size > 1) diffs++;
+      if (statuses.every(s => s === 'VISITED' || s === 'REVISIT')) mutual++;
+      if (statuses.every(s => s === 'WISHLIST')) mutualWishlist++;
+      if (statuses.some(s => s === 'WISHLIST')) anyWishlist++;
+      if (statuses.some(s => s === 'AVOID')) anyAvoid++;
+    });
+
+    return { diffs, mutual, mutualWishlist, anyWishlist, anyAvoid };
   }, [regions, allUsers, countryId]);
 
   // Filter regions based on search query & filters
@@ -1260,8 +1297,14 @@ const CompareSubRegionsDrawer: React.FC<CompareSubRegionsDrawerProps> = ({
         if (activeFilter === 'mutual') {
           return statuses.every(s => s === 'VISITED' || s === 'REVISIT');
         }
+        if (activeFilter === 'mutual-wishlist') {
+          return statuses.every(s => s === 'WISHLIST');
+        }
         if (activeFilter === 'wishlist') {
           return statuses.some(s => s === 'WISHLIST');
+        }
+        if (activeFilter === 'avoid') {
+          return statuses.some(s => s === 'AVOID');
         }
         return true;
       });
@@ -1398,19 +1441,31 @@ const CompareSubRegionsDrawer: React.FC<CompareSubRegionsDrawerProps> = ({
               onClick={() => setActiveFilter('diffs')}
               className={`compare-drawer__filter-btn ${activeFilter === 'diffs' ? 'compare-drawer__filter-btn--active' : ''}`}
             >
-              Different
+              Different ({filterCounts.diffs})
             </button>
             <button
               onClick={() => setActiveFilter('mutual')}
               className={`compare-drawer__filter-btn ${activeFilter === 'mutual' ? 'compare-drawer__filter-btn--active' : ''}`}
             >
-              Mutual
+              Mutual Visited ({filterCounts.mutual})
+            </button>
+            <button
+              onClick={() => setActiveFilter('mutual-wishlist')}
+              className={`compare-drawer__filter-btn ${activeFilter === 'mutual-wishlist' ? 'compare-drawer__filter-btn--active' : ''}`}
+            >
+              Mutual Wishlist ({filterCounts.mutualWishlist})
             </button>
             <button
               onClick={() => setActiveFilter('wishlist')}
               className={`compare-drawer__filter-btn ${activeFilter === 'wishlist' ? 'compare-drawer__filter-btn--active' : ''}`}
             >
-              Wishlists
+              Any Wishlist ({filterCounts.anyWishlist})
+            </button>
+            <button
+              onClick={() => setActiveFilter('avoid')}
+              className={`compare-drawer__filter-btn ${activeFilter === 'avoid' ? 'compare-drawer__filter-btn--active' : ''}`}
+            >
+              Any Avoid ({filterCounts.anyAvoid})
             </button>
           </div>
         </div>

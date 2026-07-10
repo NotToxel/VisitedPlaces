@@ -2,6 +2,7 @@ import { create } from 'zustand';
 import { persist } from 'zustand/middleware';
 import { ONS_TO_ISO } from '../data/gbrRegionData';
 import { US_FIPS_TO_ISO } from '../data/usaRegionData';
+import { NUMERIC_TO_A3 } from '../data/countries';
 
 // Enums and Types
 export type PlaceStatus = 'VISITED' | 'WISHLIST' | 'AVOID' | 'REVISIT' | 'NONE';
@@ -173,19 +174,31 @@ export function migrateLegacyPlaces(places: UserPlacesMap): UserPlacesMap {
   for (const [key, value] of Object.entries(places)) {
     let newKey = key;
     
-    // Migrate flat USA FIPS keys (e.g. USA-06 -> USA-US-CA)
-    if (key.startsWith('USA-')) {
-      const fips = key.substring(4);
-      if (US_FIPS_TO_ISO[fips]) {
-        newKey = `USA-${US_FIPS_TO_ISO[fips]}`;
-      }
+    // 1. Migrate numeric country code keys (e.g. "724" -> "ESP")
+    if (NUMERIC_TO_A3[newKey]) {
+      newKey = NUMERIC_TO_A3[newKey];
     }
-    // Migrate flat GBR ONS keys (e.g. GBR-E06000023 -> GBR-GB-BST)
-    else if (key.startsWith('GBR-')) {
-      const ons = key.substring(4);
-      if (ONS_TO_ISO[ons]) {
-        newKey = `GBR-${ONS_TO_ISO[ons]}`;
-      }
+    
+    // 2. Migrate USA FIPS keys (e.g. USA-06 or just 06 -> USA-US-CA)
+    let fips = '';
+    if (newKey.startsWith('USA-')) {
+      fips = newKey.substring(4);
+    } else if (/^\d{2}$/.test(newKey)) {
+      fips = newKey;
+    }
+    if (fips && US_FIPS_TO_ISO[fips]) {
+      newKey = `USA-${US_FIPS_TO_ISO[fips]}`;
+    }
+    
+    // 3. Migrate GBR ONS keys (e.g. GBR-E06000023 or E06000023 -> GBR-GB-BST)
+    let ons = '';
+    if (newKey.startsWith('GBR-')) {
+      ons = newKey.substring(4);
+    } else if (/^[ENSW]\d{8}$/.test(newKey)) {
+      ons = newKey;
+    }
+    if (ons && ONS_TO_ISO[ons]) {
+      newKey = `GBR-${ONS_TO_ISO[ons]}`;
     }
     
     // Migrate nested region maps
@@ -195,16 +208,26 @@ export function migrateLegacyPlaces(places: UserPlacesMap): UserPlacesMap {
       for (const [rKey, rVal] of Object.entries(value.regions)) {
         let newRKey = rKey;
         
+        // USA regions
+        let rFips = '';
         if (rKey.startsWith('USA-')) {
-          const fips = rKey.substring(4);
-          if (US_FIPS_TO_ISO[fips]) {
-            newRKey = `USA-${US_FIPS_TO_ISO[fips]}`;
-          }
-        } else if (rKey.startsWith('GBR-')) {
-          const ons = rKey.substring(4);
-          if (ONS_TO_ISO[ons]) {
-            newRKey = `GBR-${ONS_TO_ISO[ons]}`;
-          }
+          rFips = rKey.substring(4);
+        } else if (/^\d{2}$/.test(rKey)) {
+          rFips = rKey;
+        }
+        if (rFips && US_FIPS_TO_ISO[rFips]) {
+          newRKey = `USA-${US_FIPS_TO_ISO[rFips]}`;
+        }
+        
+        // GBR regions
+        let rOns = '';
+        if (rKey.startsWith('GBR-')) {
+          rOns = rKey.substring(4);
+        } else if (/^[ENSW]\d{8}$/.test(rKey)) {
+          rOns = rKey;
+        }
+        if (rOns && ONS_TO_ISO[rOns]) {
+          newRKey = `GBR-${ONS_TO_ISO[rOns]}`;
         }
         
         newRegions[newRKey] = rVal;
