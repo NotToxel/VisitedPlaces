@@ -1,7 +1,7 @@
 # AGENTS.MD — VisitedPlaces Project Guide
 
-> **Version**: 2.1.3  
-> **Last Updated**: 2026-07-10  
+> **Version**: 2.2.0  
+> **Last Updated**: 2026-07-11  
 > **Status**: Active Development
 
 ---
@@ -252,7 +252,7 @@ We use [Semantic Versioning](https://semver.org/):
 
 ### Current Version
 
-`2.1.3` — Patch release fixing mobile scrolling and flexbox clipping on the overseas territories panel list. Includes touch-scroll overrides.
+`2.2.0` — Minor release adding search highlighting/zooming on Hexagon view, expanding sub-region compare filters with dynamic counts, handling member renaming Enter key blur, resolving Vercel SPA routing refresh 404s, introducing dynamic chunk load error auto-recovery, and making the map search bar fully responsive on mobile.
 
 ### Display
 
@@ -322,6 +322,7 @@ npx playwright test   # E2E tests (requires Playwright browsers installed)
 - Use [Conventional Commits](https://www.conventionalcommits.org/): `feat:`, `fix:`, `chore:`, `refactor:`, `docs:`, `test:`
 - Each commit should be atomic — one logical change per commit.
 - Commit messages should explain *why*, not just *what*.
+- **Version Bumping**: You MUST bump the version number in `package.json` and this document (both the header and "Current Version" section) whenever you make changes and commit code. The new version number must be included at the bottom of the commit message (e.g., `Version: X.Y.Z`).
 
 ---
 
