@@ -8,7 +8,7 @@ import { MapFilterBar } from './MapFilterBar';
 import { MapSearchBar } from './MapSearchBar';
 import { useStore } from '../../store/useStore';
 import type { PlaceStatus } from '../../store/useStore';
-import { ArrowLeft } from 'lucide-react';
+import { ArrowLeft, Zap, X } from 'lucide-react';
 import { COUNTRIES } from '../../data/countries';
 import { getTerritoriesForCountry, getTerritoryLabel, getAllTerritories } from '../../data/territoriesRegistry';
 import { TerritoryListPanel } from './TerritoryListPanel';
@@ -36,6 +36,7 @@ export const MapContainer: React.FC = () => {
   const [mapStyle, setMapStyle] = useState<'STANDARD' | 'HEXAGON'>('STANDARD');
   const [showHexLabels, setShowHexLabels] = useState(false);
   const [activeCountry, setActiveCountry] = useState<string | null>(null);
+  const [expressMode, setExpressMode] = useState<boolean>(false);
 
   // Visibility filters
   const [showVisited, setShowVisited] = useState(true);
@@ -110,29 +111,34 @@ export const MapContainer: React.FC = () => {
   const territories = activeCountry ? getTerritoriesForCountry(activeCountry) : [];
   const territoryLabel = activeCountry ? getTerritoryLabel(activeCountry) : '';
 
-  // Country click → show context menu
+  // Country click → toggle status in express mode or show context menu
   const handleCountryClick = useCallback(
     (countryId: string, event: React.MouseEvent, displayName?: string) => {
       event?.stopPropagation?.();
       hideMapTooltip(); // Hide tooltip immediately when clicked/tapped (especially on mobile!)
-      if (activeCountry) {
-        // In drilldown view, the ID is already prefixed by getRegionId
-        setContextMenu({
-          countryId,
-          displayName,
-          x: event.clientX,
-          y: event.clientY,
-        });
-      } else {
-        setContextMenu({
-          countryId,
-          displayName,
-          x: event.clientX,
-          y: event.clientY,
-        });
+      
+      if (expressMode) {
+        if (countryId.includes('-')) {
+          const parentCode = countryId.split('-')[0];
+          const currentStatus = places[countryId]?.status || 'NONE';
+          const nextStatus = currentStatus === 'VISITED' ? 'NONE' : 'VISITED';
+          setRegionStatus(parentCode, countryId, nextStatus);
+        } else {
+          const currentStatus = places[countryId]?.status || 'NONE';
+          const nextStatus = currentStatus === 'VISITED' ? 'NONE' : 'VISITED';
+          setCountryStatus(countryId, nextStatus);
+        }
+        return;
       }
+
+      setContextMenu({
+        countryId,
+        displayName,
+        x: event.clientX,
+        y: event.clientY,
+      });
     },
-    [activeCountry]
+    [expressMode, places, setCountryStatus, setRegionStatus]
   );
 
   // Status change from context menu
@@ -179,7 +185,24 @@ export const MapContainer: React.FC = () => {
           setShowHexLabels={setShowHexLabels}
           onCountrySelect={handleCountrySelect}
           onSearchClear={handleSearchClear}
+          expressMode={expressMode}
+          setExpressMode={setExpressMode}
         />
+      )}
+
+      {/* Express Mode Active Banner */}
+      {expressMode && (
+        <div className="absolute top-[88px] left-1/2 -translate-x-1/2 z-30 flex items-center gap-2 bg-amber-500 text-slate-950 font-extrabold px-4.5 py-2.5 rounded-full shadow-lg text-[11px] select-none border border-amber-400/50 transition-all scale-100 hover:scale-[1.02] shadow-amber-500/10">
+          <Zap size={13} fill="currentColor" className="animate-pulse text-slate-950" />
+          <span>⚡ Express Mode Active: Click countries on map to toggle Visited</span>
+          <button 
+            onClick={() => setExpressMode(false)}
+            className="hover:bg-slate-950/15 p-0.5 rounded-full ml-2 transition-colors flex items-center justify-center cursor-pointer"
+            title="Disable Express Mode"
+          >
+            <X size={12.5} strokeWidth={2.5} />
+          </button>
+        </div>
       )}
 
       {/* Drilldown back button + country info */}

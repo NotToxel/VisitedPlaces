@@ -649,26 +649,26 @@ const List: React.FC = () => {
                             </div>
 
                             {/* Bottom Row: Progress (left) & Actions (right) */}
-                            <div className="flex items-center justify-between w-full pt-2.5 border-t border-base-300/10 gap-2" onClick={e => e.stopPropagation()}>
+                            <div className="flex items-center justify-between w-full pt-2 border-t border-base-300/10 gap-1.5" onClick={e => e.stopPropagation()}>
                               {hasDrill ? (
-                                <div className="flex items-center gap-1 bg-primary/10 border border-primary/25 text-primary rounded px-2.5 py-1 text-[10px] font-bold shrink-0 select-none">
-                                  <Map size={10} />
+                                <div className="flex items-center gap-0.5 bg-primary/10 border border-primary/20 text-primary rounded-lg px-2 py-0.5 text-[9px] font-bold shrink-0 select-none">
+                                  <Map size={9.5} />
                                   <span>{getSubregionsProgressString(country.id)}</span>
                                 </div>
                               ) : (
                                 <div className="flex-1" />
                               )}
                               
-                              <div className="flex gap-1.5 shrink-0">
+                              <div className="flex gap-1 shrink-0">
                                 <button 
                                   onClick={(e) => {
                                     e.stopPropagation();
                                     handleStatusChange(country.id, 'VISITED');
                                   }}
                                   title="Visited"
-                                  className={`btn btn-square btn-circle btn-sm h-7.5 w-7.5 transition-all ${status === 'VISITED' ? 'btn-success text-white border-none shadow-sm' : 'btn-ghost text-base-content/30 hover:text-accent-visited hover:bg-accent-visited/10'}`}
+                                  className={`w-7 h-7 flex items-center justify-center rounded-full transition-all border ${status === 'VISITED' ? 'bg-success border-transparent text-white shadow-sm' : 'bg-base-200/50 border-base-300/10 text-base-content/40 hover:text-accent-visited hover:bg-accent-visited/10 hover:border-accent-visited/20'}`}
                                 >
-                                  <Check size={13} />
+                                  <Check size={12} />
                                 </button>
                                 <button 
                                   onClick={(e) => {
@@ -676,9 +676,9 @@ const List: React.FC = () => {
                                     handleStatusChange(country.id, 'WISHLIST');
                                   }}
                                   title="Wishlist"
-                                  className={`btn btn-square btn-circle btn-sm h-7.5 w-7.5 transition-all ${status === 'WISHLIST' ? 'btn-secondary text-white border-none shadow-sm' : 'btn-ghost text-base-content/30 hover:text-accent-wishlist hover:bg-accent-wishlist/10'}`}
+                                  className={`w-7 h-7 flex items-center justify-center rounded-full transition-all border ${status === 'WISHLIST' ? 'bg-secondary border-transparent text-white shadow-sm' : 'bg-base-200/50 border-base-300/10 text-base-content/40 hover:text-accent-wishlist hover:bg-accent-wishlist/10 hover:border-accent-wishlist/20'}`}
                                 >
-                                  <Heart size={13} fill={status === 'WISHLIST' ? 'currentColor' : 'none'} />
+                                  <Heart size={12} fill={status === 'WISHLIST' ? 'currentColor' : 'none'} />
                                 </button>
                                 <button 
                                   onClick={(e) => {
@@ -686,9 +686,9 @@ const List: React.FC = () => {
                                     handleStatusChange(country.id, 'REVISIT');
                                   }}
                                   title="Revisit"
-                                  className={`btn btn-square btn-circle btn-sm h-7.5 w-7.5 transition-all ${status === 'REVISIT' ? 'btn-warning text-white border-none shadow-sm' : 'btn-ghost text-base-content/30 hover:text-accent-revisit hover:bg-accent-revisit/10'}`}
+                                  className={`w-7 h-7 flex items-center justify-center rounded-full transition-all border ${status === 'REVISIT' ? 'bg-warning border-transparent text-white shadow-sm' : 'bg-base-200/50 border-base-300/10 text-base-content/40 hover:text-accent-revisit hover:bg-accent-revisit/10 hover:border-accent-revisit/20'}`}
                                 >
-                                  <RotateCcw size={13} />
+                                  <RotateCcw size={12} />
                                 </button>
                                 <button 
                                   onClick={(e) => {
@@ -696,9 +696,9 @@ const List: React.FC = () => {
                                     handleStatusChange(country.id, 'AVOID');
                                   }}
                                   title="Avoid"
-                                  className={`btn btn-square btn-circle btn-sm h-7.5 w-7.5 transition-all ${status === 'AVOID' ? 'btn-error text-white border-none shadow-sm' : 'btn-ghost text-base-content/30 hover:text-accent-avoid hover:bg-accent-avoid/10'}`}
+                                  className={`w-7 h-7 flex items-center justify-center rounded-full transition-all border ${status === 'AVOID' ? 'bg-error border-transparent text-white shadow-sm' : 'bg-base-200/50 border-base-300/10 text-base-content/40 hover:text-accent-avoid hover:bg-accent-avoid/10 hover:border-accent-avoid/20'}`}
                                 >
-                                  <Ban size={13} />
+                                  <Ban size={12} />
                                 </button>
                               </div>
                             </div>

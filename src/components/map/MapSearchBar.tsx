@@ -1,5 +1,5 @@
 import React, { useState, useMemo, useRef, useEffect } from 'react';
-import { Search, X, Hexagon, Globe } from 'lucide-react';
+import { Search, X, Hexagon, Globe, Zap } from 'lucide-react';
 import { COUNTRIES } from '../../data/countries';
 import type { Country } from '../../data/countries';
 import { matchCountry } from '../../utils/searchUtils';
@@ -11,6 +11,8 @@ interface MapSearchBarProps {
   setShowHexLabels: (show: boolean) => void;
   onCountrySelect: (countryId: string) => void;
   onSearchClear: () => void;
+  expressMode?: boolean;
+  setExpressMode?: (active: boolean) => void;
 }
 
 export const MapSearchBar: React.FC<MapSearchBarProps> = ({
@@ -20,6 +22,8 @@ export const MapSearchBar: React.FC<MapSearchBarProps> = ({
   setShowHexLabels,
   onCountrySelect,
   onSearchClear,
+  expressMode = false,
+  setExpressMode,
 }) => {
   const [searchVal, setSearchVal] = useState('');
   const [isDropdownOpen, setIsDropdownOpen] = useState(false);
@@ -138,6 +142,15 @@ export const MapSearchBar: React.FC<MapSearchBarProps> = ({
           title="Hexagon Map"
         >
           <Hexagon size={14} />
+        </button>
+        
+        {/* Express Mode Toggle */}
+        <button
+          className={`map-search-bar__style-btn ${expressMode ? 'map-search-bar__style-btn--active text-amber-500 border-amber-500/20 bg-amber-500/5' : ''}`}
+          onClick={() => setExpressMode?.(!expressMode)}
+          title={expressMode ? "Disable Express Mode" : "Enable Express Mode (Click to toggle Visited status)"}
+        >
+          <Zap size={13.5} fill={expressMode ? "currentColor" : "none"} className={expressMode ? "text-amber-500 animate-pulse" : ""} />
         </button>
         {mapStyle === 'HEXAGON' && (
           <label className="map-search-bar__hex-label-toggle" title="Show country labels on hexagons">
