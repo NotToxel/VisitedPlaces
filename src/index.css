@@ -2362,6 +2362,56 @@ path.rsm-geography:active {
   flex-shrink: 0;
 }
 
+.compare-delete-banner--contained {
+  border-radius: 12px;
+  border: 1px solid rgba(239, 68, 68, 0.15);
+}
+
+/* Inline warning banner */
+.compare-warning-banner {
+  display: flex;
+  align-items: center;
+  padding: 10px 16px;
+  background: rgba(239, 68, 68, 0.08);
+  border: 1px solid rgba(239, 68, 68, 0.15);
+  border-radius: 12px;
+  box-sizing: border-box;
+  width: 100%;
+}
+
+.compare-warning-banner__content {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  width: 100%;
+  gap: 12px;
+}
+
+.compare-warning-banner__message {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 0.75rem;
+  font-weight: 600;
+  color: var(--accent-avoid);
+}
+
+.compare-warning-banner__close {
+  background: transparent;
+  border: none;
+  color: var(--accent-avoid);
+  opacity: 0.6;
+  cursor: pointer;
+  padding: 2px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: opacity 0.15s ease;
+}
+
+.compare-warning-banner__close:hover {
+  opacity: 1;
+}
 
 /* ── Member Chips Row ───────────────────────────────────────────────── */
 .compare-members-bar {

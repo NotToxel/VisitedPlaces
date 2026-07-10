@@ -23,7 +23,8 @@ import {
   ChevronDown,
   Share2,
   RefreshCw,
-  Pencil
+  Pencil,
+  AlertCircle
 } from 'lucide-react';
 
 export interface MapCompareResult {
@@ -59,6 +60,16 @@ const Compare: React.FC = () => {
   const [deletingGroupId, setDeletingGroupId] = useState<string | null>(null);
   const newGroupInputRef = useRef<HTMLInputElement>(null);
   const editGroupInputRef = useRef<HTMLInputElement>(null);
+
+  // Inline error/warning notifications state (replaces native alerts)
+  const [errorMsg, setErrorMsg] = useState<string | null>(null);
+
+  const showError = useCallback((msg: string) => {
+    setErrorMsg(msg);
+    setTimeout(() => {
+      setErrorMsg(prev => prev === msg ? null : prev);
+    }, 5000);
+  }, []);
 
   // Load groups from localStorage, or initialize with an empty list
   const [groups, setGroups] = useState<CompareGroup[]>(() => {
@@ -125,13 +136,13 @@ const Compare: React.FC = () => {
     if (!inputCode) return;
 
     if (inputCode === myShareCode) {
-      alert("This is your own share code! You don't need to add yourself to the comparison.");
+      showError("This is your own share code! You don't need to add yourself to the comparison.");
       return;
     }
 
     const isAlreadyAdded = friends.some(f => serializePlaces(f.places) === inputCode);
     if (isAlreadyAdded) {
-      alert("This friend has already been added to this comparison group.");
+      showError("This friend has already been added to this comparison group.");
       return;
     }
 
@@ -172,7 +183,7 @@ const Compare: React.FC = () => {
       });
       setFriendInput('');
     } else {
-      alert("Invalid share code. Please check and try again.");
+      showError("Invalid share code. Please check and try again.");
     }
   };
 
@@ -653,6 +664,25 @@ const Compare: React.FC = () => {
           </div>
         )}
 
+        {/* Warning banner */}
+        {errorMsg && (
+          <div className="compare-warning-banner" style={{ margin: '12px 20px 0 20px', width: 'auto' }}>
+            <div className="compare-warning-banner__content">
+              <div className="compare-warning-banner__message">
+                <AlertCircle size={14} />
+                <span>{errorMsg}</span>
+              </div>
+              <button 
+                className="compare-warning-banner__close" 
+                onClick={() => setErrorMsg(null)}
+                title="Dismiss"
+              >
+                <X size={14} />
+              </button>
+            </div>
+          </div>
+        )}
+
         {/* Empty state hero */}
         <div className="compare-empty" style={{ flex: 'none', paddingBottom: '20px' }}>
           <div className="compare-empty__icon-ring">
@@ -726,6 +756,25 @@ const Compare: React.FC = () => {
                   Cancel
                 </button>
               </div>
+            </div>
+          </div>
+        )}
+
+        {/* Warning banner */}
+        {errorMsg && (
+          <div className="compare-warning-banner">
+            <div className="compare-warning-banner__content">
+              <div className="compare-warning-banner__message">
+                <AlertCircle size={14} />
+                <span>{errorMsg}</span>
+              </div>
+              <button 
+                className="compare-warning-banner__close" 
+                onClick={() => setErrorMsg(null)}
+                title="Dismiss"
+              >
+                <X size={14} />
+              </button>
             </div>
           </div>
         )}
