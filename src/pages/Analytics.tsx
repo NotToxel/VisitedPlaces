@@ -9,6 +9,15 @@ const Analytics: React.FC = () => {
   const { places } = useStore();
   const totalCountries = COUNTRIES.length;
 
+  const [chartReady, setChartReady] = useState(false);
+
+  useEffect(() => {
+    const handle = requestAnimationFrame(() => {
+      setChartReady(true);
+    });
+    return () => cancelAnimationFrame(handle);
+  }, []);
+
   const countryContinents = useMemo(() => {
     const map: Record<string, string> = {};
     COUNTRIES.forEach(c => {
@@ -446,26 +455,28 @@ const Analytics: React.FC = () => {
               Regional Profile Comparison
             </h3>
             <div className="w-full h-[240px] mt-2 relative">
-              <ResponsiveContainer width="100%" height="100%" minWidth={0} minHeight={0}>
-                <BarChart data={barChartData} margin={{ top: 5, right: 5, left: -22, bottom: 0 }}>
-                  <CartesianGrid strokeDasharray="3 3" stroke="rgba(240, 240, 240, 0.04)" vertical={false} />
-                  <XAxis dataKey="name" stroke="var(--text-base-content)" opacity={0.6} fontSize={9} tickLine={false} />
-                  <YAxis stroke="var(--text-base-content)" opacity={0.6} fontSize={9} tickLine={false} />
-                  <RechartsTooltip 
-                    contentStyle={{ 
-                      backgroundColor: 'var(--bg-base-200)', 
-                      borderColor: 'var(--glass-border)', 
-                      borderRadius: '12px',
-                      color: 'var(--text-base-content)',
-                      fontSize: '11px'
-                    }} 
-                  />
-                  <Legend verticalAlign="top" height={32} iconSize={8} formatter={(value) => <span className="text-[10px] font-semibold text-base-content/85">{value}</span>} />
-                  <Bar dataKey="Visited" stackId="a" fill="var(--accent-visited)" />
-                  <Bar dataKey="Wishlist" stackId="a" fill="var(--accent-wishlist)" />
-                  <Bar dataKey="Unexplored" stackId="a" fill="var(--bg-base-300)" opacity={0.45} radius={[3, 3, 0, 0]} />
-                </BarChart>
-              </ResponsiveContainer>
+              {chartReady && (
+                <ResponsiveContainer width="100%" height="100%" minWidth={0} minHeight={0}>
+                  <BarChart data={barChartData} margin={{ top: 5, right: 5, left: -22, bottom: 0 }}>
+                    <CartesianGrid strokeDasharray="3 3" stroke="rgba(240, 240, 240, 0.04)" vertical={false} />
+                    <XAxis dataKey="name" stroke="var(--text-base-content)" opacity={0.6} fontSize={9} tickLine={false} />
+                    <YAxis stroke="var(--text-base-content)" opacity={0.6} fontSize={9} tickLine={false} />
+                    <RechartsTooltip 
+                      contentStyle={{ 
+                        backgroundColor: 'var(--bg-base-200)', 
+                        borderColor: 'var(--glass-border)', 
+                        borderRadius: '12px',
+                        color: 'var(--text-base-content)',
+                        fontSize: '11px'
+                      }} 
+                    />
+                    <Legend verticalAlign="top" height={32} iconSize={8} formatter={(value) => <span className="text-[10px] font-semibold text-base-content/85">{value}</span>} />
+                    <Bar dataKey="Visited" stackId="a" fill="var(--accent-visited)" />
+                    <Bar dataKey="Wishlist" stackId="a" fill="var(--accent-wishlist)" />
+                    <Bar dataKey="Unexplored" stackId="a" fill="var(--bg-base-300)" opacity={0.45} radius={[3, 3, 0, 0]} />
+                  </BarChart>
+                </ResponsiveContainer>
+              )}
             </div>
           </div>
 
