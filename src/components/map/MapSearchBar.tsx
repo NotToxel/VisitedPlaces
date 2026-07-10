@@ -52,6 +52,14 @@ export const MapSearchBar: React.FC<MapSearchBarProps> = ({
     return () => document.removeEventListener('mousedown', handleClickOutside);
   }, []);
 
+  // Clear search input when activeCountry changes (entering/exiting sub-region view)
+  useEffect(() => {
+    Promise.resolve().then(() => {
+      setSearchVal('');
+      onSearchClear();
+    });
+  }, [activeCountry, onSearchClear]);
+
   const filteredSuggestions = useMemo(() => {
     const query = searchVal.trim();
     if (!query) return [];

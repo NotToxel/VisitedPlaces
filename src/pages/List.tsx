@@ -171,14 +171,14 @@ const List: React.FC = () => {
   const getSubregionsProgressString = useCallback((countryId: string) => {
     const isCurated = countryId === 'USA' || countryId === 'GBR';
     if (!neDataLoaded && !isCurated && !subRegionsByCountry[countryId]) {
-      return 'Loading...';
+      return '...';
     }
     const visited = Object.keys(places).filter(k => k.startsWith(`${countryId}-`) && (places[k]?.status === 'VISITED' || places[k]?.status === 'REVISIT')).length;
     const regions = subRegionsByCountry[countryId];
     if (regions && regions.length > 0) {
-      return `${visited}/${regions.length} Visited`;
+      return `${visited}/${regions.length}`;
     }
-    return visited > 0 ? `${visited} Visited` : 'Sub-regions';
+    return visited > 0 ? `${visited}` : 'Map';
   }, [places, subRegionsByCountry, neDataLoaded]);
 
   // Overall Statistics
@@ -651,7 +651,15 @@ const List: React.FC = () => {
                             {/* Bottom Row: Progress (left) & Actions (right) */}
                             <div className="flex items-center justify-between w-full pt-2 border-t border-base-300/10 gap-1.5" onClick={e => e.stopPropagation()}>
                               {hasDrill ? (
-                                <div className="flex items-center gap-0.5 bg-primary/10 border border-primary/20 text-primary rounded-lg px-2 py-0.5 text-[9px] font-bold shrink-0 select-none">
+                                <div 
+                                  className="flex items-center gap-1 bg-primary/10 border border-primary/20 text-primary rounded-lg px-2 py-0.5 text-[9px] font-bold shrink-0 select-none cursor-pointer hover:bg-primary/20 transition-colors"
+                                  title="Click to view sub-regions"
+                                  onClick={(e) => {
+                                    e.stopPropagation();
+                                    setSelectedCountryId(country.id);
+                                    setSubRegionSearch('');
+                                  }}
+                                >
                                   <Map size={9.5} />
                                   <span>{getSubregionsProgressString(country.id)}</span>
                                 </div>
@@ -666,9 +674,9 @@ const List: React.FC = () => {
                                     handleStatusChange(country.id, 'VISITED');
                                   }}
                                   title="Visited"
-                                  className={`w-7 h-7 flex items-center justify-center rounded-full transition-all border ${status === 'VISITED' ? 'bg-success border-transparent text-white shadow-sm' : 'bg-base-200/50 border-base-300/10 text-base-content/40 hover:text-accent-visited hover:bg-accent-visited/10 hover:border-accent-visited/20'}`}
+                                  className={`w-[26px] h-[26px] flex items-center justify-center rounded-full transition-all border ${status === 'VISITED' ? 'bg-success border-transparent text-white shadow-sm' : 'bg-base-200/50 border-base-300/10 text-base-content/40 hover:text-accent-visited hover:bg-accent-visited/10 hover:border-accent-visited/20'}`}
                                 >
-                                  <Check size={12} />
+                                  <Check size={11} />
                                 </button>
                                 <button 
                                   onClick={(e) => {
@@ -676,9 +684,9 @@ const List: React.FC = () => {
                                     handleStatusChange(country.id, 'WISHLIST');
                                   }}
                                   title="Wishlist"
-                                  className={`w-7 h-7 flex items-center justify-center rounded-full transition-all border ${status === 'WISHLIST' ? 'bg-secondary border-transparent text-white shadow-sm' : 'bg-base-200/50 border-base-300/10 text-base-content/40 hover:text-accent-wishlist hover:bg-accent-wishlist/10 hover:border-accent-wishlist/20'}`}
+                                  className={`w-[26px] h-[26px] flex items-center justify-center rounded-full transition-all border ${status === 'WISHLIST' ? 'bg-secondary border-transparent text-white shadow-sm' : 'bg-base-200/50 border-base-300/10 text-base-content/40 hover:text-accent-wishlist hover:bg-accent-wishlist/10 hover:border-accent-wishlist/20'}`}
                                 >
-                                  <Heart size={12} fill={status === 'WISHLIST' ? 'currentColor' : 'none'} />
+                                  <Heart size={11} fill={status === 'WISHLIST' ? 'currentColor' : 'none'} />
                                 </button>
                                 <button 
                                   onClick={(e) => {
@@ -686,9 +694,9 @@ const List: React.FC = () => {
                                     handleStatusChange(country.id, 'REVISIT');
                                   }}
                                   title="Revisit"
-                                  className={`w-7 h-7 flex items-center justify-center rounded-full transition-all border ${status === 'REVISIT' ? 'bg-warning border-transparent text-white shadow-sm' : 'bg-base-200/50 border-base-300/10 text-base-content/40 hover:text-accent-revisit hover:bg-accent-revisit/10 hover:border-accent-revisit/20'}`}
+                                  className={`w-[26px] h-[26px] flex items-center justify-center rounded-full transition-all border ${status === 'REVISIT' ? 'bg-warning border-transparent text-white shadow-sm' : 'bg-base-200/50 border-base-300/10 text-base-content/40 hover:text-accent-revisit hover:bg-accent-revisit/10 hover:border-accent-revisit/20'}`}
                                 >
-                                  <RotateCcw size={12} />
+                                  <RotateCcw size={11} />
                                 </button>
                                 <button 
                                   onClick={(e) => {
@@ -696,9 +704,9 @@ const List: React.FC = () => {
                                     handleStatusChange(country.id, 'AVOID');
                                   }}
                                   title="Avoid"
-                                  className={`w-7 h-7 flex items-center justify-center rounded-full transition-all border ${status === 'AVOID' ? 'bg-error border-transparent text-white shadow-sm' : 'bg-base-200/50 border-base-300/10 text-base-content/40 hover:text-accent-avoid hover:bg-accent-avoid/10 hover:border-accent-avoid/20'}`}
+                                  className={`w-[26px] h-[26px] flex items-center justify-center rounded-full transition-all border ${status === 'AVOID' ? 'bg-error border-transparent text-white shadow-sm' : 'bg-base-200/50 border-base-300/10 text-base-content/40 hover:text-accent-avoid hover:bg-accent-avoid/10 hover:border-accent-avoid/20'}`}
                                 >
-                                  <Ban size={12} />
+                                  <Ban size={11} />
                                 </button>
                               </div>
                             </div>
