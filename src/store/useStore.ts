@@ -21,11 +21,13 @@ export interface AppState {
   // Current user's places
   places: UserPlacesMap;
   theme: 'dark' | 'light';
+  neDataLoaded: boolean;
   
   // Actions
   setCountryStatus: (countryCode: string, status: PlaceStatus) => void;
   setRegionStatus: (countryCode: string, regionCode: string, status: PlaceStatus) => void;
   toggleTheme: () => void;
+  setNeDataLoaded: (loaded: boolean) => void;
   
   // Load whole state (for sharing / resetting)
   loadPlaces: (places: UserPlacesMap) => void;
@@ -36,8 +38,10 @@ export const useStore = create<AppState>()(
     (set) => ({
       places: {},
       theme: 'dark',
+      neDataLoaded: false,
 
       toggleTheme: () => set((state) => ({ theme: state.theme === 'dark' ? 'light' : 'dark' })),
+      setNeDataLoaded: (loaded) => set({ neDataLoaded: loaded }),
       
       setCountryStatus: (countryCode, status) => set((state) => {
         const updatedPlaces = { ...state.places };
@@ -112,7 +116,13 @@ export const useStore = create<AppState>()(
       loadPlaces: (places) => set({ places })
     }),
     {
-      name: 'visited-places-storage', // unique name for localStorage key
+      // v2.0 CLEAN BREAK: new storage key so old data is not loaded
+      name: 'visited-places-v2',
+      // Only persist places and theme in localStorage
+      partialize: (state) => ({
+        places: state.places,
+        theme: state.theme,
+      } as AppState),
     }
   )
 );

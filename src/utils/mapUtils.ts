@@ -1,28 +1,19 @@
 import { UI_COLORS } from '../config/colors';
 import type { PlaceStatus } from '../store/useStore';
-import { UK_TERRITORIES, USA_TERRITORIES } from '../data/mapData';
-import { COUNTRIES } from '../data/countries';
-
-const US_FIPS_TO_ABBR: Record<string, string> = {
-  '01': 'al', '02': 'ak', '04': 'az', '05': 'ar', '06': 'ca', '08': 'co', '09': 'ct',
-  '10': 'de', '11': 'dc', '12': 'fl', '13': 'ga', '15': 'hi', '16': 'id', '17': 'il',
-  '18': 'in', '19': 'ia', '20': 'ks', '21': 'ky', '22': 'la', '23': 'me', '24': 'md',
-  '25': 'ma', '26': 'mi', '27': 'mn', '28': 'ms', '29': 'mo', '30': 'mt', '31': 'ne',
-  '32': 'nv', '33': 'nh', '34': 'nj', '35': 'nm', '36': 'ny', '37': 'nc', '38': 'nd',
-  '39': 'oh', '40': 'ok', '41': 'or', '42': 'pa', '44': 'ri', '45': 'sc', '46': 'sd',
-  '47': 'tn', '48': 'tx', '49': 'ut', '50': 'vt', '51': 'va', '53': 'wa', '54': 'wv',
-  '55': 'wi', '56': 'wy'
-};
+import { getPlaceFlagUrl as getFlagUrl } from './flagUtils';
 
 export interface GeoProperties {
   AREACD?: string;
   areacd?: string;
   ISO_A3?: string;
   iso_a3?: string;
+  iso_3166_2?: string;
   cca3?: string;
   name?: string;
   AREANM?: string;
   areanm?: string;
+  adm0_a3?: string;
+  type_en?: string;
 }
 
 export interface GeoFeature {
@@ -51,23 +42,70 @@ export const getFillColor = (
 };
 
 /**
- * Normalizes TopoJSON IDs (which might be raw strings, CCN3 numeric codes, or region specific codes)
- * into the standard ISO A3 format `USA`, `GBR`, or locally prefixed formats like `USA-72`.
+ * Normalizes TopoJSON/GeoJSON feature IDs into the store key format.
+ *
+ * World view: returns ISO-A3 (e.g., "USA", "GBR")
+ * Curated drill-down (USA): returns "USA-{FIPS}" (e.g., "USA-06")
+ * Curated drill-down (GBR): returns "GBR-{AREACD}" (e.g., "GBR-E06000001")
+ * NE admin-1 drill-down: returns "{PARENT}-{ISO_3166_2}" (e.g., "FRA-FR-ARA")
  */
+function slugify(name: string): string {
+  return name
+    .toLowerCase()
+    .normalize('NFD')
+    .replace(/[\u0300-\u036f]/g, '')
+    .replace(/[^a-z0-9]+/g, '-')
+    .replace(/^-+|-+$/g, '');
+}
+
 export const getRegionId = (
   geo: GeoFeature, 
   numericToA3: Record<string, string>, 
-  activeCountry: string | null
+  activeCountry: string | null,
+  duplicateIsos?: Set<string>,
+  duplicateNames?: Set<string>
 ): string => {
+  // World view — resolve country ISO-A3
+  if (!activeCountry) {
+    const rawId = geo.properties?.ISO_A3 || geo.id?.toString() || '';
+    return numericToA3[rawId] || rawId;
+  }
+
+  // Curated drill-down: GBR
   if (activeCountry === 'GBR') {
-     const rawId = geo.properties?.AREACD || geo.properties?.areacd || geo.id?.toString() || '';
-     return `GBR-${rawId}`;
+    const rawId = geo.properties?.AREACD || geo.properties?.areacd || geo.id?.toString() || '';
+    return `GBR-${rawId}`;
   }
+
+  // Curated drill-down: USA
   if (activeCountry === 'USA') {
-     return `USA-${geo.id?.toString() || ''}`;
+    return `USA-${geo.id?.toString() || ''}`;
   }
-  const rawId = geo.properties?.ISO_A3 || geo.id?.toString() || '';
-  return numericToA3[rawId] || rawId;
+
+  // NE admin-1 drill-down — use ISO 3166-2 code from NE properties
+  const iso3166_2 = geo.properties?.iso_3166_2;
+  const name = geo.properties?.name || '';
+  const typeEn = geo.properties?.type_en || '';
+
+  if (iso3166_2) {
+    let regionId = iso3166_2;
+    const hasIsoDuplicate = duplicateIsos?.has(iso3166_2) || false;
+    const hasNameDuplicate = name && duplicateNames?.has(name);
+    
+    if ((hasIsoDuplicate || hasNameDuplicate) && typeEn) {
+      regionId = `${regionId}-${slugify(typeEn)}`;
+    }
+    return `${activeCountry}-${regionId}`;
+  }
+
+  // Fallback: use the feature name slugified
+  const fallbackName = geo.properties?.name || geo.id?.toString() || '';
+  let finalFallback = slugify(fallbackName);
+  const hasNameDuplicate = fallbackName && duplicateNames?.has(fallbackName);
+  if (hasNameDuplicate && typeEn) {
+    finalFallback = `${finalFallback}-${slugify(typeEn)}`;
+  }
+  return `${activeCountry}-${finalFallback}`;
 };
 
 /**
@@ -90,50 +128,5 @@ export const hideMapTooltip = () => {
   }
 };
 
-export const getPlaceFlagUrl = (placeId: string): string | null => {
-  if (!placeId) return null;
-
-  // 1. Check if it's a standard country ID
-  const country = COUNTRIES.find((c) => c.id === placeId);
-  if (country && country.flag) {
-    return country.flag;
-  }
-
-  // 2. Check if it's a USA sub-region (e.g. USA-06, USA-72)
-  if (placeId.startsWith('USA-')) {
-    const subId = placeId.substring(4);
-    
-    // Check if it's a territory in USA_TERRITORIES
-    const territory = USA_TERRITORIES.find((t) => t.id === placeId);
-    if (territory && territory.flagCode) {
-      return `https://flagcdn.com/${territory.flagCode}.svg`;
-    }
-
-    // Map state FIPS code (padded to 2 digits)
-    const normalizedFips = subId.padStart(2, '0');
-    const stateAbbr = US_FIPS_TO_ABBR[normalizedFips];
-    if (stateAbbr) {
-      return `https://flagcdn.com/us-${stateAbbr}.svg`;
-    }
-  }
-
-  // 3. Check if it's a GBR sub-region (e.g. GBR-E06000001, GBR-JEY)
-  if (placeId.startsWith('GBR-')) {
-    const subId = placeId.substring(4);
-    
-    // Check if it's a territory in UK_TERRITORIES
-    const territory = UK_TERRITORIES.find((t) => t.id === placeId);
-    if (territory && territory.flagCode) {
-      return `https://flagcdn.com/${territory.flagCode}.svg`;
-    }
-
-    // Check UK national flags: E (England), S (Scotland), W (Wales), N (Northern Ireland)
-    const prefix = subId.charAt(0).toUpperCase();
-    if (prefix === 'E') return 'https://flagcdn.com/gb-eng.svg';
-    if (prefix === 'S') return 'https://flagcdn.com/gb-sct.svg';
-    if (prefix === 'W') return 'https://flagcdn.com/gb-wls.svg';
-    if (prefix === 'N') return 'https://flagcdn.com/gb-nir.svg';
-  }
-
-  return null;
-};
+// Re-export the universal flag resolver from flagUtils
+export const getPlaceFlagUrl = getFlagUrl;

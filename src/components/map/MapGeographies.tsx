@@ -15,6 +15,7 @@ interface MapGeographiesProps {
   showAvoid: boolean;
   showRevisit: boolean;
   handleCountryClick: (geo: GeoFeature, event: React.MouseEvent, displayName?: string) => void;
+  strokeWidth?: number;
 }
 
 interface RsmGeography {
@@ -40,27 +41,65 @@ const MapGeographiesBase: React.FC<MapGeographiesProps> = ({
   showWishlist,
   showAvoid,
   showRevisit,
-  handleCountryClick
+  handleCountryClick,
+  strokeWidth
 }) => {
   return (
     <Geographies geography={geoData}>
-      {({ geographies }) =>
-        (geographies as RsmGeography[]).map((geo) => {
+      {({ geographies }) => {
+        // Pre-compute duplicates for Natural Earth admin-1 features of the active country
+        const duplicateIsos = new Set<string>();
+        const duplicateNames = new Set<string>();
+        
+        if (activeCountry && activeCountry !== 'USA' && activeCountry !== 'GBR') {
+          const isoCounts: Record<string, number> = {};
+          const nameCounts: Record<string, number> = {};
+          
+          geographies.forEach(g => {
+            const iso = g.properties?.iso_3166_2 || '';
+            const name = g.properties?.name || '';
+            if (iso) isoCounts[iso] = (isoCounts[iso] || 0) + 1;
+            if (name) nameCounts[name] = (nameCounts[name] || 0) + 1;
+          });
+          
+          for (const [iso, count] of Object.entries(isoCounts)) {
+            if (count > 1) duplicateIsos.add(iso);
+          }
+          for (const [name, count] of Object.entries(nameCounts)) {
+            if (count > 1) duplicateNames.add(name);
+          }
+        }
+
+        return (geographies as RsmGeography[]).map((geo) => {
           const feature: GeoFeature = {
             id: geo.id,
             properties: geo.properties
           };
-          const countryId = getRegionId(feature, numericToA3, activeCountry);
-          // Standardize ID format for the datastore (e.g. USA-72)
-          const placeIdForStore = (activeCountry && countryId && !countryId.toString().startsWith(`${activeCountry}-`)) 
-             ? `${activeCountry}-${countryId}` 
-             : countryId;
+          const countryId = getRegionId(feature, numericToA3, activeCountry, duplicateIsos, duplicateNames);
+          // For drill-downs, the ID may already be prefixed from getRegionId
+          const placeIdForStore = countryId;
              
           const status = placeIdForStore ? (places[placeIdForStore]?.status || 'NONE') : 'NONE';
           const isSelected = status !== 'NONE';
-          let countryName = geo.properties?.AREANM || geo.properties?.areanm || geo.properties?.name || 'Unknown Region';
+          // Get display name from various property formats
+          let countryName = (
+            geo.properties?.AREANM || 
+            geo.properties?.areanm || 
+            geo.properties?.name || 
+            'Unknown Region'
+          ) as string;
           if (countryName === 'Commonwealth of the Northern Mariana Islands') {
             countryName = 'Northern Mariana Islands';
+          }
+
+          const iso = geo.properties?.iso_3166_2 || '';
+          const typeEn = geo.properties?.type_en || '';
+          if (activeCountry && activeCountry !== 'USA' && activeCountry !== 'GBR') {
+            const hasIsoDuplicate = iso && duplicateIsos.has(iso);
+            const hasNameDuplicate = countryName && duplicateNames.has(countryName);
+            if ((hasIsoDuplicate || hasNameDuplicate) && typeEn) {
+              countryName = `${countryName} (${typeEn})`;
+            }
           }
           
           const isHighlighted = !!highlightedCountry && (
@@ -86,12 +125,12 @@ const MapGeographiesBase: React.FC<MapGeographiesProps> = ({
               onClick={(e) => handleCountryClick(feature, e, countryName)}
               fill={fill}
               stroke={isHighlighted ? "var(--accent-highlight)" : 'var(--map-stroke)'}
-              strokeWidth={isHighlighted ? 1.5 : (activeCountry ? 0.7 : 0.5)}
+              strokeWidth={isHighlighted ? (strokeWidth ? strokeWidth * 2 : 1.5) : (strokeWidth ?? (activeCountry ? 0.7 : 0.5))}
               style={GEOGRAPHY_STYLE}
             />
           );
-        })
-      }
+        });
+      }}
     </Geographies>
   );
 };

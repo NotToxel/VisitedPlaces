@@ -1,12 +1,12 @@
 import React, { useState } from 'react';
 import { Check, Heart, Ban, RotateCcw, ChevronDown, ChevronUp } from 'lucide-react';
 import type { PlaceStatus } from '../../store/useStore';
-import type { MapMarker } from '../../data/mapData';
+import type { Territory } from '../../data/territoriesRegistry';
 import { getFillColor } from '../../utils/mapUtils';
 
 interface TerritoryListPanelProps {
   activeCountry: string;
-  territories: MapMarker[];
+  territories: Territory[];
   territoryLabel?: string;
   places: Record<string, { status: PlaceStatus }>;
   onSetStatus: (countryId: string, status: PlaceStatus) => void;

@@ -1,4 +1,4 @@
-import React, { memo, useEffect, useRef, useCallback } from 'react';
+import React, { memo, useEffect, useRef, useCallback, useMemo } from 'react';
 import { ComposableMap, ZoomableGroup, Marker } from 'react-simple-maps';
 import { useStore } from '../../store/useStore';
 import type { PlaceStatus } from '../../store/useStore';
@@ -42,7 +42,7 @@ const StandardMapBase: React.FC<StandardMapProps> = ({
     subRegionCenter, setSubRegionCenter, subRegionZoom, setSubRegionZoom, animateTo 
   } = useMapAnimation();
 
-  const { geoData, isLoading } = useDrilldownGeography(activeCountry, setActiveCountry);
+  const { geoData, isLoading, countryBBox } = useDrilldownGeography(activeCountry, setActiveCountry);
 
   // Pre-fetch and cache the world topology so we can compute centroids for search pan
   useEffect(() => {
@@ -123,23 +123,81 @@ const StandardMapBase: React.FC<StandardMapProps> = ({
     } 
   }, [activeCountry, setSubRegionCenter, setSubRegionZoom, setMapCenter, setMapZoom]);
 
+  // Compute projection config: curated override or auto-computed from bounding box
   const currentConfig = activeCountry ? drilldownRegistry[activeCountry] : null;
+
+  const { projectionScale, projectionCenter, projectionRotate, drilldownDefaultCenter, drilldownDefaultZoom } = useMemo(() => {
+    if (currentConfig) {
+      // Curated drill-down (USA, GBR)
+      return {
+        projectionScale: currentConfig.scale,
+        projectionCenter: currentConfig.center || [0, 0] as [number, number],
+        projectionRotate: undefined,
+        drilldownDefaultCenter: currentConfig.defaultView.center,
+        drilldownDefaultZoom: currentConfig.defaultView.zoom,
+      };
+    }
+    if (activeCountry && countryBBox) {
+      // NE-based drill-down — auto-compute scale and rotation from bounding box
+      const lngSpan = countryBBox.maxLng - countryBBox.minLng;
+      const latSpan = countryBBox.maxLat - countryBBox.minLat;
+      const maxSpan = Math.max(lngSpan, latSpan, 1);
+      // Scale heuristic: target fitting within a portion of the 800x500 viewport with generous padding
+      // Cap scale at 24000 to allow very small countries (like Hong Kong, Nauru, Singapore) to zoom in comfortably.
+      const autoScale = Math.min(18000 / maxSpan, 24000);
+      
+      const centerLng = countryBBox.centerLng;
+      const centerLat = countryBBox.centerLat;
+
+      return {
+        projectionScale: autoScale,
+        projectionCenter: [0, centerLat] as [number, number],
+        projectionRotate: [-centerLng, 0, 0] as [number, number, number],
+        drilldownDefaultCenter: [centerLng, centerLat] as [number, number],
+        drilldownDefaultZoom: 1,
+      };
+    }
+    // World view
+    return {
+      projectionScale: 147,
+      projectionCenter: [0, 0] as [number, number],
+      projectionRotate: undefined,
+      drilldownDefaultCenter: [0, 20] as [number, number],
+      drilldownDefaultZoom: 1,
+    };
+  }, [currentConfig, activeCountry, countryBBox]);
+
+  const customStrokeWidth = useMemo(() => {
+    if (!activeCountry) return undefined;
+    return Math.max(0.15, Math.min(0.7, 1000 / projectionScale));
+  }, [activeCountry, projectionScale]);
+
+  // Reset sub-region view when entering a new drill-down
+  useEffect(() => {
+    if (activeCountry && drilldownDefaultCenter) {
+      setSubRegionCenter(drilldownDefaultCenter);
+      setSubRegionZoom(drilldownDefaultZoom);
+    }
+  }, [activeCountry, drilldownDefaultCenter, drilldownDefaultZoom, setSubRegionCenter, setSubRegionZoom]);
 
   return (
     <div style={{ width: '100%', height: '100%', position: 'relative', display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center' }}>
-      {activeCountry && currentConfig && (
+      {activeCountry && (
         <DrilldownControls 
           config={currentConfig}
+          defaultCenter={drilldownDefaultCenter}
+          defaultZoom={drilldownDefaultZoom}
           setSubRegionCenter={setSubRegionCenter}
           setSubRegionZoom={setSubRegionZoom}
         />
       )}
 
       <ComposableMap 
-        projection={currentConfig?.projection || "geoMercator"}
+        projection={"geoMercator"}
         projectionConfig={{ 
-          scale: currentConfig ? currentConfig.scale : 147,
-          center: currentConfig?.center || [0, 0],
+          scale: projectionScale,
+          center: projectionCenter,
+          rotate: projectionRotate,
         }}
         width={800}
         height={500}
@@ -164,6 +222,7 @@ const StandardMapBase: React.FC<StandardMapProps> = ({
             showAvoid={showAvoid}
             showRevisit={showRevisit}
             handleCountryClick={handleCountryClick}
+            strokeWidth={customStrokeWidth}
           />
 
           {!activeCountry && !isLoading && MICROSTATES.map((marker) => {

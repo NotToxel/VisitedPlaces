@@ -1,17 +1,21 @@
-import React, { useState, useCallback } from 'react';
+import React, { useState, useCallback, useEffect } from 'react';
 import { NUMERIC_TO_A3 } from '../../data/countries';
 import { StandardMap } from './StandardMap';
 import { HexagonMap } from './HexagonMap';
+import { RegionCardGrid } from './RegionCardGrid';
 import { CountryContextMenu } from './CountryContextMenu';
 import { MapFilterBar } from './MapFilterBar';
 import { MapSearchBar } from './MapSearchBar';
 import { useStore } from '../../store/useStore';
-import { drilldownRegistry } from '../../config/drilldownConfig';
 import type { PlaceStatus } from '../../store/useStore';
 import { ArrowLeft } from 'lucide-react';
 import { COUNTRIES } from '../../data/countries';
-import { getSubRegionUrl } from '../../utils/topojsonCache';
+import { getTerritoriesForCountry, getTerritoryLabel, getAllTerritories } from '../../data/territoriesRegistry';
 import { TerritoryListPanel } from './TerritoryListPanel';
+import { getAllCountryFeaturesWithMeta } from '../../data/naturalEarthAdmin1';
+import type { NERegionFeature } from '../../data/naturalEarthAdmin1';
+import { getSubRegionUrl } from '../../utils/topojsonCache';
+import { getPlaceFlagUrl } from '../../utils/flagUtils';
 
 interface ContextMenuState {
   countryId: string;
@@ -20,8 +24,14 @@ interface ContextMenuState {
   y: number;
 }
 
+const CARD_GRID_COUNTRIES = new Set([
+  'FJI', 'KIR', 'MDV', 'SYC', 'FSM', 'MHL', 'PLW', 'CPV', 'COM', 'STP',
+  'ATF', 'PYF', 'COK', 'SHN', 'WLF', 'TON'
+]);
+
 export const MapContainer: React.FC = () => {
-  const { places, setCountryStatus } = useStore();
+  const { places, setCountryStatus, setRegionStatus, neDataLoaded } = useStore();
+  if (neDataLoaded) { /* Trigger re-render on load */ }
   const [mapStyle, setMapStyle] = useState<'STANDARD' | 'HEXAGON'>('STANDARD');
   const [showHexLabels, setShowHexLabels] = useState(false);
   const [activeCountry, setActiveCountry] = useState<string | null>(null);
@@ -38,21 +48,75 @@ export const MapContainer: React.FC = () => {
   // Search highlight
   const [highlightedCountryA3, setHighlightedCountryA3] = useState<string | null>(null);
 
-  const currentConfig = activeCountry ? drilldownRegistry[activeCountry] : null;
-  const activeCountryData = COUNTRIES.find((c) => c.id === activeCountry);
+  // Card grid state for archipelago nations
+  const [cardGridFeatures, setCardGridFeatures] = useState<NERegionFeature[]>([]);
+  const [cardGridCountry, setCardGridCountry] = useState<string | null>(null);
+
+  // Derived: card grid mode is active when features are loaded for the current country
+  const cardGridMode = activeCountry !== null && cardGridCountry === activeCountry && cardGridFeatures.length > 0;
+
+  // Detect card grid mode when activeCountry changes
+  useEffect(() => {
+    if (!activeCountry || getSubRegionUrl(activeCountry)) {
+      // No active country or curated drill-down — no async work needed.
+      // State will be stale but cardGridMode derivation handles it (activeCountry !== cardGridCountry).
+      return;
+    }
+
+    let active = true;
+
+    // Check if the country is explicitly listed as a card-grid island nation/territory
+    if (CARD_GRID_COUNTRIES.has(activeCountry)) {
+      getAllCountryFeaturesWithMeta(activeCountry).then((features) => {
+        if (!active) return;
+        setCardGridFeatures(features);
+        setCardGridCountry(activeCountry);
+      });
+    }
+
+    return () => { active = false; };
+  }, [activeCountry]);
+
+  // Dynamically resolve country/territory name and flag (fixes New Caledonia getting stuck)
+  const activeCountryName = activeCountry ? (() => {
+    const country = COUNTRIES.find((c) => c.id === activeCountry);
+    if (country) return country.name;
+    const territory = getAllTerritories().find((t) => t.id === activeCountry || t.id.endsWith(activeCountry));
+    if (territory) return territory.name;
+
+    const WELL_KNOWN_NAMES: Record<string, string> = {
+      'ATF': 'French Southern and Antarctic Lands',
+      'NCL': 'New Caledonia',
+      'GRL': 'Greenland',
+      'ESH': 'Western Sahara',
+      'FRO': 'Faroe Islands',
+      'FLK': 'Falkland Islands',
+      'SJM': 'Svalbard and Jan Mayen',
+      'ALA': 'Åland Islands',
+      'PYF': 'French Polynesia',
+      'COK': 'Cook Islands',
+      'SHN': 'Saint Helena',
+      'WLF': 'Wallis and Futuna'
+    };
+    if (WELL_KNOWN_NAMES[activeCountry]) {
+      return WELL_KNOWN_NAMES[activeCountry];
+    }
+    return activeCountry;
+  })() : '';
+
+  const activeCountryFlag = activeCountry ? getPlaceFlagUrl(activeCountry) : null;
+
+  const territories = activeCountry ? getTerritoriesForCountry(activeCountry) : [];
+  const territoryLabel = activeCountry ? getTerritoryLabel(activeCountry) : '';
 
   // Country click → show context menu
   const handleCountryClick = useCallback(
     (countryId: string, event: React.MouseEvent, displayName?: string) => {
       event?.stopPropagation?.();
       if (activeCountry) {
-        // In drilldown view, prefix with parent country code
-        const placeIdForStore =
-          countryId && !countryId.startsWith(`${activeCountry}-`)
-            ? `${activeCountry}-${countryId}`
-            : countryId;
+        // In drilldown view, the ID is already prefixed by getRegionId
         setContextMenu({
-          countryId: placeIdForStore,
+          countryId,
           displayName,
           x: event.clientX,
           y: event.clientY,
@@ -77,17 +141,21 @@ export const MapContainer: React.FC = () => {
     [setCountryStatus]
   );
 
-  // Drill-down trigger
+  // Region status change from card grid
+  const handleSetRegionStatus = useCallback(
+    (countryId: string, regionId: string, status: PlaceStatus) => {
+      setRegionStatus(countryId, regionId, status);
+    },
+    [setRegionStatus]
+  );
+
+  // Drill-down trigger — now works for all countries
   const handleDrillDown = useCallback(
     (countryId: string) => {
-      if (getSubRegionUrl(countryId)) {
-        setActiveCountry(countryId);
-      }
+      setActiveCountry(countryId);
     },
     []
   );
-
-
 
   // Search handlers
   const handleCountrySelect = useCallback((countryId: string) => {
@@ -113,7 +181,7 @@ export const MapContainer: React.FC = () => {
       )}
 
       {/* Drilldown back button + country info */}
-      {activeCountry && activeCountryData && (
+      {activeCountry && (
         <div className="map-drilldown-header">
           <button
             onClick={() => setActiveCountry(null)}
@@ -123,35 +191,42 @@ export const MapContainer: React.FC = () => {
             <span>Back to World</span>
           </button>
           <div className="map-drilldown-header__info">
-            {activeCountryData.flag ? (
+            {activeCountryFlag ? (
               <img
-                key={activeCountryData.flag}
-                src={activeCountryData.flag}
+                key={activeCountryFlag}
+                src={activeCountryFlag}
                 alt=""
                 className="map-drilldown-header__flag"
               />
             ) : (
               <div className="map-drilldown-header__flag-placeholder" />
             )}
-            <span className="map-drilldown-header__name">{activeCountryData.name}</span>
+            <span className="map-drilldown-header__name">{activeCountryName}</span>
           </div>
         </div>
       )}
 
-      {/* Territory list panel (for drilldown countries with territories) */}
-      {activeCountry && currentConfig?.territories && currentConfig.territories.length > 0 && (
+      {/* Territory list panel (for any country with territories) */}
+      {activeCountry && territories.length > 0 && (
         <TerritoryListPanel
           activeCountry={activeCountry}
-          territories={currentConfig.territories}
-          territoryLabel={currentConfig.territoryLabel}
+          territories={territories}
+          territoryLabel={territoryLabel}
           places={places}
           onSetStatus={handleSetStatus}
         />
       )}
 
-      {/* Map Viewport */}
+      {/* Map Viewport or Card Grid */}
       <div style={{ height: '100%', width: '100%' }}>
-        {mapStyle === 'STANDARD' ? (
+        {cardGridMode && activeCountry ? (
+          <RegionCardGrid
+            activeCountry={activeCountry}
+            features={cardGridFeatures}
+            places={places}
+            onSetRegionStatus={handleSetRegionStatus}
+          />
+        ) : mapStyle === 'STANDARD' ? (
           <StandardMap
             activeCountry={activeCountry}
             setActiveCountry={setActiveCountry}

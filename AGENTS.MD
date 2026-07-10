@@ -1,7 +1,7 @@
 # AGENTS.MD — VisitedPlaces Project Guide
 
-> **Version**: 1.0.2  
-> **Last Updated**: 2026-06-13  
+> **Version**: 2.0.0  
+> **Last Updated**: 2026-07-09  
 > **Status**: Active Development
 
 ---
@@ -252,7 +252,7 @@ We use [Semantic Versioning](https://semver.org/):
 
 ### Current Version
 
-`1.0.2` — Version containing layout fixes, codebase cleanup, duplicate URL fix, standard CI pipeline integration, and corrected country flag CDN URLs.
+`2.0.0` — Major release introducing a global sub-region drill-down system for all countries using Natural Earth baseline data, data-driven overseas territories, regional flags with country fallbacks, and transition to universal geoMercator projection.
 
 ### Display
 
@@ -399,7 +399,7 @@ npx playwright test   # E2E tests (requires Playwright browsers installed)
 
 ## 12. Known Limitations & Gotchas
 
-1. **`geoAlbersUsa` projection**: Cannot render geometries outside the continental US + Alaska + Hawaii + Puerto Rico. Other US territories (Guam, American Samoa, etc.) are filtered out in `processTopology` and shown as a separate territory list.
+1. **Universal geoMercator projection**: The map now uses `geoMercator` universally for both the world map and all sub-region drill-downs. Alaska is displayed at its true Mercator proportions rather than an inset configuration, which avoids computational bounding box issues and ensures projection consistency across all ~195 countries.
 
 2. **UK TopoJSON**: Contains obsolete region codes that must be filtered via `OBSOLETE_UK_REGIONS`. If the TopoJSON source is updated, this filter may need revision.
 

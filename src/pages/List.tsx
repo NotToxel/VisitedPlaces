@@ -19,11 +19,13 @@ import {
   Trophy,
   Globe
 } from 'lucide-react';
-import { fetchSubRegions, getSubRegionUrl } from '../utils/topojsonCache';
+import { fetchSubRegions, hasDrilldownSupport } from '../utils/topojsonCache';
 import type { TopoRegion } from '../utils/topojsonCache';
+import { getPlaceFlagUrl } from '../utils/flagUtils';
+import { fuzzyMatch, matchCountry } from '../utils/searchUtils';
 
 const List: React.FC = () => {
-  const { places, setCountryStatus } = useStore();
+  const { places, setCountryStatus, neDataLoaded } = useStore();
   
   // Search & Filters State
   const [search, setSearch] = useState('');
@@ -60,7 +62,7 @@ const List: React.FC = () => {
 
   // Trigger sub-regions load when a country with sub-regions is selected
   useEffect(() => {
-    if (selectedCountryId && getSubRegionUrl(selectedCountryId)) {
+    if (selectedCountryId && hasDrilldownSupport(selectedCountryId)) {
       Promise.resolve().then(() => {
         loadSubRegions(selectedCountryId);
       });
@@ -99,12 +101,12 @@ const List: React.FC = () => {
   const filteredCountries = useMemo(() => {
     return COUNTRIES.filter(c => {
       const status = places[c.id]?.status || 'NONE';
-      const searchVal = deferredSearch.trim().toLowerCase();
-      let matchesSearch = c.name.toLowerCase().includes(searchVal) || c.id.toLowerCase().includes(searchVal);
+      const searchVal = deferredSearch.trim();
+      let matchesSearch = matchCountry(c.name, c.id, c.cca2, searchVal);
       
       if (!matchesSearch && searchVal.length > 0 && searchSubRegions) {
         const states = subRegionsByCountry[c.id] || [];
-        if (states.some(s => s.name.toLowerCase().includes(searchVal))) {
+        if (states.some(s => fuzzyMatch(s.name, searchVal))) {
           matchesSearch = true;
         }
       }
@@ -165,13 +167,17 @@ const List: React.FC = () => {
 
   // Count visited subregions dynamically
   const getSubregionsProgressString = useCallback((countryId: string) => {
+    const isCurated = countryId === 'USA' || countryId === 'GBR';
+    if (!neDataLoaded && !isCurated && !subRegionsByCountry[countryId]) {
+      return 'Loading...';
+    }
     const visited = Object.keys(places).filter(k => k.startsWith(`${countryId}-`) && (places[k]?.status === 'VISITED' || places[k]?.status === 'REVISIT')).length;
     const regions = subRegionsByCountry[countryId];
     if (regions && regions.length > 0) {
       return `${visited}/${regions.length} Visited`;
     }
     return visited > 0 ? `${visited} Visited` : 'Sub-regions';
-  }, [places, subRegionsByCountry]);
+  }, [places, subRegionsByCountry, neDataLoaded]);
 
   // Overall Statistics
   const stats = useMemo(() => {
@@ -269,13 +275,13 @@ const List: React.FC = () => {
       );
     }
 
-    const hasSubRegions = getSubRegionUrl(selectedCountry.id) !== null;
+    const hasSubRegions = hasDrilldownSupport(selectedCountry.id);
     const countryStatus = places[selectedCountry.id]?.status || 'NONE';
     
     // Filter subregions
     const subregionsList = subRegionsByCountry[selectedCountry.id] || [];
     const filteredSubregions = subregionsList.filter(r => 
-      r.name.toLowerCase().includes(subRegionSearch.trim().toLowerCase())
+      fuzzyMatch(r.name, subRegionSearch)
     );
 
     return (
@@ -418,6 +424,7 @@ const List: React.FC = () => {
                     ) : (
                       filteredSubregions.map(state => {
                         const stateStatus = places[state.id]?.status || 'NONE';
+                        const flagUrl = getPlaceFlagUrl(state.id);
                         
                         return (
                           <div 
@@ -430,7 +437,21 @@ const List: React.FC = () => {
                               'bg-base-200/30 border-transparent text-base-content/75 hover:bg-base-200/60'
                             }`}
                           >
-                            <span className="truncate flex-1 font-semibold">{state.name}</span>
+                            <div className="flex items-center gap-2 min-w-0 flex-1">
+                              {flagUrl ? (
+                                <img
+                                  src={flagUrl}
+                                  alt=""
+                                  className="w-5 h-3.5 object-cover rounded-sm border border-base-300/20 shrink-0"
+                                  onError={(e) => {
+                                    e.currentTarget.style.display = 'none';
+                                  }}
+                                />
+                              ) : (
+                                <div className="w-5 h-3.5 bg-base-300 rounded-sm border border-base-300/20 shrink-0" />
+                              )}
+                              <span className="truncate flex-1 font-semibold">{state.name}</span>
+                            </div>
                             
                             <div className="flex gap-0.5 shrink-0">
                               <button
@@ -582,7 +603,7 @@ const List: React.FC = () => {
                       {placesInContinent.map(country => {
                         const status = places[country.id]?.status || 'NONE';
                         const isSelected = selectedCountryId === country.id;
-                        const hasDrill = getSubRegionUrl(country.id) !== null;
+                        const hasDrill = hasDrilldownSupport(country.id);
 
                         return (
                           <div 

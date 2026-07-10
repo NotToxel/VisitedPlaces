@@ -2,6 +2,7 @@ import React, { useState, useMemo, useRef, useEffect } from 'react';
 import { Search, X, Hexagon, Globe } from 'lucide-react';
 import { COUNTRIES } from '../../data/countries';
 import type { Country } from '../../data/countries';
+import { matchCountry } from '../../utils/searchUtils';
 
 interface MapSearchBarProps {
   mapStyle: 'STANDARD' | 'HEXAGON';
@@ -38,13 +39,10 @@ export const MapSearchBar: React.FC<MapSearchBarProps> = ({
   }, []);
 
   const filteredSuggestions = useMemo(() => {
-    const query = searchVal.trim().toLowerCase();
+    const query = searchVal.trim();
     if (!query) return [];
     return COUNTRIES.filter(
-      (c) =>
-        c.name.toLowerCase().includes(query) ||
-        c.id.toLowerCase().includes(query) ||
-        c.cca2.toLowerCase().includes(query)
+      (c) => matchCountry(c.name, c.id, c.cca2, query)
     );
   }, [searchVal]);
 

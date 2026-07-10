@@ -4,7 +4,8 @@ import type { UserPlacesMap } from '../store/useStore';
 import { COUNTRIES, NUMERIC_TO_A3 } from '../data/countries';
 import { deserializePlaces, serializePlaces } from '../utils/serialization';
 import { CompareMap } from '../components/map/CompareMap';
-import { MICROSTATES, UK_TERRITORIES, USA_TERRITORIES } from '../data/mapData';
+import { MICROSTATES } from '../data/mapData';
+import { getAllTerritories } from '../data/territoriesRegistry';
 import { 
   Plus, 
   Trash2, 
@@ -167,11 +168,11 @@ const Compare: React.FC = () => {
 
     // Gather all uniquely mentioned countries, microstates, and territories
     const allCountryCodes = new Set<string>();
+    const allTerritories = getAllTerritories();
     allUsers.forEach(u => Object.keys(u.places).forEach(code => {
       const isMicrostateOrTerritory = 
         MICROSTATES.some(m => m.id === code) || 
-        UK_TERRITORIES.some(t => t.id === code) || 
-        USA_TERRITORIES.some(t => t.id === code);
+        allTerritories.some(t => t.id === code);
       if (!code.includes('-') || isMicrostateOrTerritory) {
         allCountryCodes.add(code);
       }
@@ -253,17 +254,9 @@ const Compare: React.FC = () => {
         };
       }
     });
-    // Add UK territories
-    UK_TERRITORIES.forEach(t => {
-      if (!map[t.id]) {
-        map[t.id] = {
-          name: t.name,
-          flag: t.flagCode ? `https://flagcdn.com/${t.flagCode}.svg` : ''
-        };
-      }
-    });
-    // Add US territories
-    USA_TERRITORIES.forEach(t => {
+    // Add territories
+    const allTerritories = getAllTerritories();
+    allTerritories.forEach(t => {
       if (!map[t.id]) {
         map[t.id] = {
           name: t.name,

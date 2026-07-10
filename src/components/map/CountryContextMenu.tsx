@@ -2,7 +2,7 @@ import React, { useEffect, useRef } from 'react';
 import { Check, Heart, RotateCcw, Ban, X, ChevronRight } from 'lucide-react';
 import { COUNTRIES } from '../../data/countries';
 import type { PlaceStatus } from '../../store/useStore';
-import { getSubRegionUrl } from '../../utils/topojsonCache';
+import { hasDrilldownSupport } from '../../utils/topojsonCache';
 import { getPlaceFlagUrl } from '../../utils/mapUtils';
 
 interface CountryContextMenuProps {
@@ -30,7 +30,7 @@ export const CountryContextMenu: React.FC<CountryContextMenuProps> = ({
   const country = COUNTRIES.find((c) => c.id === countryId);
   const resolvedName = displayName || country?.name || countryId;
   const flagUrl = getPlaceFlagUrl(countryId);
-  const hasDrillDown = !!getSubRegionUrl(countryId);
+  const hasDrillDown = hasDrilldownSupport(countryId);
 
   // Reposition if overflowing viewport
   useEffect(() => {

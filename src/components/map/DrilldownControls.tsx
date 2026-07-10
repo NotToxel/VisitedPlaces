@@ -3,21 +3,28 @@ import { RefreshCw } from 'lucide-react';
 import type { DrilldownConfig } from '../../config/drilldownConfig';
 
 interface DrilldownControlsProps {
-  config: DrilldownConfig;
+  config?: DrilldownConfig | null;
+  defaultCenter?: [number, number];
+  defaultZoom?: number;
   setSubRegionCenter: (center: [number, number]) => void;
   setSubRegionZoom: (zoom: number) => void;
 }
 
 export const DrilldownControls: React.FC<DrilldownControlsProps> = ({
   config,
+  defaultCenter,
+  defaultZoom,
   setSubRegionCenter,
   setSubRegionZoom
 }) => {
+  const center = config?.defaultView.center || defaultCenter || [0, 20];
+  const zoom = config?.defaultView.zoom || defaultZoom || 1;
+
   return (
     <button 
       onClick={() => {
-        setSubRegionCenter(config.defaultView.center);
-        setSubRegionZoom(config.defaultView.zoom);
+        setSubRegionCenter(center);
+        setSubRegionZoom(zoom);
       }}
       className="map-reset-zoom"
       title="Reset Map Zoom"
