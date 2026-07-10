@@ -6,7 +6,7 @@
 import { ISO3166_FLAGS_BASE } from '../config/urls';
 import { COUNTRIES } from '../data/countries';
 import { getAllTerritories } from '../data/territoriesRegistry';
-import { getGbrIsoCode } from '../data/gbrRegionData';
+import { getGbrIsoCode, GB_FLAG_EXTENSIONS } from '../data/gbrRegionData';
 
 /**
  * Returns the flag URL for a sub-region given its ISO 3166-2 code.
@@ -16,7 +16,13 @@ export function getRegionFlagUrl(iso3166_2: string): string {
   const dashIndex = iso3166_2.indexOf('-');
   if (dashIndex === -1) return '';
   const countryPart = iso3166_2.substring(0, dashIndex);
-  return `${ISO3166_FLAGS_BASE}/${countryPart}/${iso3166_2}.svg`;
+  
+  let ext = 'svg';
+  if (countryPart === 'GB') {
+    ext = GB_FLAG_EXTENSIONS[iso3166_2] || 'svg';
+  }
+  
+  return `${ISO3166_FLAGS_BASE}/${countryPart}/${iso3166_2}.${ext}`;
 }
 
 /**
@@ -70,9 +76,12 @@ export function getPlaceFlagUrl(placeId: string): string | null {
   if (placeId.startsWith('GBR-')) {
     const onsCode = placeId.substring(4);
     const isoCode = getGbrIsoCode(onsCode);
-    if (isoCode) {
+    if (isoCode && GB_FLAG_EXTENSIONS[isoCode]) {
       return getRegionFlagUrl(isoCode);
     }
+    // Fall back immediately to GBR flag to avoid 404
+    const parentCountry = COUNTRIES.find((c) => c.id === 'GBR');
+    return parentCountry?.flag || null;
   }
 
   // 3. It's a sub-region — extract the ISO 3166-2 portion
@@ -82,6 +91,11 @@ export function getPlaceFlagUrl(placeId: string): string | null {
     const iso3166_2 = placeId.substring(parentEnd + 1);
     // If it looks like an ISO 3166-2 code (has a dash), try the regional flag
     if (iso3166_2.includes('-')) {
+      if (iso3166_2.startsWith('GB-') && !GB_FLAG_EXTENSIONS[iso3166_2]) {
+        // Fall back immediately to GBR flag
+        const parentCountry = COUNTRIES.find((c) => c.id === 'GBR');
+        return parentCountry?.flag || null;
+      }
       return getRegionFlagUrl(iso3166_2);
     }
   }

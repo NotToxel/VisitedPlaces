@@ -21,7 +21,7 @@ import {
 } from 'lucide-react';
 import { fetchSubRegions, hasDrilldownSupport } from '../utils/topojsonCache';
 import type { TopoRegion } from '../utils/topojsonCache';
-import { getPlaceFlagUrl } from '../utils/flagUtils';
+import { getPlaceFlagUrl, getParentCountryFlagUrl } from '../utils/flagUtils';
 import { fuzzyMatch, matchCountry } from '../utils/searchUtils';
 
 const List: React.FC = () => {
@@ -446,7 +446,10 @@ const List: React.FC = () => {
                                   alt=""
                                   className="w-5 h-3.5 object-cover rounded-sm border border-base-300/20 shrink-0"
                                   onError={(e) => {
-                                    e.currentTarget.style.display = 'none';
+                                    const parentFlag = getParentCountryFlagUrl(state.id);
+                                    if (parentFlag && e.currentTarget.src !== parentFlag) {
+                                      e.currentTarget.src = parentFlag;
+                                    }
                                   }}
                                 />
                               ) : (
