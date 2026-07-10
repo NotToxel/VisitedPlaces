@@ -1253,7 +1253,7 @@ path.rsm-geography:active {
 /* Mobile responsiveness for map overlays */
 @media (max-width: 640px) {
   .map-search-bar {
-    min-width: 200px;
+    width: calc(100vw - 24px);
     max-width: calc(100vw - 24px);
     top: 8px;
   }
