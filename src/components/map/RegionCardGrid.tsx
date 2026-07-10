@@ -3,7 +3,7 @@ import { geoMercator, geoPath } from 'd3-geo';
 import { Check, Heart, Ban, RotateCcw } from 'lucide-react';
 import type { NERegionFeature, NEFeature } from '../../data/naturalEarthAdmin1';
 import type { PlaceStatus } from '../../store/useStore';
-import { getRegionFlagUrl } from '../../utils/flagUtils';
+import { getPlaceFlagUrl, getParentCountryFlagUrl } from '../../utils/flagUtils';
 import { COUNTRIES } from '../../data/countries';
 
 interface RegionCardGridProps {
@@ -120,14 +120,7 @@ const RegionCardBase: React.FC<RegionCardProps> = ({
   const svgPath = useMemo(() => computeRegionPath(feature), [feature]);
 
   const flagUrl = useMemo(() => {
-    // Try regional flag first, fallback to country flag
-    if (regionId.includes('-')) {
-      const parts = regionId.split('-');
-      if (parts.length >= 2) {
-        return getRegionFlagUrl(regionId);
-      }
-    }
-    return `https://flagcdn.com/24x18/${countryCca2}.png`;
+    return getPlaceFlagUrl(regionId) || `https://flagcdn.com/${countryCca2.toLowerCase()}.svg`;
   }, [regionId, countryCca2]);
 
   const handleMapClick = useCallback(() => {
@@ -175,7 +168,10 @@ const RegionCardBase: React.FC<RegionCardProps> = ({
           alt=""
           className="region-card__flag"
           onError={(e) => {
-            e.currentTarget.style.display = 'none';
+            const parentFlag = getParentCountryFlagUrl(regionId);
+            if (parentFlag && e.currentTarget.src !== parentFlag) {
+              e.currentTarget.src = parentFlag;
+            }
           }}
         />
         <span className="region-card__name" title={displayName}>{displayName}</span>

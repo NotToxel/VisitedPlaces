@@ -66,7 +66,10 @@ const Compare: React.FC = () => {
       const saved = localStorage.getItem('visited-places-compare-groups');
       if (saved) {
         const parsed = JSON.parse(saved);
-        if (Array.isArray(parsed)) return parsed;
+        if (Array.isArray(parsed)) {
+          // Filter out legacy empty default groups to prevent showing them by default
+          return parsed.filter(g => g.id !== 'default' || g.friends.length > 0);
+        }
       }
     } catch (e) {
       console.warn("Could not load compare groups", e);
@@ -435,7 +438,9 @@ const Compare: React.FC = () => {
             src={data.flag} 
             alt="" 
             className="compare-country-pill__flag" 
-            onError={(e) => { (e.target as HTMLImageElement).style.display = 'none'; }}
+            onError={(e) => {
+              e.currentTarget.src = "data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='16' height='11'><rect width='16' height='11' fill='%23333333' opacity='0.15'/></svg>";
+            }}
           />
         )}
         {data?.name || code}
@@ -1012,7 +1017,9 @@ const Compare: React.FC = () => {
                               src={countryData[code]?.flag} 
                               alt="" 
                               className="compare-insight-card__item-flag"
-                              onError={(e) => { (e.target as HTMLImageElement).style.display = 'none'; }}
+                              onError={(e) => {
+                                e.currentTarget.src = "data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='18' height='13'><rect width='18' height='13' fill='%23333333' opacity='0.15'/></svg>";
+                              }}
                             />
                           )}
                           <span className="compare-insight-card__item-name">
@@ -1046,7 +1053,9 @@ const Compare: React.FC = () => {
                                 src={countryData[code]?.flag} 
                                 alt="" 
                                 className="compare-insight-card__item-flag"
-                                onError={(e) => { (e.target as HTMLImageElement).style.display = 'none'; }}
+                                onError={(e) => {
+                                  e.currentTarget.src = "data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='18' height='13'><rect width='18' height='13' fill='%23333333' opacity='0.15'/></svg>";
+                                }}
                               />
                             )}
                             <span className="compare-insight-card__item-name">
