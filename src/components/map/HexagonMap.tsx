@@ -1,4 +1,5 @@
 import React, { memo, useState, useEffect, useRef, useCallback } from 'react';
+import { RefreshCw } from 'lucide-react';
 import { useStore } from '../../store/useStore';
 import { hexGridData } from '../../utils/hexGridData';
 import { getFillColor, showMapTooltip, hideMapTooltip, formatStatusLabel } from '../../utils/mapUtils';
@@ -94,6 +95,31 @@ const HexagonMapBase: React.FC<HexagonMapProps> = ({
   // Global drag-moved tracker to prevent clicks on drag release
   const hasMovedRef = useRef(false);
 
+  // --- Helper: client pixel → SVG viewBox coords ---
+  const clientToViewbox = useCallback((clientX: number, clientY: number) => {
+    if (!svgRef.current) return { vx: 0, vy: 0 };
+    const rect = svgRef.current.getBoundingClientRect();
+    return {
+      vx: (clientX - rect.left) / rect.width * SVG_W,
+      vy: (clientY - rect.top) / rect.height * SVG_H,
+    };
+  }, []);
+
+  const constrainTranslation = useCallback((proposedTx: number, proposedTy: number, currentZoom: number) => {
+    const gx = SVG_W / 2 / currentZoom - proposedTx;
+    const gy = SVG_H / 2 / currentZoom - proposedTy;
+    const minGx = -200;
+    const maxGx = SVG_W + 200;
+    const minGy = -150;
+    const maxGy = SVG_H + 150;
+    const constrainedGx = Math.max(minGx, Math.min(maxGx, gx));
+    const constrainedGy = Math.max(minGy, Math.min(maxGy, gy));
+    return {
+      tx: SVG_W / 2 / currentZoom - constrainedGx,
+      ty: SVG_H / 2 / currentZoom - constrainedGy,
+    };
+  }, []);
+
   // --- Animation ---
   const animateTo = useCallback((targetTx: number, targetTy: number, targetZoom: number) => {
     if (animRef.current) cancelAnimationFrame(animRef.current);
@@ -103,8 +129,10 @@ const HexagonMapBase: React.FC<HexagonMapProps> = ({
       live.tx += (targetTx - live.tx) * f;
       live.ty += (targetTy - live.ty) * f;
       live.zoom += (targetZoom - live.zoom) * f;
-      setTx(live.tx);
-      setTy(live.ty);
+
+      const constrained = constrainTranslation(live.tx, live.ty, live.zoom);
+      setTx(constrained.tx);
+      setTy(constrained.ty);
       setZoom(live.zoom);
       const done =
         Math.abs(targetTx - live.tx) < 0.15 &&
@@ -113,12 +141,13 @@ const HexagonMapBase: React.FC<HexagonMapProps> = ({
       if (!done) {
         animRef.current = requestAnimationFrame(step);
       } else {
-        live.tx = targetTx; live.ty = targetTy; live.zoom = targetZoom;
-        setTx(targetTx); setTy(targetTy); setZoom(targetZoom);
+        const finalConstrained = constrainTranslation(targetTx, targetTy, targetZoom);
+        live.tx = finalConstrained.tx; live.ty = finalConstrained.ty; live.zoom = targetZoom;
+        setTx(finalConstrained.tx); setTy(finalConstrained.ty); setZoom(targetZoom);
       }
     };
     animRef.current = requestAnimationFrame(step);
-  }, []);
+  }, [constrainTranslation]);
 
   // --- Pan to highlighted country ---
   useEffect(() => {
@@ -136,16 +165,6 @@ const HexagonMapBase: React.FC<HexagonMapProps> = ({
     animateTo(targetTx, targetTy, targetZoom);
   }, [baseHighlighted, animateTo]);
 
-  // --- Helper: client pixel → SVG viewBox coords ---
-  const clientToViewbox = useCallback((clientX: number, clientY: number) => {
-    if (!svgRef.current) return { vx: 0, vy: 0 };
-    const rect = svgRef.current.getBoundingClientRect();
-    return {
-      vx: (clientX - rect.left) / rect.width * SVG_W,
-      vy: (clientY - rect.top) / rect.height * SVG_H,
-    };
-  }, []);
-
   // --- Wheel zoom: anchored to cursor ---
   const handleWheel = useCallback((e: React.WheelEvent<SVGSVGElement>) => {
     e.preventDefault();
@@ -154,19 +173,18 @@ const HexagonMapBase: React.FC<HexagonMapProps> = ({
     const oldZoom = liveRef.current.zoom;
     const newZoom = Math.max(0.4, Math.min(12, oldZoom * factor));
 
-    // Keep point (vx, vy) fixed: newZoom*(gx + newTx) = vx
-    // gx = vx/oldZoom - tx  =>  newTx = vx/newZoom - gx = tx + vx*(1/newZoom - 1/oldZoom)
     const newTx = liveRef.current.tx + vx * (1 / newZoom - 1 / oldZoom);
     const newTy = liveRef.current.ty + vy * (1 / newZoom - 1 / oldZoom);
+    const constrained = constrainTranslation(newTx, newTy, newZoom);
 
     if (animRef.current) cancelAnimationFrame(animRef.current);
     liveRef.current.zoom = newZoom;
-    liveRef.current.tx = newTx;
-    liveRef.current.ty = newTy;
+    liveRef.current.tx = constrained.tx;
+    liveRef.current.ty = constrained.ty;
     setZoom(newZoom);
-    setTx(newTx);
-    setTy(newTy);
-  }, [clientToViewbox]);
+    setTx(constrained.tx);
+    setTy(constrained.ty);
+  }, [clientToViewbox, constrainTranslation]);
 
   // --- Drag pan ---
   const handleMouseDown = useCallback((e: React.MouseEvent<SVGSVGElement>) => {
@@ -194,12 +212,14 @@ const HexagonMapBase: React.FC<HexagonMapProps> = ({
     }
     const newTx = dragRef.current.startTx + dx;
     const newTy = dragRef.current.startTy + dy;
+    const constrained = constrainTranslation(newTx, newTy, liveRef.current.zoom);
+
     if (animRef.current) cancelAnimationFrame(animRef.current);
-    liveRef.current.tx = newTx;
-    liveRef.current.ty = newTy;
-    setTx(newTx);
-    setTy(newTy);
-  }, []);
+    liveRef.current.tx = constrained.tx;
+    liveRef.current.ty = constrained.ty;
+    setTx(constrained.tx);
+    setTy(constrained.ty);
+  }, [constrainTranslation]);
 
   const handleMouseUp = useCallback(() => { 
     setIsDragging(false);
@@ -261,12 +281,13 @@ const HexagonMapBase: React.FC<HexagonMapProps> = ({
 
       const newTx = touchRef.current.startTx + dx;
       const newTy = touchRef.current.startTy + dy;
+      const constrained = constrainTranslation(newTx, newTy, liveRef.current.zoom);
 
       if (animRef.current) cancelAnimationFrame(animRef.current);
-      liveRef.current.tx = newTx;
-      liveRef.current.ty = newTy;
-      setTx(newTx);
-      setTy(newTy);
+      liveRef.current.tx = constrained.tx;
+      liveRef.current.ty = constrained.ty;
+      setTx(constrained.tx);
+      setTy(constrained.ty);
     } else if (e.touches.length === 2 && touchRef.current.startDistance > 0) {
       const t1 = e.touches[0];
       const t2 = e.touches[1];
@@ -281,16 +302,17 @@ const HexagonMapBase: React.FC<HexagonMapProps> = ({
       const vy = touchRef.current.midVy;
       const newTx = touchRef.current.startTx + vx * (1 / newZoom - 1 / startZoom);
       const newTy = touchRef.current.startTy + vy * (1 / newZoom - 1 / startZoom);
+      const constrained = constrainTranslation(newTx, newTy, newZoom);
 
       if (animRef.current) cancelAnimationFrame(animRef.current);
       liveRef.current.zoom = newZoom;
-      liveRef.current.tx = newTx;
-      liveRef.current.ty = newTy;
+      liveRef.current.tx = constrained.tx;
+      liveRef.current.ty = constrained.ty;
       setZoom(newZoom);
-      setTx(newTx);
-      setTy(newTy);
+      setTx(constrained.tx);
+      setTy(constrained.ty);
     }
-  }, []);
+  }, [constrainTranslation]);
 
   const handleTouchEnd = useCallback((e: React.TouchEvent<SVGSVGElement>) => {
     if (e.touches.length === 1 && touchRef.current) {
@@ -311,6 +333,11 @@ const HexagonMapBase: React.FC<HexagonMapProps> = ({
     }
   }, []);
 
+  const handleResetZoom = useCallback(() => {
+    if (animRef.current) cancelAnimationFrame(animRef.current);
+    animateTo(INITIAL_TX, INITIAL_TY, INITIAL_ZOOM);
+  }, [animateTo]);
+
   const handleCountryClick = useCallback((countryId: string, event: React.MouseEvent) => {
     // Ignore if we were dragging/panning/zooming
     if (hasMovedRef.current) return;
@@ -319,87 +346,98 @@ const HexagonMapBase: React.FC<HexagonMapProps> = ({
   }, [onCountryClick]);
 
   return (
-    <svg
-      ref={svgRef}
-      viewBox={`0 0 ${SVG_W} ${SVG_H}`}
-      style={{
-        width: '100%',
-        height: '100%',
-        outline: 'none',
-        cursor: isDragging ? 'grabbing' : 'grab',
-        touchAction: 'none'
-      }}
-      onWheel={handleWheel}
-      onMouseDown={handleMouseDown}
-      onMouseMove={handleMouseMove}
-      onMouseUp={handleMouseUp}
-      onMouseLeave={handleMouseUp}
-      onTouchStart={handleTouchStart}
-      onTouchMove={handleTouchMove}
-      onTouchEnd={handleTouchEnd}
-      onTouchCancel={handleTouchEnd}
-    >
-      <g transform={`scale(${zoom}) translate(${tx}, ${ty})`}>
-        {Object.entries(hexGridData)
-          .sort(([idA], [idB]) => {
-            const isAActive = idA === baseHighlighted || idA === hoveredId;
-            const isBActive = idB === baseHighlighted || idB === hoveredId;
-            if (isAActive && !isBActive) return 1;
-            if (!isAActive && isBActive) return -1;
-            return 0;
-          })
-          .map(([countryId, dot]) => {
-            const status = places[countryId]?.status || 'NONE';
-            const isHovered = hoveredId === countryId;
-            const isHighlighted = baseHighlighted === countryId;
-            const isSelected = status !== 'NONE';
-            const { cx, cy } = hexCenter(dot);
+    <div style={{ width: '100%', height: '100%', position: 'relative', display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center' }}>
+      <button 
+        onClick={handleResetZoom}
+        className="map-reset-zoom"
+        title="Reset Map Zoom"
+      >
+        <RefreshCw size={12} />
+        <span>Reset Zoom</span>
+      </button>
 
-            return (
-              <g key={countryId}>
-                <path
-                  d={HEX_PATH}
-                  transform={`translate(${cx}, ${cy}) ${isHighlighted ? 'scale(1.15)' : isHovered ? 'scale(1.05)' : 'scale(1)'}`}
-                  fill={getFillColor(status, isHovered || isHighlighted, false, showVisited, showWishlist, showAvoid, showRevisit)}
-                  stroke={isHighlighted ? "var(--accent-highlight)" : "var(--map-stroke)"}
-                  strokeWidth={isHighlighted ? 1.6 : 0.8}
-                  style={{ cursor: 'pointer', outline: 'none', transition: 'fill 0.2s ease, stroke 0.2s ease, stroke-width 0.2s ease, transform 0.2s ease' }}
-                onMouseEnter={(e) => {
-                  if (window.matchMedia('(hover: hover)').matches) {
-                    setHoveredId(countryId);
-                  }
-                  showMapTooltip(`${dot.name}${isSelected ? ` - ${formatStatusLabel(status)}` : ''}`, e);
-                }}
-                onMouseMove={(e) => {
-                  showMapTooltip(`${dot.name}${isSelected ? ` - ${formatStatusLabel(status)}` : ''}`, e);
-                }}
-                onMouseLeave={() => {
-                  setHoveredId(null);
-                  hideMapTooltip();
-                }}
-                onClick={(e) => handleCountryClick(countryId, e as unknown as React.MouseEvent)}
-              />
-              {showLabels && (
-                <text
-                  x={cx}
-                  y={cy}
-                  textAnchor="middle"
-                  dy=".35em"
-                  fontSize="4.2"
-                  fill="var(--text-primary)"
-                  stroke="var(--bg-base-100)"
-                  strokeWidth="0.8px"
-                  paintOrder="stroke fill"
-                  style={{ pointerEvents: 'none', fontWeight: 800 }}
-                >
-                  {countryId}
-                </text>
-              )}
-            </g>
-          );
-        })}
-      </g>
-    </svg>
+      <svg
+        ref={svgRef}
+        viewBox={`0 0 ${SVG_W} ${SVG_H}`}
+        style={{
+          width: '100%',
+          height: '100%',
+          outline: 'none',
+          cursor: isDragging ? 'grabbing' : 'grab',
+          touchAction: 'none'
+        }}
+        onWheel={handleWheel}
+        onMouseDown={handleMouseDown}
+        onMouseMove={handleMouseMove}
+        onMouseUp={handleMouseUp}
+        onMouseLeave={handleMouseUp}
+        onTouchStart={handleTouchStart}
+        onTouchMove={handleTouchMove}
+        onTouchEnd={handleTouchEnd}
+        onTouchCancel={handleTouchEnd}
+      >
+        <g transform={`scale(${zoom}) translate(${tx}, ${ty})`}>
+          {Object.entries(hexGridData)
+            .sort(([idA], [idB]) => {
+              const isAActive = idA === baseHighlighted || idA === hoveredId;
+              const isBActive = idB === baseHighlighted || idB === hoveredId;
+              if (isAActive && !isBActive) return 1;
+              if (!isAActive && isBActive) return -1;
+              return 0;
+            })
+            .map(([countryId, dot]) => {
+              const status = places[countryId]?.status || 'NONE';
+              const isHovered = hoveredId === countryId;
+              const isHighlighted = baseHighlighted === countryId;
+              const isSelected = status !== 'NONE';
+              const { cx, cy } = hexCenter(dot);
+
+              return (
+                <g key={countryId}>
+                  <path
+                    d={HEX_PATH}
+                    transform={`translate(${cx}, ${cy}) ${isHighlighted ? 'scale(1.15)' : isHovered ? 'scale(1.05)' : 'scale(1)'}`}
+                    fill={getFillColor(status, isHovered || isHighlighted, false, showVisited, showWishlist, showAvoid, showRevisit)}
+                    stroke={isHighlighted ? "var(--accent-highlight)" : "var(--map-stroke)"}
+                    strokeWidth={isHighlighted ? 1.6 : 0.8}
+                    style={{ cursor: 'pointer', outline: 'none', transition: 'fill 0.2s ease, stroke 0.2s ease, stroke-width 0.2s ease, transform 0.2s ease' }}
+                  onMouseEnter={(e) => {
+                    if (window.matchMedia('(hover: hover)').matches) {
+                      setHoveredId(countryId);
+                    }
+                    showMapTooltip(`${dot.name}${isSelected ? ` - ${formatStatusLabel(status)}` : ''}`, e);
+                  }}
+                  onMouseMove={(e) => {
+                    showMapTooltip(`${dot.name}${isSelected ? ` - ${formatStatusLabel(status)}` : ''}`, e);
+                  }}
+                  onMouseLeave={() => {
+                    setHoveredId(null);
+                    hideMapTooltip();
+                  }}
+                  onClick={(e) => handleCountryClick(countryId, e as unknown as React.MouseEvent)}
+                />
+                {showLabels && (
+                  <text
+                    x={cx}
+                    y={cy}
+                    textAnchor="middle"
+                    dy=".35em"
+                    fontSize="4.2"
+                    fill="var(--text-primary)"
+                    stroke="var(--bg-base-100)"
+                    strokeWidth="0.8px"
+                    paintOrder="stroke fill"
+                    style={{ pointerEvents: 'none', fontWeight: 800 }}
+                  >
+                    {countryId}
+                  </text>
+                )}
+              </g>
+            );
+          })}
+        </g>
+      </svg>
+    </div>
   );
 };
 

@@ -1,5 +1,6 @@
 import React, { memo, useEffect, useRef, useCallback, useMemo } from 'react';
 import { ComposableMap, ZoomableGroup, Marker } from 'react-simple-maps';
+import { RefreshCw } from 'lucide-react';
 import { useStore } from '../../store/useStore';
 import type { PlaceStatus } from '../../store/useStore';
 import { MICROSTATES } from '../../data/mapData';
@@ -261,7 +262,7 @@ const StandardMapBase: React.FC<StandardMapProps> = ({
 
   return (
     <div style={{ width: '100%', height: '100%', position: 'relative', display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center' }}>
-      {activeCountry && (
+      {activeCountry ? (
         <DrilldownControls 
           config={currentConfig}
           defaultCenter={drilldownDefaultCenter}
@@ -269,6 +270,18 @@ const StandardMapBase: React.FC<StandardMapProps> = ({
           setSubRegionCenter={setSubRegionCenter}
           setSubRegionZoom={setSubRegionZoom}
         />
+      ) : (
+        <button 
+          onClick={() => {
+            setMapCenter([0, 20]);
+            setMapZoom(1);
+          }}
+          className="map-reset-zoom"
+          title="Reset Map Zoom"
+        >
+          <RefreshCw size={12} />
+          <span>Reset Zoom</span>
+        </button>
       )}
 
       <ComposableMap 
@@ -289,6 +302,7 @@ const StandardMapBase: React.FC<StandardMapProps> = ({
           minZoom={0.5} 
           maxZoom={24} 
           onMoveEnd={handleMoveEnd}
+          translateExtent={[[-200, -150], [1000, 650]]}
         >
           <MapGeographies 
             geoData={geoData}

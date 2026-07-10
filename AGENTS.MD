@@ -1,6 +1,6 @@
 # AGENTS.MD — VisitedPlaces Project Guide
 
-> **Version**: 2.2.1  
+> **Version**: 2.2.2  
 > **Last Updated**: 2026-07-11  
 > **Status**: Active Development
 
@@ -252,7 +252,7 @@ We use [Semantic Versioning](https://semver.org/):
 
 ### Current Version
 
-`2.2.1` — Patch release adding touch drag (panning) and pinch-to-zoom support for the Hexagon Map view on mobile touch devices. Disables browser zoom on pinch.
+`2.2.2` — Patch release adding "Reset Zoom" controls to the standard and hexagon map views, and setting strict pan/scroll bounding box constraints across all map components to prevent panning maps completely off-screen.
 
 ### Display
 
