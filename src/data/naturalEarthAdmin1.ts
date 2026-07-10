@@ -58,22 +58,48 @@ async function fetchNEAdmin1(): Promise<NEFeatureCollection | null> {
   if (cachedData) return cachedData;
   if (pendingFetch) return pendingFetch;
 
-  pendingFetch = fetch(NE_ADMIN1_URL)
-    .then((res) => {
+  pendingFetch = (async () => {
+    // 1. Try CacheStorage first for persistent cross-session caching of large NE GeoJSON
+    if (typeof window !== 'undefined' && 'caches' in window) {
+      try {
+        const cache = await caches.open('visited-places-geo-cache-v1');
+        const cachedResponse = await cache.match(NE_ADMIN1_URL);
+        if (cachedResponse) {
+          const data = await cachedResponse.json() as NEFeatureCollection;
+          cachedData = data;
+          return data;
+        }
+      } catch (err) {
+        console.warn('Cache Storage read failed for NE admin-1:', err);
+      }
+    }
+
+    // 2. Fetch from network if not cached
+    try {
+      const res = await fetch(NE_ADMIN1_URL);
       if (!res.ok) throw new Error(`NE admin-1 fetch failed: ${res.status}`);
-      return res.json() as Promise<NEFeatureCollection>;
-    })
-    .then((data) => {
+      
+      const resClone = res.clone();
+      const data = await res.json() as NEFeatureCollection;
+      
+      // Persist to CacheStorage asynchronously
+      if (typeof window !== 'undefined' && 'caches' in window) {
+        caches.open('visited-places-geo-cache-v1')
+          .then((cache) => cache.put(NE_ADMIN1_URL, resClone))
+          .catch((err) => console.warn('Cache Storage write failed for NE admin-1:', err));
+      }
+
       cachedData = data;
       return data;
-    })
-    .catch((err) => {
+    } catch (err) {
       console.error('Failed to fetch Natural Earth admin-1 data:', err);
       return null;
-    })
-    .finally(() => {
-      pendingFetch = null;
-    });
+    }
+  })();
+
+  pendingFetch.finally(() => {
+    pendingFetch = null;
+  });
 
   return pendingFetch;
 }

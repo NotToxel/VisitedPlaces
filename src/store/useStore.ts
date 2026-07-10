@@ -1,5 +1,7 @@
 import { create } from 'zustand';
 import { persist } from 'zustand/middleware';
+import { ONS_TO_ISO } from '../data/gbrRegionData';
+import { US_FIPS_TO_ISO } from '../data/usaRegionData';
 
 // Enums and Types
 export type PlaceStatus = 'VISITED' | 'WISHLIST' | 'AVOID' | 'REVISIT' | 'NONE';
@@ -140,16 +142,80 @@ export const useStore = create<AppState>()(
         return { places: updatedPlaces };
       }),
       
-      loadPlaces: (places) => set({ places })
+      loadPlaces: (places) => set({ places: migrateLegacyPlaces(places) })
     }),
     {
-      // v2.0 CLEAN BREAK: new storage key so old data is not loaded
-      name: 'visited-places-v2',
+      name: 'visited-places-storage',
       // Only persist places and theme in localStorage
       partialize: (state) => ({
         places: state.places,
         theme: state.theme,
       } as AppState),
+      // Automatically migrate legacy FIPS/ONS keys to ISO 3166-2 on store hydration
+      onRehydrateStorage: () => (state) => {
+        if (state && state.places) {
+          state.places = migrateLegacyPlaces(state.places);
+        }
+      }
     }
   )
 );
+
+/**
+ * Migration helper to translate old FIPS keys (USA-XX) and ONS keys (GBR-EXXXXXXXX)
+ * into standard ISO 3166-2 keys (USA-US-XX, GBR-GB-XXX).
+ */
+export function migrateLegacyPlaces(places: UserPlacesMap): UserPlacesMap {
+  if (!places) return places;
+  
+  const migrated: UserPlacesMap = {};
+  
+  for (const [key, value] of Object.entries(places)) {
+    let newKey = key;
+    
+    // Migrate flat USA FIPS keys (e.g. USA-06 -> USA-US-CA)
+    if (key.startsWith('USA-')) {
+      const fips = key.substring(4);
+      if (US_FIPS_TO_ISO[fips]) {
+        newKey = `USA-${US_FIPS_TO_ISO[fips]}`;
+      }
+    }
+    // Migrate flat GBR ONS keys (e.g. GBR-E06000023 -> GBR-GB-BST)
+    else if (key.startsWith('GBR-')) {
+      const ons = key.substring(4);
+      if (ONS_TO_ISO[ons]) {
+        newKey = `GBR-${ONS_TO_ISO[ons]}`;
+      }
+    }
+    
+    // Migrate nested region maps
+    let newRegions = value.regions;
+    if (value.regions && Object.keys(value.regions).length > 0) {
+      newRegions = {};
+      for (const [rKey, rVal] of Object.entries(value.regions)) {
+        let newRKey = rKey;
+        
+        if (rKey.startsWith('USA-')) {
+          const fips = rKey.substring(4);
+          if (US_FIPS_TO_ISO[fips]) {
+            newRKey = `USA-${US_FIPS_TO_ISO[fips]}`;
+          }
+        } else if (rKey.startsWith('GBR-')) {
+          const ons = rKey.substring(4);
+          if (ONS_TO_ISO[ons]) {
+            newRKey = `GBR-${ONS_TO_ISO[ons]}`;
+          }
+        }
+        
+        newRegions[newRKey] = rVal;
+      }
+    }
+    
+    migrated[newKey] = {
+      status: value.status,
+      regions: newRegions
+    };
+  }
+  
+  return migrated;
+}

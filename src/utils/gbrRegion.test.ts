@@ -28,15 +28,15 @@ describe('GBR Region Helper Logic', () => {
 
   describe('getPlaceFlagUrl for GBR', () => {
     it('should return GBR sub-region flag URL with correct extension (e.g. .jpg for Bristol, .png for Hull)', () => {
-      const bristolUrl = getPlaceFlagUrl('GBR-E06000023');
+      const bristolUrl = getPlaceFlagUrl('GBR-GB-BST');
       expect(bristolUrl).toBe('https://cdn.jsdelivr.net/gh/amckenna41/iso3166-flags@main/iso3166-2-flags/GB/GB-BST.jpg');
 
-      const hullUrl = getPlaceFlagUrl('GBR-E06000010');
+      const hullUrl = getPlaceFlagUrl('GBR-GB-KHL');
       expect(hullUrl).toBe('https://cdn.jsdelivr.net/gh/amckenna41/iso3166-flags@main/iso3166-2-flags/GB/GB-KHL.png');
     });
 
-    it('should fall back to country flag URL (gb.svg) for unmatched GBR ONS codes', () => {
-      const url = getPlaceFlagUrl('GBR-E09000001');
+    it('should fall back to country flag URL (gb.svg) for unmatched GBR keys', () => {
+      const url = getPlaceFlagUrl('GBR-GB-XYZ');
       expect(url).toBe('https://flagcdn.com/gb.svg');
     });
   });

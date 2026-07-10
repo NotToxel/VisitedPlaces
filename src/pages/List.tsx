@@ -5,7 +5,6 @@ import { useStore } from '../store/useStore';
 import type { PlaceStatus } from '../store/useStore';
 import { 
   Search, 
-  Filter, 
   Check, 
   Heart, 
   ChevronDown, 
@@ -17,12 +16,68 @@ import {
   Map, 
   Layers, 
   Trophy,
-  Globe
+  Globe,
+  ArrowUpAZ,
+  ArrowDownAZ,
+  ListOrdered
 } from 'lucide-react';
 import { fetchSubRegions, hasDrilldownSupport } from '../utils/topojsonCache';
 import type { TopoRegion } from '../utils/topojsonCache';
-import { getPlaceFlagUrl, getParentCountryFlagUrl } from '../utils/flagUtils';
+import { FlagImage } from '../components/common/FlagImage';
+import { preloadPlaceFlags } from '../utils/flagUtils';
 import { fuzzyMatch, matchCountry } from '../utils/searchUtils';
+
+// Continent metadata with emoji icons
+const CONTINENTS: { name: string; emoji: string; shortName: string }[] = [
+  { name: 'Africa', emoji: '🌍', shortName: 'Africa' },
+  { name: 'Asia', emoji: '🌏', shortName: 'Asia' },
+  { name: 'Europe', emoji: '🏰', shortName: 'Europe' },
+  { name: 'North America', emoji: '🌎', shortName: 'N. America' },
+  { name: 'Oceania', emoji: '🌊', shortName: 'Oceania' },
+  { name: 'South America', emoji: '🌎', shortName: 'S. America' },
+];
+
+// Sort mode types
+type SortMode = 'A-Z' | 'Z-A' | 'STATUS';
+
+// Status filter type
+type StatusFilter = 'ALL' | 'VISITED' | 'WISHLIST' | 'REVISIT' | 'AVOID' | 'UNSELECTED';
+
+// Status priority for "Status First" sorting
+const STATUS_PRIORITY: Record<string, number> = {
+  VISITED: 0,
+  WISHLIST: 1,
+  REVISIT: 2,
+  AVOID: 3,
+  NONE: 4,
+};
+
+// Status display config
+const STATUS_CONFIG: { status: StatusFilter; label: string; colorVar: string; dot: boolean }[] = [
+  { status: 'ALL', label: 'All', colorVar: 'var(--accent-primary)', dot: false },
+  { status: 'VISITED', label: 'Visited', colorVar: 'var(--accent-visited)', dot: true },
+  { status: 'WISHLIST', label: 'Wishlist', colorVar: 'var(--accent-wishlist)', dot: true },
+  { status: 'REVISIT', label: 'Revisit', colorVar: 'var(--accent-revisit)', dot: true },
+  { status: 'AVOID', label: 'Avoid', colorVar: 'var(--accent-avoid)', dot: true },
+  { status: 'UNSELECTED', label: 'Unselected', colorVar: 'var(--text-secondary)', dot: false },
+];
+
+// Status badge config for cards
+const BADGE_CONFIG: Record<string, { label: string; icon: React.ReactNode; color: string }> = {
+  VISITED: { label: 'Visited', icon: <Check size={9} />, color: 'var(--accent-visited)' },
+  WISHLIST: { label: 'Wishlist', icon: <Heart size={9} fill="currentColor" />, color: 'var(--accent-wishlist)' },
+  REVISIT: { label: 'Revisit', icon: <RotateCcw size={9} />, color: 'var(--accent-revisit)' },
+  AVOID: { label: 'Avoid', icon: <Ban size={9} />, color: 'var(--accent-avoid)' },
+};
+
+// Status group labels for "Status First" grouping
+const STATUS_GROUP_LABELS: Record<string, string> = {
+  VISITED: 'Visited',
+  WISHLIST: 'Wishlist',
+  REVISIT: 'Want to Revisit',
+  AVOID: 'Avoid',
+  NONE: 'Unselected',
+};
 
 const List: React.FC = () => {
   const { places, setCountryStatus, neDataLoaded } = useStore();
@@ -31,14 +86,23 @@ const List: React.FC = () => {
   const [search, setSearch] = useState('');
   const deferredSearch = useDeferredValue(search);
   const [searchSubRegions, setSearchSubRegions] = useState(false);
-  const [filterMode, setFilterMode] = useState<'ALL' | 'VISITED' | 'WISHLIST' | 'REVISIT' | 'AVOID' | 'UNSELECTED'>('ALL');
-  const [collapsedContinents, setCollapsedContinents] = useState<Record<string, boolean>>({});
+  const [filterMode, setFilterMode] = useState<StatusFilter>('ALL');
+  const [sortMode, setSortMode] = useState<SortMode>('A-Z');
+  const [continentFilter, setContinentFilter] = useState<Set<string>>(new Set());
+  const [collapsedGroups, setCollapsedGroups] = useState<Record<string, boolean>>({});
 
   // Sub-region loading & selection
   const [selectedCountryId, setSelectedCountryId] = useState<string | null>(null);
   const [subRegionSearch, setSubRegionSearch] = useState('');
+  const [subRegionFilter, setSubRegionFilter] = useState<StatusFilter>('ALL');
   const [subRegionsByCountry, setSubRegionsByCountry] = useState<Record<string, TopoRegion[]>>({});
   const [loadingSubRegions, setLoadingSubRegions] = useState<Record<string, boolean>>({});
+
+  const selectCountry = useCallback((id: string | null) => {
+    setSelectedCountryId(id);
+    setSubRegionSearch('');
+    setSubRegionFilter('ALL');
+  }, []);
 
   // Fetch subregions helper
   const loadSubRegions = useCallback(async (id: string) => {
@@ -50,10 +114,6 @@ const List: React.FC = () => {
   }, [subRegionsByCountry, loadingSubRegions]);
 
   // When sub-region search is enabled, bulk-load sub-regions for every country.
-  // The NE admin-1 GeoJSON is already cached in memory after the initial fetch,
-  // so each fetchSubRegions call is just an in-memory filter — effectively free.
-  // We re-run whenever neDataLoaded flips to true so countries loaded after the
-  // toggle is set also get their sub-regions populated.
   useEffect(() => {
     if (!searchSubRegions) return;
     const timer = setTimeout(() => {
@@ -65,11 +125,17 @@ const List: React.FC = () => {
   // Trigger sub-regions load when a country with sub-regions is selected
   useEffect(() => {
     if (selectedCountryId && hasDrilldownSupport(selectedCountryId)) {
-      Promise.resolve().then(() => {
-        loadSubRegions(selectedCountryId);
+      Promise.resolve().then(async () => {
+        await loadSubRegions(selectedCountryId);
+        const subRegs = subRegionsByCountry[selectedCountryId];
+        if (subRegs) {
+          preloadPlaceFlags(subRegs.map(r => r.id));
+        }
       });
     }
-  }, [selectedCountryId, loadSubRegions]);
+  }, [selectedCountryId, loadSubRegions, subRegionsByCountry]);
+
+
 
   // Handle direct country status click
   const handleStatusChange = (id: string, newStatus: PlaceStatus) => {
@@ -99,6 +165,64 @@ const List: React.FC = () => {
     return COUNTRIES.find(c => c.id === selectedCountryId) || null;
   }, [selectedCountryId]);
 
+  // Toggle continent filter
+  const toggleContinent = (continent: string) => {
+    setContinentFilter(prev => {
+      const next = new Set(prev);
+      if (next.has(continent)) {
+        next.delete(continent);
+      } else {
+        next.add(continent);
+      }
+      return next;
+    });
+  };
+
+  // Cycle sort mode
+  const cycleSortMode = () => {
+    setSortMode(prev => {
+      if (prev === 'A-Z') return 'Z-A';
+      if (prev === 'Z-A') return 'STATUS';
+      return 'A-Z';
+    });
+  };
+
+  // Overall Statistics
+  const stats = useMemo(() => {
+    const total = COUNTRIES.length;
+    const visited = COUNTRIES.filter(c => places[c.id]?.status === 'VISITED').length;
+    const wishlist = COUNTRIES.filter(c => places[c.id]?.status === 'WISHLIST').length;
+    const revisit = COUNTRIES.filter(c => places[c.id]?.status === 'REVISIT').length;
+    const avoid = COUNTRIES.filter(c => places[c.id]?.status === 'AVOID').length;
+    const unselected = total - visited - wishlist - revisit - avoid;
+    const visitedAndRevisitCount = visited + revisit;
+    const rate = total > 0 ? Math.round((visitedAndRevisitCount / total) * 1000) / 10 : 0;
+    
+    // Continent breakdown
+    const continents: Record<string, { total: number; visited: number }> = {};
+    COUNTRIES.forEach(c => {
+      if (!continents[c.continent]) {
+        continents[c.continent] = { total: 0, visited: 0 };
+      }
+      continents[c.continent].total++;
+      if (places[c.id]?.status === 'VISITED' || places[c.id]?.status === 'REVISIT') {
+        continents[c.continent].visited++;
+      }
+    });
+
+    return { total, visited, wishlist, revisit, avoid, unselected, rate, continents };
+  }, [places]);
+
+  // Status counts for filter pills
+  const statusCounts = useMemo(() => ({
+    ALL: COUNTRIES.length,
+    VISITED: stats.visited,
+    WISHLIST: stats.wishlist,
+    REVISIT: stats.revisit,
+    AVOID: stats.avoid,
+    UNSELECTED: stats.unselected,
+  }), [stats]);
+
   // Filter countries list
   const filteredCountries = useMemo(() => {
     return COUNTRIES.filter(c => {
@@ -117,54 +241,73 @@ const List: React.FC = () => {
         filterMode === 'ALL' ? true :
         filterMode === 'UNSELECTED' ? status === 'NONE' :
         filterMode === status;
-        
-      return matchesSearch && matchesFilter;
-    });
-  }, [places, deferredSearch, filterMode, searchSubRegions, subRegionsByCountry]);
 
-  // Group countries by continent
+      const matchesContinent = continentFilter.size === 0 || continentFilter.has(c.continent);
+        
+      return matchesSearch && matchesFilter && matchesContinent;
+    });
+  }, [places, deferredSearch, filterMode, searchSubRegions, subRegionsByCountry, continentFilter]);
+
+  // Sort countries
+  const sortedCountries = useMemo(() => {
+    const sorted = [...filteredCountries];
+    if (sortMode === 'A-Z') {
+      sorted.sort((a, b) => a.name.localeCompare(b.name));
+    } else if (sortMode === 'Z-A') {
+      sorted.sort((a, b) => b.name.localeCompare(a.name));
+    } else {
+      // Status first: group by status priority, then A-Z within
+      sorted.sort((a, b) => {
+        const statusA = places[a.id]?.status || 'NONE';
+        const statusB = places[b.id]?.status || 'NONE';
+        const priorityDiff = STATUS_PRIORITY[statusA] - STATUS_PRIORITY[statusB];
+        if (priorityDiff !== 0) return priorityDiff;
+        return a.name.localeCompare(b.name);
+      });
+    }
+    return sorted;
+  }, [filteredCountries, sortMode, places]);
+
+  // Group countries by continent or status
   const groupedPlaces = useMemo(() => {
     const groups: Record<string, Country[]> = {};
-    filteredCountries.forEach(place => {
-      if (!groups[place.continent]) groups[place.continent] = [];
-      groups[place.continent].push(place);
-    });
-    
-    // Sort alphabetically within continents
-    Object.keys(groups).forEach(continent => {
-      groups[continent].sort((a, b) => a.name.localeCompare(b.name));
-    });
-    
-    // Sort continents alphabetically
-    return Object.keys(groups).sort().reduce((acc, key) => {
-      acc[key] = groups[key];
-      return acc;
-    }, {} as Record<string, Country[]>);
-  }, [filteredCountries]);
 
-  // Toggle continent section
-  const toggleContinent = (continent: string) => {
-    setCollapsedContinents(prev => ({
-      ...prev,
-      [continent]: !prev[continent]
-    }));
-  };
-
-  // Get status color styling
-  const getCardBorderAndBg = (status: PlaceStatus, isSelected: boolean) => {
-    let base = "border rounded-2xl transition-all duration-200 cursor-pointer p-4 flex flex-col justify-between gap-3 min-h-[96px] ";
-    
-    if (isSelected) {
-      base += "ring-2 ring-primary border-primary bg-primary/5 shadow-[0_0_12px_rgba(122,162,247,0.15)] ";
-      return base;
+    if (sortMode === 'STATUS') {
+      // Group by status
+      sortedCountries.forEach(country => {
+        const status = places[country.id]?.status || 'NONE';
+        const groupLabel = STATUS_GROUP_LABELS[status] || 'Unselected';
+        if (!groups[groupLabel]) groups[groupLabel] = [];
+        groups[groupLabel].push(country);
+      });
+      // Return in status priority order
+      const orderedGroups: Record<string, Country[]> = {};
+      for (const statusLabel of Object.values(STATUS_GROUP_LABELS)) {
+        if (groups[statusLabel]) {
+          orderedGroups[statusLabel] = groups[statusLabel];
+        }
+      }
+      return orderedGroups;
+    } else {
+      // Group by continent
+      sortedCountries.forEach(country => {
+        if (!groups[country.continent]) groups[country.continent] = [];
+        groups[country.continent].push(country);
+      });
+      // Sort continents alphabetically
+      return Object.keys(groups).sort().reduce((acc, key) => {
+        acc[key] = groups[key];
+        return acc;
+      }, {} as Record<string, Country[]>);
     }
+  }, [sortedCountries, sortMode, places]);
 
-    if (status === 'VISITED') return base + "bg-accent-visited/5 border-accent-visited/35 hover:bg-accent-visited/10 text-accent-visited shadow-[0_2px_8px_-3px_rgba(158,206,106,0.1)]";
-    if (status === 'WISHLIST') return base + "bg-accent-wishlist/5 border-accent-wishlist/35 hover:bg-accent-wishlist/10 text-accent-wishlist shadow-[0_2px_8px_-3px_rgba(187,154,247,0.1)]";
-    if (status === 'REVISIT') return base + "bg-accent-revisit/5 border-accent-revisit/35 hover:bg-accent-revisit/10 text-accent-revisit shadow-[0_2px_8px_-3px_rgba(255,158,100,0.1)]";
-    if (status === 'AVOID') return base + "bg-accent-avoid/5 border-accent-avoid/35 hover:bg-accent-avoid/10 text-accent-avoid shadow-[0_2px_8px_-3px_rgba(239,68,68,0.1)]";
-    
-    return base + "bg-base-200/25 border-base-300/40 text-base-content/85 hover:bg-base-200/50 hover:border-base-300/70";
+  // Toggle group section
+  const toggleGroup = (group: string) => {
+    setCollapsedGroups(prev => ({
+      ...prev,
+      [group]: !prev[group]
+    }));
   };
 
   // Count visited subregions dynamically
@@ -181,30 +324,23 @@ const List: React.FC = () => {
     return visited > 0 ? `${visited}` : 'Map';
   }, [places, subRegionsByCountry, neDataLoaded]);
 
-  // Overall Statistics
-  const stats = useMemo(() => {
-    const total = COUNTRIES.length;
-    const visited = COUNTRIES.filter(c => places[c.id]?.status === 'VISITED').length;
-    const wishlist = COUNTRIES.filter(c => places[c.id]?.status === 'WISHLIST').length;
-    const revisit = COUNTRIES.filter(c => places[c.id]?.status === 'REVISIT').length;
-    const avoid = COUNTRIES.filter(c => places[c.id]?.status === 'AVOID').length;
-    const visitedAndRevisitCount = visited + revisit;
-    const rate = total > 0 ? Math.round((visitedAndRevisitCount / total) * 1000) / 10 : 0;
-    
-    // Continent breakdown
-    const continents: Record<string, { total: number; visited: number }> = {};
-    COUNTRIES.forEach(c => {
-      if (!continents[c.continent]) {
-        continents[c.continent] = { total: 0, visited: 0 };
-      }
-      continents[c.continent].total++;
-      if (places[c.id]?.status === 'VISITED' || places[c.id]?.status === 'REVISIT') {
-        continents[c.continent].visited++;
-      }
-    });
+  // Get accent color for a status
+  const getAccentColor = (status: PlaceStatus): string => {
+    switch (status) {
+      case 'VISITED': return 'var(--accent-visited)';
+      case 'WISHLIST': return 'var(--accent-wishlist)';
+      case 'REVISIT': return 'var(--accent-revisit)';
+      case 'AVOID': return 'var(--accent-avoid)';
+      default: return 'transparent';
+    }
+  };
 
-    return { total, visited, wishlist, revisit, avoid, rate, continents };
-  }, [places]);
+  // Sort mode icon and label
+  const sortModeDisplay = {
+    'A-Z': { icon: <ArrowUpAZ size={13} />, label: 'A → Z' },
+    'Z-A': { icon: <ArrowDownAZ size={13} />, label: 'Z → A' },
+    'STATUS': { icon: <ListOrdered size={13} />, label: 'Status' },
+  };
 
   // Render detail panel (shared between desktop sidebar and mobile bottom sheet)
   const renderDetailPanel = () => {
@@ -282,9 +418,15 @@ const List: React.FC = () => {
     
     // Filter subregions
     const subregionsList = subRegionsByCountry[selectedCountry.id] || [];
-    const filteredSubregions = subregionsList.filter(r => 
-      fuzzyMatch(r.name, subRegionSearch)
-    );
+    const filteredSubregions = subregionsList.filter(r => {
+      const matchesSearch = fuzzyMatch(r.name, subRegionSearch);
+      const stateStatus = places[r.id]?.status || 'NONE';
+      const matchesFilter = 
+        subRegionFilter === 'ALL' ? true :
+        subRegionFilter === 'UNSELECTED' ? stateStatus === 'NONE' :
+        stateStatus === subRegionFilter;
+      return matchesSearch && matchesFilter;
+    });
 
     return (
       <div className="flex flex-col gap-4 h-full overflow-hidden">
@@ -307,7 +449,7 @@ const List: React.FC = () => {
             </div>
           </div>
           <button 
-            onClick={() => setSelectedCountryId(null)}
+            onClick={() => selectCountry(null)}
             className="btn btn-ghost btn-xs btn-circle text-base-content/50 hover:text-base-content shrink-0"
             title="Close details"
           >
@@ -401,6 +543,46 @@ const List: React.FC = () => {
                     )}
                   </div>
 
+                  {/* Status filter for subregions */}
+                  <div className="flex gap-1 overflow-x-auto py-1 shrink-0 select-none no-scrollbar">
+                    {(['ALL', 'VISITED', 'WISHLIST', 'REVISIT', 'AVOID', 'UNSELECTED'] as const).map((mode) => {
+                      const isActive = subRegionFilter === mode;
+                      const activeColor = 
+                        mode === 'VISITED' ? 'var(--accent-visited)' : 
+                        mode === 'WISHLIST' ? 'var(--accent-wishlist)' : 
+                        mode === 'REVISIT' ? 'var(--accent-revisit)' : 
+                        mode === 'AVOID' ? 'var(--accent-avoid)' : 
+                        mode === 'UNSELECTED' ? 'var(--text-secondary)' :
+                        'var(--accent-primary)';
+                        
+                      return (
+                        <button
+                          key={mode}
+                          onClick={() => setSubRegionFilter(mode)}
+                          className={`btn btn-xs rounded-full font-bold px-2 py-0.5 text-[9px] transition-all flex items-center gap-1 shrink-0 ${
+                            isActive ? 'btn-active' : 'btn-outline border-base-300/30 text-base-content/60'
+                          }`}
+                          style={{
+                            borderColor: isActive ? activeColor : undefined,
+                            color: isActive ? activeColor : undefined,
+                            background: isActive ? `color-mix(in srgb, ${activeColor} 12%, transparent)` : undefined
+                          }}
+                          title={`Show ${mode.toLowerCase()} sub-regions`}
+                        >
+                          {mode === 'VISITED' && <Check size={8} />}
+                          {mode === 'WISHLIST' && <Heart size={8} fill="currentColor" />}
+                          {mode === 'REVISIT' && <RotateCcw size={8} />}
+                          {mode === 'AVOID' && <Ban size={8} />}
+                          <span>
+                            {mode === 'ALL' ? 'All' : 
+                             mode === 'UNSELECTED' ? 'Unselected' : 
+                             mode.charAt(0) + mode.slice(1).toLowerCase()}
+                          </span>
+                        </button>
+                      );
+                    })}
+                  </div>
+
                   {/* Bulk Actions */}
                   <div className="grid grid-cols-2 gap-1.5 shrink-0 mt-0.5">
                     <button
@@ -426,7 +608,6 @@ const List: React.FC = () => {
                     ) : (
                       filteredSubregions.map(state => {
                         const stateStatus = places[state.id]?.status || 'NONE';
-                        const flagUrl = getPlaceFlagUrl(state.id);
                         
                         return (
                           <div 
@@ -448,21 +629,10 @@ const List: React.FC = () => {
                                   handleStatusChange(state.id, 'VISITED');
                                 }}
                               >
-                                {flagUrl ? (
-                                  <img
-                                    src={flagUrl}
-                                    alt=""
-                                    className="w-7.5 h-5 object-cover rounded-sm border border-base-300/20"
-                                    onError={(e) => {
-                                      const parentFlag = getParentCountryFlagUrl(state.id);
-                                      if (parentFlag && e.currentTarget.src !== parentFlag) {
-                                        e.currentTarget.src = parentFlag;
-                                      }
-                                    }}
-                                  />
-                                ) : (
-                                  <div className="w-7.5 h-5 bg-base-300 rounded-sm border border-base-300/20" />
-                                )}
+                                <FlagImage
+                                  placeId={state.id}
+                                  className="w-7.5 h-5 object-cover rounded-sm border border-base-300/20"
+                                />
                               </div>
                               <span className="truncate flex-1 font-bold">{state.name}</span>
                             </div>
@@ -519,72 +689,94 @@ const List: React.FC = () => {
 
   return (
     <div className="p-4 md:p-6 h-full flex flex-col gap-4 overflow-hidden bg-transparent select-none max-w-6xl mx-auto w-full">
-      {/* Search and Filters Header */}
-      <div className="glass-panel border border-base-300/50 p-4.5 rounded-2xl shrink-0 flex flex-col gap-3.5 items-center justify-center">
-        <div className="flex flex-col items-center justify-center text-center gap-1 shrink-0 select-none">
-          <h2 className="flex items-center gap-2 text-md font-extrabold text-base-content justify-center">
-            <Filter size={16} className="text-primary animate-pulse" />
-            Country Directory
-          </h2>
+      {/* Toolbar Header */}
+      <div className="glass-panel border border-base-300/50 p-4 rounded-2xl shrink-0 flex flex-col gap-3">
+        
+        {/* Row 1: Search + Sort + Sub-region toggle */}
+        <div className="flex items-center justify-center gap-3 w-full">
+          <div className="relative w-full sm:max-w-xs">
+            <Search size={14} className="absolute left-2.5 top-1/2 -translate-y-1/2 text-base-content/40" />
+            <input 
+              type="text" 
+              className="input input-bordered input-sm !pl-8 w-full text-xs" 
+              placeholder="Search countries..." 
+              value={search}
+              onChange={(e) => setSearch(e.target.value)}
+            />
+            {search && (
+              <button 
+                onClick={() => setSearch('')}
+                className="absolute right-2.5 top-1/2 -translate-y-1/2 text-base-content/40 hover:text-base-content"
+              >
+                <X size={12} />
+              </button>
+            )}
+          </div>
+          
+          {/* Include sub-regions toggle */}
+          <label className="hidden sm:flex items-center gap-2 cursor-pointer text-xs text-base-content/70 select-none shrink-0 py-1">
+            <input 
+              type="checkbox" 
+              className="checkbox checkbox-primary checkbox-xs"
+              checked={searchSubRegions} 
+              onChange={(e) => setSearchSubRegions(e.target.checked)} 
+            />
+            <span>Sub-regions</span>
+          </label>
+
+          {/* Sort button */}
+          <button 
+            className="list-sort-btn"
+            onClick={cycleSortMode}
+            title={`Sort: ${sortMode}`}
+          >
+            {sortModeDisplay[sortMode].icon}
+            <span className="hidden sm:inline">{sortModeDisplay[sortMode].label}</span>
+          </button>
+        </div>
+
+        {/* Row 2: Continent Quick Filters */}
+        <div className="list-continent-chips">
+          <button
+            className={`list-continent-chip ${continentFilter.size === 0 ? 'list-continent-chip--active' : ''}`}
+            onClick={() => setContinentFilter(new Set())}
+          >
+            <span className="list-continent-chip__emoji">🌐</span>
+            <span>All</span>
+          </button>
+          {CONTINENTS.map(c => (
+            <button
+              key={c.name}
+              className={`list-continent-chip ${continentFilter.has(c.name) ? 'list-continent-chip--active' : ''}`}
+              onClick={() => toggleContinent(c.name)}
+            >
+              <span className="list-continent-chip__emoji">{c.emoji}</span>
+              <span>{c.shortName}</span>
+            </button>
+          ))}
+        </div>
+
+        {/* Row 3: Status Filter Pills */}
+        <div className="list-status-pills">
+          {STATUS_CONFIG.map(({ status, label, colorVar, dot }) => (
+            <button
+              key={status}
+              className={`list-status-pill ${filterMode === status ? 'list-status-pill--active' : ''}`}
+              style={{ '--pill-color': colorVar } as React.CSSProperties}
+              onClick={() => setFilterMode(status)}
+            >
+              {dot && <span className="list-status-pill__dot" />}
+              <span>{label}</span>
+              <span className="list-status-pill__count">{statusCounts[status]}</span>
+            </button>
+          ))}
+        </div>
+
+        {/* Summary line */}
+        <div className="text-center">
           <span className="text-[10px] text-base-content/40 font-bold uppercase tracking-wider">
             Showing {filteredCountries.length} of {COUNTRIES.length} countries
           </span>
-        </div>
-        
-        <div className="flex flex-col lg:flex-row gap-3.5 items-center justify-center w-full mt-0.5">
-          {/* Global search & Sub-regions check wrapper */}
-          <div className="flex flex-col sm:flex-row gap-3 items-center justify-center w-full lg:w-auto">
-            <div className="relative w-full sm:w-64 shrink-0">
-              <Search size={14} className="absolute left-2.5 top-1/2 -translate-y-1/2 text-base-content/40" />
-              <input 
-                type="text" 
-                className="input input-bordered input-sm !pl-8 w-full text-xs" 
-                placeholder="Search countries..." 
-                value={search}
-                onChange={(e) => setSearch(e.target.value)}
-              />
-              {search && (
-                <button 
-                  onClick={() => setSearch('')}
-                  className="absolute right-2.5 top-1/2 -translate-y-1/2 text-base-content/40 hover:text-base-content"
-                >
-                  <X size={12} />
-                </button>
-              )}
-            </div>
-            
-            {/* Include sub-regions toggle */}
-            <label className="flex items-center gap-2 cursor-pointer text-xs text-base-content/70 select-none shrink-0 py-1">
-              <input 
-                type="checkbox" 
-                className="checkbox checkbox-primary checkbox-xs"
-                checked={searchSubRegions} 
-                onChange={(e) => setSearchSubRegions(e.target.checked)} 
-              />
-              <span>Include Sub-regions</span>
-            </label>
-          </div>
-          
-          {/* Divider on desktop */}
-          <div className="hidden lg:block w-px h-6 bg-base-300/40" />
-          
-          {/* Global filter tabs */}
-          <div className="flex flex-wrap gap-1 justify-center items-center w-full lg:w-auto">
-            {(['ALL', 'VISITED', 'WISHLIST', 'REVISIT', 'AVOID', 'UNSELECTED'] as const).map((mode) => (
-              <button
-                key={mode}
-                className={`btn btn-xs font-semibold ${filterMode === mode ? 'btn-primary' : 'btn-outline border-base-300/40 text-base-content/85 hover:text-primary'}`}
-                onClick={() => setFilterMode(mode)}
-              >
-                {mode === 'ALL' ? 'All' : 
-                 mode === 'VISITED' ? 'Visited' : 
-                 mode === 'WISHLIST' ? 'Wishlist' : 
-                 mode === 'REVISIT' ? 'Revisit' : 
-                 mode === 'AVOID' ? 'Avoid' : 
-                 'Unselected'}
-              </button>
-            ))}
-          </div>
         </div>
       </div>
 
@@ -598,85 +790,88 @@ const List: React.FC = () => {
               No countries found matching your criteria.
             </div>
           ) : (
-            Object.entries(groupedPlaces).map(([continent, placesInContinent]) => {
-              const isCollapsed = collapsedContinents[continent];
+            Object.entries(groupedPlaces).map(([group, countriesInGroup]) => {
+              const isCollapsed = collapsedGroups[group];
               
               return (
-                <div key={continent} className="flex flex-col shrink-0">
+                <div key={group} className="flex flex-col shrink-0">
                   <h3 
-                    onClick={() => toggleContinent(continent)}
+                    onClick={() => toggleGroup(group)}
                     className="flex items-center gap-1.5 font-bold text-xs text-base-content/80 border-b border-base-300/35 pb-1.5 mt-2 mb-2 cursor-pointer uppercase tracking-wider select-none hover:text-primary transition-colors"
                   >
                     {isCollapsed ? <ChevronRight size={13} /> : <ChevronDown size={13} />}
-                    <span>{continent}</span>
-                    <span className="text-[10px] opacity-40 font-semibold font-mono">({placesInContinent.length})</span>
+                    <span>{group}</span>
+                    <span className="text-[10px] opacity-40 font-semibold font-mono">({countriesInGroup.length})</span>
                   </h3>
                   
                   {!isCollapsed && (
-                    <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-4 mt-2.5">
-                      {placesInContinent.map(country => {
+                    <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-3 mt-1">
+                      {countriesInGroup.map(country => {
                         const status = places[country.id]?.status || 'NONE';
                         const isSelected = selectedCountryId === country.id;
-                        const hasDrill = hasDrilldownSupport(country.id);                        return (
+                        const hasDrill = hasDrilldownSupport(country.id);
+                        const badge = BADGE_CONFIG[status];
+                        const accentColor = getAccentColor(status);
+
+                        return (
                           <div 
                             key={country.id} 
-                            onClick={() => {
-                              setSelectedCountryId(country.id);
-                              setSubRegionSearch('');
-                            }}
-                            className={getCardBorderAndBg(status, isSelected)}
+                            onClick={() => selectCountry(country.id)}
+                            className={`list-country-card ${isSelected ? 'list-country-card--selected' : ''}`}
                           >
-                            {/* Top Row: Identity (Flag, Name, Code) */}
-                            <div className="flex items-center gap-3 w-full min-w-0">
-                              <div 
-                                className="cursor-pointer shrink-0 hover:scale-105 transition-transform"
-                                title="Click flag to instantly toggle Visited status"
-                                onClick={(e) => {
-                                  e.stopPropagation();
-                                  handleStatusChange(country.id, 'VISITED');
-                                }}
-                              >
-                                {country.flag ? (
-                                  <img src={country.flag} alt="" className="w-9 h-6 object-cover rounded-sm border border-base-300/20" />
-                                ) : (
-                                  <div className="w-9 h-6 bg-base-300 rounded-sm border border-base-300/20" />
-                                )}
+                            {/* Left accent stripe */}
+                            <div className="list-country-card__accent" style={{ '--card-accent': accentColor } as React.CSSProperties} />
+                            
+                            {/* Main row: Flag + Name + Status badge */}
+                            <div className="list-country-card__main">
+                              {country.flag ? (
+                                <img src={country.flag} alt="" className="list-country-card__flag" />
+                              ) : (
+                                <div className="list-country-card__flag-placeholder" />
+                              )}
+                              <div className="list-country-card__info">
+                                <span className="list-country-card__name" title={country.name}>{country.name}</span>
+                                <span className="list-country-card__meta">{country.id} • {country.continent}</span>
                               </div>
-                              <div className="flex flex-col min-w-0 flex-1">
-                                <span className="truncate font-extrabold text-[14px] leading-tight text-base-content" title={country.name}>{country.name}</span>
-                                <span className="text-[10px] opacity-40 font-mono tracking-wider font-semibold uppercase">{country.id}</span>
-                              </div>
+                              {badge && (
+                                <div 
+                                  className="list-country-card__status-badge" 
+                                  style={{ '--badge-color': badge.color } as React.CSSProperties}
+                                >
+                                  {badge.icon}
+                                  <span>{badge.label}</span>
+                                </div>
+                              )}
                             </div>
 
-                            {/* Bottom Row: Progress (left) & Actions (right) */}
-                            <div className="flex items-center justify-between w-full pt-2 border-t border-base-300/10 gap-1.5" onClick={e => e.stopPropagation()}>
+                            {/* Bottom row: Sub-region badge + Action buttons */}
+                            <div className="list-country-card__actions" onClick={e => e.stopPropagation()}>
                               {hasDrill ? (
                                 <div 
-                                  className="flex items-center gap-1 bg-primary/10 border border-primary/20 text-primary rounded-lg px-2 py-0.5 text-[9px] font-bold shrink-0 select-none cursor-pointer hover:bg-primary/20 transition-colors"
+                                  className="list-country-card__subregion-badge"
                                   title="Click to view sub-regions"
                                   onClick={(e) => {
                                     e.stopPropagation();
-                                    setSelectedCountryId(country.id);
-                                    setSubRegionSearch('');
+                                    selectCountry(country.id);
                                   }}
                                 >
-                                  <Map size={9.5} />
+                                  <Map size={10} />
                                   <span>{getSubregionsProgressString(country.id)}</span>
                                 </div>
                               ) : (
                                 <div className="flex-1" />
                               )}
                               
-                              <div className="flex gap-1 shrink-0">
+                              <div className="flex gap-1.5 shrink-0">
                                 <button 
                                   onClick={(e) => {
                                     e.stopPropagation();
                                     handleStatusChange(country.id, 'VISITED');
                                   }}
                                   title="Visited"
-                                  className={`w-[26px] h-[26px] flex items-center justify-center rounded-full transition-all border ${status === 'VISITED' ? 'bg-success border-transparent text-white shadow-sm' : 'bg-base-200/50 border-base-300/10 text-base-content/40 hover:text-accent-visited hover:bg-accent-visited/10 hover:border-accent-visited/20'}`}
+                                  className={`list-country-card__action-btn list-country-card__action-btn--visited ${status === 'VISITED' ? 'list-country-card__action-btn--active' : ''}`}
                                 >
-                                  <Check size={11} />
+                                  <Check size={13} />
                                 </button>
                                 <button 
                                   onClick={(e) => {
@@ -684,9 +879,9 @@ const List: React.FC = () => {
                                     handleStatusChange(country.id, 'WISHLIST');
                                   }}
                                   title="Wishlist"
-                                  className={`w-[26px] h-[26px] flex items-center justify-center rounded-full transition-all border ${status === 'WISHLIST' ? 'bg-secondary border-transparent text-white shadow-sm' : 'bg-base-200/50 border-base-300/10 text-base-content/40 hover:text-accent-wishlist hover:bg-accent-wishlist/10 hover:border-accent-wishlist/20'}`}
+                                  className={`list-country-card__action-btn list-country-card__action-btn--wishlist ${status === 'WISHLIST' ? 'list-country-card__action-btn--active' : ''}`}
                                 >
-                                  <Heart size={11} fill={status === 'WISHLIST' ? 'currentColor' : 'none'} />
+                                  <Heart size={13} fill={status === 'WISHLIST' ? 'currentColor' : 'none'} />
                                 </button>
                                 <button 
                                   onClick={(e) => {
@@ -694,9 +889,9 @@ const List: React.FC = () => {
                                     handleStatusChange(country.id, 'REVISIT');
                                   }}
                                   title="Revisit"
-                                  className={`w-[26px] h-[26px] flex items-center justify-center rounded-full transition-all border ${status === 'REVISIT' ? 'bg-warning border-transparent text-white shadow-sm' : 'bg-base-200/50 border-base-300/10 text-base-content/40 hover:text-accent-revisit hover:bg-accent-revisit/10 hover:border-accent-revisit/20'}`}
+                                  className={`list-country-card__action-btn list-country-card__action-btn--revisit ${status === 'REVISIT' ? 'list-country-card__action-btn--active' : ''}`}
                                 >
-                                  <RotateCcw size={11} />
+                                  <RotateCcw size={13} />
                                 </button>
                                 <button 
                                   onClick={(e) => {
@@ -704,9 +899,9 @@ const List: React.FC = () => {
                                     handleStatusChange(country.id, 'AVOID');
                                   }}
                                   title="Avoid"
-                                  className={`w-[26px] h-[26px] flex items-center justify-center rounded-full transition-all border ${status === 'AVOID' ? 'bg-error border-transparent text-white shadow-sm' : 'bg-base-200/50 border-base-300/10 text-base-content/40 hover:text-accent-avoid hover:bg-accent-avoid/10 hover:border-accent-avoid/20'}`}
+                                  className={`list-country-card__action-btn list-country-card__action-btn--avoid ${status === 'AVOID' ? 'list-country-card__action-btn--active' : ''}`}
                                 >
-                                  <Ban size={11} />
+                                  <Ban size={13} />
                                 </button>
                               </div>
                             </div>
@@ -734,7 +929,7 @@ const List: React.FC = () => {
       {selectedCountry && (
         <div 
           className="fixed inset-0 lg:hidden bg-black/60 backdrop-blur-sm z-50 transition-opacity flex items-end justify-center animate-fadeIn"
-          onClick={() => setSelectedCountryId(null)}
+          onClick={() => selectCountry(null)}
         >
           <div 
             className="w-full max-h-[80vh] glass-panel bg-base-100 rounded-t-3xl border-t border-base-300 p-5 overflow-hidden flex flex-col gap-4 shadow-2xl animate-slideUp"

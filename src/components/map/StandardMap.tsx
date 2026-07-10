@@ -180,11 +180,10 @@ const StandardMapBase: React.FC<StandardMapProps> = ({
     }
   }, [highlightedCountry, activeCountry, countryBBox, animateTo]);
 
-  const handleCountryClick = useCallback((geo: GeoFeature, event: React.MouseEvent, displayName?: string) => {
-    const countryId = getRegionId(geo, numericToA3, activeCountry);
+  const handleCountryClick = useCallback((countryId: string, event: React.MouseEvent, displayName?: string) => {
     if (!countryId) return;
     onCountryClick(countryId, event, displayName);
-  }, [numericToA3, activeCountry, onCountryClick]);
+  }, [onCountryClick]);
 
   const handleMicrostateClick = useCallback((id: string, name: string, event: React.MouseEvent) => {
     onCountryClick(id, event, name);

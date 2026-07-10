@@ -156,23 +156,50 @@ export const fetchRawTopology = async (url: string): Promise<unknown> => {
   if (rawTopologyCache[url]) return rawTopologyCache[url];
   if (pendingTopologyRequests[url] !== undefined) return pendingTopologyRequests[url];
 
-  const promise = fetch(url)
-    .then((res) => {
+  const promise = (async () => {
+    // 1. Try CacheStorage first for persistent cross-session caching
+    if (typeof window !== 'undefined' && 'caches' in window) {
+      try {
+        const cache = await caches.open('visited-places-geo-cache-v1');
+        const cachedResponse = await cache.match(url);
+        if (cachedResponse) {
+          const data = await cachedResponse.json();
+          rawTopologyCache[url] = data;
+          return data;
+        }
+      } catch (err) {
+        console.warn('Cache Storage read failed, falling back to network:', err);
+      }
+    }
+
+    // 2. Fetch from network if not cached
+    try {
+      const res = await fetch(url);
       if (!res.ok) throw new Error(`Failed to fetch raw topology from ${url}`);
-      return res.json();
-    })
-    .then((data) => {
+      
+      const resClone = res.clone();
+      const data = await res.json();
+      
+      // Persist to CacheStorage asynchronously
+      if (typeof window !== 'undefined' && 'caches' in window) {
+        caches.open('visited-places-geo-cache-v1')
+          .then((cache) => cache.put(url, resClone))
+          .catch((err) => console.warn('Cache Storage write failed:', err));
+      }
+
       rawTopologyCache[url] = data;
       return data;
-    })
-    .catch((err) => {
+    } catch (err) {
       console.error(err);
       return null;
-    })
-    .finally(() => {
-      delete pendingTopologyRequests[url];
-    });
+    }
+  })();
 
   pendingTopologyRequests[url] = promise;
+
+  promise.finally(() => {
+    delete pendingTopologyRequests[url];
+  });
+
   return promise;
 };

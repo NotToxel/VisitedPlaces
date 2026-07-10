@@ -224,7 +224,9 @@ const HexagonMapBase: React.FC<HexagonMapProps> = ({
                 strokeWidth={0.8}
                 style={{ cursor: 'pointer', outline: 'none', transition: 'fill 0.2s ease, transform 0.2s ease' }}
                 onMouseEnter={(e) => {
-                  setHoveredId(countryId);
+                  if (window.matchMedia('(hover: hover)').matches) {
+                    setHoveredId(countryId);
+                  }
                   showMapTooltip(`${dot.name}${isSelected ? ` - ${formatStatusLabel(status)}` : ''}`, e);
                 }}
                 onMouseMove={(e) => {

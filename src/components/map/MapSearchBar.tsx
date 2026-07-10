@@ -5,7 +5,7 @@ import type { Country } from '../../data/countries';
 import { matchCountry } from '../../utils/searchUtils';
 import type { PlaceStatus } from '../../store/useStore';
 import type { TopoRegion } from '../../utils/topojsonCache';
-import { getPlaceFlagUrl, getParentCountryFlagUrl } from '../../utils/flagUtils';
+import { FlagImage } from '../common/FlagImage';
 
 interface MapSearchBarProps {
   mapStyle: 'STANDARD' | 'HEXAGON';
@@ -212,16 +212,9 @@ export const MapSearchBar: React.FC<MapSearchBarProps> = ({
                 onMouseEnter={() => setKbIndex(idx)}
               >
                 {activeCountry ? (
-                  <img
-                    src={getPlaceFlagUrl(item.id) || getParentCountryFlagUrl(item.id) || ''}
-                    alt=""
+                  <FlagImage
+                    placeId={item.id}
                     className="map-search-bar__dropdown-flag object-cover rounded-sm"
-                    onError={(e) => {
-                      const fallback = getParentCountryFlagUrl(item.id);
-                      if (fallback) {
-                        e.currentTarget.src = fallback;
-                      }
-                    }}
                   />
                 ) : flag ? (
                   <img

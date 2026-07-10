@@ -1,7 +1,7 @@
 # AGENTS.MD — VisitedPlaces Project Guide
 
-> **Version**: 2.0.0  
-> **Last Updated**: 2026-07-09  
+> **Version**: 2.1.0  
+> **Last Updated**: 2026-07-10  
 > **Status**: Active Development
 
 ---
@@ -252,7 +252,7 @@ We use [Semantic Versioning](https://semver.org/):
 
 ### Current Version
 
-`2.0.0` — Major release introducing a global sub-region drill-down system for all countries using Natural Earth baseline data, data-driven overseas territories, regional flags with country fallbacks, and transition to universal geoMercator projection.
+`2.1.0` — Minor release introducing offline-first CacheStorage persistent caching for maps, background flag preloading during country drilldowns, proactive CDN flag verification (2,843 sub-national flags), and USA/GBR standardizations to Natural Earth baselines with backwards-compatible legacy key migrations.
 
 ### Display
 

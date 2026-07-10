@@ -3,8 +3,7 @@ import { geoMercator, geoPath } from 'd3-geo';
 import { Check, Heart, Ban, RotateCcw } from 'lucide-react';
 import type { NERegionFeature, NEFeature } from '../../data/naturalEarthAdmin1';
 import type { PlaceStatus } from '../../store/useStore';
-import { getPlaceFlagUrl, getParentCountryFlagUrl } from '../../utils/flagUtils';
-import { COUNTRIES } from '../../data/countries';
+import { FlagImage } from '../common/FlagImage';
 
 interface RegionCardGridProps {
   activeCountry: string;
@@ -104,7 +103,6 @@ interface RegionCardProps {
   activeCountry: string;
   regionFeature: NERegionFeature;
   status: PlaceStatus;
-  countryCca2: string;
   onSetRegionStatus: (countryId: string, regionId: string, status: PlaceStatus) => void;
 }
 
@@ -112,16 +110,11 @@ const RegionCardBase: React.FC<RegionCardProps> = ({
   activeCountry,
   regionFeature,
   status,
-  countryCca2,
   onSetRegionStatus,
 }) => {
   const { regionId, displayName, feature } = regionFeature;
 
   const svgPath = useMemo(() => computeRegionPath(feature), [feature]);
-
-  const flagUrl = useMemo(() => {
-    return getPlaceFlagUrl(regionId) || `https://flagcdn.com/${countryCca2.toLowerCase()}.svg`;
-  }, [regionId, countryCca2]);
 
   const handleMapClick = useCallback(() => {
     const nextStatus = status === 'VISITED' ? 'NONE' : 'VISITED';
@@ -163,20 +156,13 @@ const RegionCardBase: React.FC<RegionCardProps> = ({
       </svg>
 
       <div className="region-card__info">
-        <img
-          src={flagUrl}
-          alt=""
+        <FlagImage
+          placeId={regionId}
           className="region-card__flag cursor-pointer"
           title="Click flag to instantly toggle Visited status"
           onClick={(e) => {
             e.stopPropagation();
             handleMapClick();
-          }}
-          onError={(e) => {
-            const parentFlag = getParentCountryFlagUrl(regionId);
-            if (parentFlag && e.currentTarget.src !== parentFlag) {
-              e.currentTarget.src = parentFlag;
-            }
           }}
         />
         <span className="region-card__name" title={displayName}>{displayName}</span>
@@ -206,27 +192,6 @@ const RegionCardGridBase: React.FC<RegionCardGridProps> = ({
   places,
   onSetRegionStatus,
 }) => {
-  const countryCca2 = useMemo(() => {
-    const country = COUNTRIES.find((c) => c.id === activeCountry);
-    if (country) return country.cca2.toLowerCase();
-
-    const territoryCca2Map: Record<string, string> = {
-      'ATF': 'tf',
-      'NCL': 'nc',
-      'GRL': 'gl',
-      'ESH': 'eh',
-      'FRO': 'fo',
-      'FLK': 'fk',
-      'SJM': 'sj',
-      'ALA': 'ax',
-      'PYF': 'pf',
-      'COK': 'ck',
-      'SHN': 'sh',
-      'WLF': 'wf'
-    };
-    return territoryCca2Map[activeCountry] || '';
-  }, [activeCountry]);
-
   const visitedCount = useMemo(() => {
     return features.filter((f) => {
       const regionStatus = places[activeCountry]?.regions?.[f.regionId];
@@ -254,7 +219,6 @@ const RegionCardGridBase: React.FC<RegionCardGridProps> = ({
                 activeCountry={activeCountry}
                 regionFeature={rf}
                 status={regionStatus}
-                countryCca2={countryCca2}
                 onSetRegionStatus={onSetRegionStatus}
               />
             );

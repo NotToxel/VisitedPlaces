@@ -16,7 +16,7 @@ import { getAllCountryFeaturesWithMeta } from '../../data/naturalEarthAdmin1';
 import type { NERegionFeature } from '../../data/naturalEarthAdmin1';
 import { getSubRegionUrl, fetchSubRegions } from '../../utils/topojsonCache';
 import type { TopoRegion } from '../../utils/topojsonCache';
-import { getPlaceFlagUrl } from '../../utils/flagUtils';
+import { getPlaceFlagUrl, preloadPlaceFlags } from '../../utils/flagUtils';
 import { hideMapTooltip } from '../../utils/mapUtils';
 
 interface ContextMenuState {
@@ -44,7 +44,10 @@ export const MapContainer: React.FC = () => {
   useEffect(() => {
     if (activeCountry) {
       fetchSubRegions(activeCountry)
-        .then((regions) => setSubRegions(regions))
+        .then((regions) => {
+          setSubRegions(regions);
+          preloadPlaceFlags(regions.map((r) => r.id));
+        })
         .catch(() => {
           Promise.resolve().then(() => setSubRegions([]));
         });
@@ -210,7 +213,7 @@ export const MapContainer: React.FC = () => {
 
       {/* Express Mode Active Banner */}
       {expressMode && (
-        <div className={`absolute left-1/2 -translate-x-1/2 z-30 flex items-center gap-2 bg-slate-900/85 backdrop-blur-md text-white font-extrabold px-3.5 py-2 rounded-2xl shadow-lg text-[11px] select-none border border-white/10 transition-all ${
+        <div className={`absolute left-1/2 -translate-x-1/2 z-30 flex items-center gap-1.5 sm:gap-2 bg-slate-900/85 backdrop-blur-md text-white font-extrabold px-2 py-1.5 sm:px-3.5 sm:py-2 rounded-2xl shadow-lg text-[11px] select-none border border-white/10 transition-all ${
           activeCountry ? 'top-[98px] sm:top-[88px]' : 'top-[88px]'
         }`}>
           <Zap size={12} fill="currentColor" className="animate-pulse text-amber-400 shrink-0" />
@@ -221,7 +224,8 @@ export const MapContainer: React.FC = () => {
             <button
               key={status}
               onClick={() => setExpressStatus(status)}
-              className="flex items-center gap-1 px-2.5 py-1 rounded-full text-[10px] font-bold transition-all cursor-pointer border"
+              className="flex items-center justify-center gap-1 p-1.5 sm:px-2.5 sm:py-1 rounded-full text-[10px] font-bold transition-all cursor-pointer border"
+              title={label}
               style={{
                 background: expressStatus === status ? color : 'transparent',
                 color: expressStatus === status ? '#0f172a' : color,
@@ -233,7 +237,7 @@ export const MapContainer: React.FC = () => {
               {status === 'WISHLIST' && <Heart size={10} fill={expressStatus === status ? 'currentColor' : 'none'} />}
               {status === 'REVISIT' && <RotateCcw size={10} />}
               {status === 'AVOID' && <Ban size={10} />}
-              {label}
+              <span className="hidden sm:inline">{label}</span>
             </button>
           ))}
           <div className="w-px h-4 bg-white/15 shrink-0" />

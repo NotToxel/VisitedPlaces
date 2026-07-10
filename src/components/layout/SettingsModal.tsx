@@ -61,6 +61,7 @@ export const SettingsModal: React.FC<SettingsModalProps> = ({ onClose }) => {
     
     // Selectively remove app keys
     localStorage.removeItem('visited-places-storage');
+    localStorage.removeItem('visited-places-v2');
     localStorage.removeItem('visited-places-compare-groups');
     localStorage.removeItem('visited-places-active-group-id');
     

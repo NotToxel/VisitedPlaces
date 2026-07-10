@@ -15,7 +15,7 @@ interface MapGeographiesProps {
   showWishlist: boolean;
   showAvoid: boolean;
   showRevisit: boolean;
-  handleCountryClick: (geo: GeoFeature, event: React.MouseEvent, displayName?: string) => void;
+  handleCountryClick: (countryId: string, event: React.MouseEvent, displayName?: string) => void;
   strokeWidth?: number;
 }
 
@@ -126,7 +126,7 @@ const MapGeographiesBase: React.FC<MapGeographiesProps> = ({
               onMouseEnter={(e) => showMapTooltip(tooltipText, e)}
               onMouseMove={(e) => showMapTooltip(tooltipText, e)}
               onMouseLeave={hideMapTooltip}
-              onClick={(e) => handleCountryClick(feature, e, countryName)}
+              onClick={(e) => handleCountryClick(countryId, e, countryName)}
               fill={fill}
               stroke={isHighlighted ? "var(--accent-highlight)" : 'var(--map-stroke)'}
               strokeWidth={isHighlighted ? (strokeWidth ? strokeWidth * 2 : 1.5) : (strokeWidth ?? (activeCountry ? 0.7 : 0.5))}
