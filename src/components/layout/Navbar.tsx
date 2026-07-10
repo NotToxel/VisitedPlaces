@@ -1,6 +1,6 @@
 import React from 'react';
 import { NavLink } from 'react-router-dom';
-import { Map, List, BarChart3, Users, Settings } from 'lucide-react';
+import { Map, List, BarChart3, Users, Settings, Info } from 'lucide-react';
 import { SettingsModal } from './SettingsModal';
 
 export const Navbar: React.FC = () => {
@@ -74,6 +74,14 @@ export const Navbar: React.FC = () => {
           >
             <Users size={14} />
             <span className="hidden sm:inline">Compare</span>
+          </NavLink>
+          <NavLink
+            to="/about"
+            className={({ isActive }) => getLinkClass(isActive)}
+            title="About"
+          >
+            <Info size={14} />
+            <span className="hidden sm:inline">About</span>
           </NavLink>
           <button
             onClick={() => setIsSettingsOpen(true)}

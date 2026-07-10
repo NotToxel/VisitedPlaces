@@ -261,7 +261,7 @@ const StandardMapBase: React.FC<StandardMapProps> = ({
   }, [activeCountry, drilldownDefaultCenter, drilldownDefaultZoom, setSubRegionCenter, setSubRegionZoom]);
 
   return (
-    <div style={{ width: '100%', height: '100%', position: 'relative', display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center' }}>
+    <div className={`standard-map-wrapper ${activeCountry ? 'standard-map-wrapper--drilldown' : ''}`} style={{ width: '100%', height: '100%', position: 'relative', display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center' }}>
       {activeCountry ? (
         <DrilldownControls 
           config={currentConfig}
@@ -299,10 +299,10 @@ const StandardMapBase: React.FC<StandardMapProps> = ({
           key={activeCountry || 'world'} 
           center={activeCountry ? subRegionCenter : mapCenter} 
           zoom={activeCountry ? subRegionZoom : mapZoom} 
-          minZoom={0.5} 
+          minZoom={0.3} 
           maxZoom={24} 
           onMoveEnd={handleMoveEnd}
-          translateExtent={[[-200, -150], [1000, 650]]}
+          translateExtent={[[-400, -250], [1200, 750]]}
         >
           <MapGeographies 
             geoData={geoData}

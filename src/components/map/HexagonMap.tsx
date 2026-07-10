@@ -346,7 +346,7 @@ const HexagonMapBase: React.FC<HexagonMapProps> = ({
   }, [onCountryClick]);
 
   return (
-    <div style={{ width: '100%', height: '100%', position: 'relative', display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center' }}>
+    <div className="hexagon-map-wrapper" style={{ width: '100%', height: '100%', position: 'relative', display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center' }}>
       <button 
         onClick={handleResetZoom}
         className="map-reset-zoom"

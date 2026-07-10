@@ -115,9 +115,9 @@ const CompareMapBase: React.FC<CompareMapProps> = ({ mergedData, numericToA3 }) 
         <ZoomableGroup 
           center={[0, 0]} 
           zoom={1} 
-          minZoom={0.5} 
+          minZoom={0.3} 
           maxZoom={24}
-          translateExtent={[[-200, -150], [1000, 650]]}
+          translateExtent={[[-400, -250], [1200, 750]]}
         >
           {worldData && (
             <CompareMapGeographies 

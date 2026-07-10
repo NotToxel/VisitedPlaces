@@ -251,6 +251,10 @@ export const SettingsModal: React.FC<SettingsModalProps> = ({ onClose }) => {
             )}
           </div>
 
+          {/* Version */}
+          <div className="text-center text-[10px] text-base-content/40 mt-1 select-none">
+            VisitedPlaces v{__APP_VERSION__}
+          </div>
         </div>
       </div>
     </>

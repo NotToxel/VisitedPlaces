@@ -1858,11 +1858,15 @@ path.rsm-geography:active {
   }
 
   .map-reset-zoom {
-    top: 8px;
-    right: 8px;
+    top: 60px;
+    right: 12px;
     padding: 5px 12px;
     font-size: 0.65rem;
     border-radius: 8px;
+  }
+
+  .standard-map-wrapper--drilldown .map-reset-zoom {
+    top: 104px;
   }
 
   .region-card-grid {

@@ -7,6 +7,7 @@ const Home = React.lazy(() => import('./pages/Home'));
 const List = React.lazy(() => import('./pages/List'));
 const Analytics = React.lazy(() => import('./pages/Analytics'));
 const Compare = React.lazy(() => import('./pages/Compare'));
+const About = React.lazy(() => import('./pages/About'));
 
 const App: React.FC = () => {
   const { theme } = useStore();
@@ -29,6 +30,7 @@ const App: React.FC = () => {
           <Route path="list" element={<List />} />
           <Route path="analytics" element={<Analytics />} />
           <Route path="compare" element={<Compare />} />
+          <Route path="about" element={<About />} />
         </Route>
       </Routes>
     </BrowserRouter>
