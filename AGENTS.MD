@@ -263,6 +263,7 @@ The version is injected at build time via Vite's `define` config and displayed a
 1. Bump the `version` field in `package.json`
 2. The app automatically picks up the new version at next build
 3. Update this document's version header
+4. Update the version badge in `README.md`
 
 ---
 
@@ -322,7 +323,7 @@ npx playwright test   # E2E tests (requires Playwright browsers installed)
 - Use [Conventional Commits](https://www.conventionalcommits.org/): `feat:`, `fix:`, `chore:`, `refactor:`, `docs:`, `test:`
 - Each commit should be atomic — one logical change per commit.
 - Commit messages should explain *why*, not just *what*.
-- **Version Bumping**: You MUST bump the version number in `package.json` and this document (both the header and "Current Version" section) whenever you make changes and commit code. The new version number must be included at the bottom of the commit message (e.g., `Version: X.Y.Z`).
+- **Version Bumping**: You MUST bump the version number in `package.json`, `README.md` (the version badge), and this document (both the header and "Current Version" section) whenever you make changes and commit code. The new version number must be included at the bottom of the commit message (e.g., `Version: X.Y.Z`).
 
 ---
 

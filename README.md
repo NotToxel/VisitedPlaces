@@ -1,8 +1,8 @@
 # 🌍 VisitedPlaces
 
-**An interactive, offline-first world travel tracker** — mark countries and regions you've visited, explore your travel analytics, and compare maps with friends using shareable codes.
+**An interactive world travel tracker** — mark countries and regions you've visited, explore your travel analytics, and compare maps with friends using shareable codes.
 
-[![Version](https://img.shields.io/badge/version-2.1.3-blue.svg)](package.json)
+[![Version](https://img.shields.io/badge/version-2.2.3-blue.svg)](package.json)
 [![License: AGPL-3.0](https://img.shields.io/badge/License-AGPL--3.0-blue.svg)](LICENSE)
 [![TypeScript](https://img.shields.io/badge/TypeScript-Strict-3178C6.svg)](tsconfig.app.json)
 
@@ -32,11 +32,9 @@
 
 ## 🗃️ Data Sources
 
-VisitedPlaces utilizes high-quality, open-source datasets to power offline-first maps, country metadata, and sub-national flags:
+VisitedPlaces utilizes high-quality, open-source datasets to power interactive maps, country metadata, and sub-national flags:
 
 *   **World Map Geometries:** TopoJSON boundaries from the [world-atlas](https://github.com/topojson/world-atlas) project (110m resolution).
-*   **USA Map Geometries:** Higher-resolution state boundary TopoJSON from the [us-atlas](https://github.com/topojson/us-atlas) project.
-*   **United Kingdom Map Geometries:** County and local authority TopoJSON from the [ONSdigital/uk-topojson](https://github.com/ONSdigital/uk-topojson) repository.
 *   **Global Sub-division Geometries:** Natural Earth admin-1 (states and provinces) 10m resolution GeoJSON from the [nvkelso/natural-earth-vector](https://github.com/nvkelso/natural-earth-vector) repository.
 *   **National Flags:** High-resolution vector flags served by [Flagpedia / FlagCDN](https://flagcdn.com/).
 *   **Sub-National Flags:** Sub-national state, province, and regional flag assets from [amckenna41/iso3166-flags](https://github.com/amckenna41/iso3166-flags).
