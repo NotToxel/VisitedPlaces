@@ -26,7 +26,7 @@ const About: React.FC = () => {
             <span>Discover VisitedPlaces</span>
           </h3>
           <p className="text-xs text-base-content/80 leading-relaxed">
-            VisitedPlaces is an interactive, offline-first world travel tracker designed to let you catalog your travel history, map out future dreams, and compare journeys with others. It runs entirely in your browser without requiring account creation, servers, or trackers.
+            VisitedPlaces is an interactive world travel tracker designed to let you catalog your travel history, map out future dreams, and compare journeys with others. It runs entirely in your browser without requiring account creation, servers, or trackers.
           </p>
         </div>
 
@@ -97,28 +97,6 @@ const About: React.FC = () => {
               <span>GitHub Repository</span>
               <ExternalLink size={11} />
             </a>
-          </div>
-
-          <div className="border-t border-base-300/40 pt-4 flex flex-col gap-2.5">
-            <h4 className="text-xs font-bold text-base-content uppercase tracking-wider">Travel Status Legend</h4>
-            <div className="grid grid-cols-2 sm:grid-cols-4 gap-2">
-              <div className="flex items-center gap-2 p-2 rounded-lg bg-base-300/30 border border-base-300/40">
-                <span className="w-3 h-3 rounded-full bg-[#9ece6a]" />
-                <span className="text-[11px] font-semibold text-base-content/90">Visited</span>
-              </div>
-              <div className="flex items-center gap-2 p-2 rounded-lg bg-base-300/30 border border-base-300/40">
-                <span className="w-3 h-3 rounded-full bg-[#bb9af7]" />
-                <span className="text-[11px] font-semibold text-base-content/90">Wishlist</span>
-              </div>
-              <div className="flex items-center gap-2 p-2 rounded-lg bg-base-300/30 border border-base-300/40">
-                <span className="w-3 h-3 rounded-full bg-[#ff9e64]" />
-                <span className="text-[11px] font-semibold text-base-content/90">Revisit</span>
-              </div>
-              <div className="flex items-center gap-2 p-2 rounded-lg bg-base-300/30 border border-base-300/40">
-                <span className="w-3 h-3 rounded-full bg-[#ef4444]" />
-                <span className="text-[11px] font-semibold text-base-content/90">Avoid</span>
-              </div>
-            </div>
           </div>
         </div>
 
