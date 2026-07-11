@@ -758,7 +758,7 @@ path.rsm-geography:active {
   z-index: 200;
   min-width: 180px;
   max-width: 220px;
-  background: var(--glass-bg);
+  background: rgba(36, 40, 59, 0.95);
   backdrop-filter: blur(20px);
   -webkit-backdrop-filter: blur(20px);
   border: 1px solid var(--glass-border);
@@ -771,6 +771,7 @@ path.rsm-geography:active {
 }
 
 [data-theme="light"] .country-context-menu {
+  background: rgba(226, 232, 240, 0.96);
   box-shadow: 0 12px 40px rgba(0, 0, 0, 0.12), 0 0 0 1px rgba(0, 0, 0, 0.06);
 }
 
@@ -1363,7 +1364,7 @@ path.rsm-geography:active {
   z-index: 40;
   width: 240px;
   max-height: calc(100% - 120px);
-  background: var(--glass-bg);
+  background: rgba(36, 40, 59, 0.95);
   backdrop-filter: blur(20px);
   -webkit-backdrop-filter: blur(20px);
   border: 1px solid var(--glass-border);
@@ -1375,6 +1376,7 @@ path.rsm-geography:active {
 }
 
 [data-theme="light"] .territory-list-panel {
+  background: rgba(226, 232, 240, 0.96);
   box-shadow: 0 8px 32px rgba(0, 0, 0, 0.08);
 }
 
