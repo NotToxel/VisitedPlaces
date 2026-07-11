@@ -23,62 +23,38 @@ const STATUS_ACTIONS: { s: PlaceStatus; label: string; Icon: typeof Check; cls: 
   { s: 'AVOID', label: 'Avoid', Icon: Ban, cls: 'avoid' },
 ];
 
-interface GeometryWithCoords {
-  coordinates: unknown;
-}
-
-function shiftCoordinatesIfWrapped(coords: unknown): unknown {
-  const cloned = JSON.parse(JSON.stringify(coords));
-  let hasPositive = false;
-  let hasNegative = false;
-
-  function check(c: unknown) {
-    if (!Array.isArray(c)) return;
-    const first = c[0];
-    const second = c[1];
-    if (typeof first === 'number' && typeof second === 'number') {
-      if (first > 90) hasPositive = true;
-      if (first < -90) hasNegative = true;
-      return;
-    }
-    for (const sub of c) {
-      check(sub);
-    }
-  }
-
-  check(cloned);
-
-  if (hasPositive && hasNegative) {
-    function shift(c: unknown) {
-      if (!Array.isArray(c)) return;
-      const first = c[0];
-      const second = c[1];
-      if (typeof first === 'number' && typeof second === 'number') {
-        const point = c as unknown as [number, number];
-        if (point[0] < 0) {
-          point[0] += 360;
-        }
-        return;
-      }
-      for (const sub of c) {
-        shift(sub);
-      }
-    }
-    shift(cloned);
-  }
-
-  return cloned;
-}
-
 /** Compute the SVG path string for a single NE feature, fitted to the card dimensions. */
 function computeRegionPath(feature: NEFeature): string | null {
   try {
     const geoFeature = JSON.parse(JSON.stringify(feature)) as unknown as GeoJSON.Feature;
-    if (geoFeature.geometry && 'coordinates' in geoFeature.geometry) {
-      const geom = geoFeature.geometry as unknown as GeometryWithCoords;
-      geom.coordinates = shiftCoordinatesIfWrapped(geom.coordinates);
+
+    // Check if it spans the antimeridian (180th meridian)
+    let hasPositive = false;
+    let hasNegative = false;
+    function check(c: unknown) {
+      if (!Array.isArray(c)) return;
+      const first = c[0];
+      const second = c[1];
+      if (typeof first === 'number' && typeof second === 'number') {
+        if (first > 90) hasPositive = true;
+        if (first < -90) hasNegative = true;
+        return;
+      }
+      for (const sub of c) {
+        check(sub);
+      }
     }
-    const projection = geoMercator().fitExtent(
+    if (geoFeature.geometry && 'coordinates' in geoFeature.geometry) {
+      check(geoFeature.geometry.coordinates);
+    }
+
+    const projection = geoMercator();
+    if (hasPositive && hasNegative) {
+      // Rotate the projection by 180 degrees so the antimeridian is projected contiguously at the center
+      projection.rotate([180, 0]);
+    }
+
+    projection.fitExtent(
       [[SVG_PADDING, SVG_PADDING], [CARD_SVG_WIDTH - SVG_PADDING, CARD_SVG_HEIGHT - SVG_PADDING]],
       geoFeature
     );

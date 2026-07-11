@@ -176,8 +176,8 @@ function getCountryMainlandFeatures(countryA3: string, data: NEFeatureCollection
     features = features.filter(
       (f) => !f.properties?.iso_3166_2 || !EXCLUDED_PRT_ISOS.has(f.properties.iso_3166_2)
     );
-  } else if (countryA3 === 'RUS' || countryA3 === 'NZL') {
-    // Russia and New Zealand span the antimeridian.
+  } else if (countryA3 === 'RUS' || countryA3 === 'NZL' || countryA3 === 'FJI' || countryA3 === 'KIR') {
+    // Russia, New Zealand, Fiji, and Kiribati span the antimeridian.
     // Shift any negative longitudes by +360 degrees so D3 maps can project them contiguously
     // with the rest of their landmass instead of wrapping around the globe.
     features.forEach((f) => {
