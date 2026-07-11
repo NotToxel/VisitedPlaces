@@ -2,7 +2,7 @@
 
 **An interactive world travel tracker** — mark countries and regions you've visited, explore your travel analytics, and compare maps with friends using shareable codes.
 
-[![Version](https://img.shields.io/badge/version-2.2.3-blue.svg)](package.json)
+[![Version](https://img.shields.io/badge/version-2.2.4-blue.svg)](package.json)
 [![License: AGPL-3.0](https://img.shields.io/badge/License-AGPL--3.0-blue.svg)](LICENSE)
 [![TypeScript](https://img.shields.io/badge/TypeScript-Strict-3178C6.svg)](tsconfig.app.json)
 

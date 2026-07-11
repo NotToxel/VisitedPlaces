@@ -51,6 +51,9 @@
   --glass-border: rgba(255, 255, 255, 0.05);
   --glass-blur: 16px;
 
+  --card-shape-fill: rgba(255, 255, 255, 0.15);
+  --card-shape-stroke: rgba(255, 255, 255, 0.35);
+
   /* Custom component theme support in Dark mode */
   --accent-primary: #7aa2f7;
   --accent-secondary: #bb9af7;
@@ -87,6 +90,9 @@
   --glass-bg: rgba(255, 255, 255, 0.7);
   --glass-border: rgba(15, 23, 42, 0.12);
   --glass-blur: 16px;
+
+  --card-shape-fill: rgba(15, 23, 42, 0.08);
+  --card-shape-stroke: rgba(15, 23, 42, 0.2);
 
   /* Custom component theme support in Light mode */
   --accent-primary: #3b82f6;

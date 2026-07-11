@@ -23,8 +23,13 @@ const STATUS_ACTIONS: { s: PlaceStatus; label: string; Icon: typeof Check; cls: 
   { s: 'AVOID', label: 'Avoid', Icon: Ban, cls: 'avoid' },
 ];
 
+interface RegionPathResult {
+  path: string | null;
+  scale: number;
+}
+
 /** Compute the SVG path string for a single NE feature, fitted to the card dimensions. */
-function computeRegionPath(feature: NEFeature): string | null {
+function computeRegionPath(feature: NEFeature): RegionPathResult {
   try {
     const geoFeature = JSON.parse(JSON.stringify(feature)) as unknown as GeoJSON.Feature;
 
@@ -80,9 +85,12 @@ function computeRegionPath(feature: NEFeature): string | null {
       geoFeature
     );
     const pathGen = geoPath(projection);
-    return pathGen(geoFeature) || null;
+    return {
+      path: pathGen(geoFeature) || null,
+      scale: projection.scale()
+    };
   } catch {
-    return null;
+    return { path: null, scale: 150 };
   }
 }
 
@@ -92,7 +100,7 @@ function getStatusColor(status: PlaceStatus): string {
     case 'WISHLIST': return 'var(--accent-wishlist)';
     case 'AVOID': return 'var(--accent-avoid)';
     case 'REVISIT': return 'var(--accent-revisit)';
-    default: return 'var(--map-fill-unselected)';
+    default: return 'var(--card-shape-fill, var(--map-fill-unselected))';
   }
 }
 
@@ -111,7 +119,12 @@ const RegionCardBase: React.FC<RegionCardProps> = ({
 }) => {
   const { regionId, displayName, feature } = regionFeature;
 
-  const svgPath = useMemo(() => computeRegionPath(feature), [feature]);
+  const { path: svgPath, scale: projectionScale } = useMemo(() => computeRegionPath(feature), [feature]);
+
+  const dynamicStrokeWidth = useMemo(() => {
+    // Thicker outlines for smaller regions/islands (lower scale) to make them stand out
+    return Math.max(0.6, Math.min(1.8, 1800 / projectionScale));
+  }, [projectionScale]);
 
   const handleMapClick = useCallback(() => {
     const nextStatus = status === 'VISITED' ? 'NONE' : 'VISITED';
@@ -135,8 +148,8 @@ const RegionCardBase: React.FC<RegionCardProps> = ({
           <path
             d={svgPath}
             fill={getStatusColor(status)}
-            stroke="var(--map-stroke)"
-            strokeWidth={0.6}
+            stroke="var(--card-shape-stroke, var(--map-stroke))"
+            strokeWidth={dynamicStrokeWidth}
             className="region-card__shape"
           />
         ) : (
@@ -145,8 +158,8 @@ const RegionCardBase: React.FC<RegionCardProps> = ({
             cy={CARD_SVG_HEIGHT / 2}
             r={8}
             fill={getStatusColor(status)}
-            stroke="var(--map-stroke)"
-            strokeWidth={0.6}
+            stroke="var(--card-shape-stroke, var(--map-stroke))"
+            strokeWidth={dynamicStrokeWidth}
             className="region-card__shape"
           />
         )}
