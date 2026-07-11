@@ -98,7 +98,7 @@ src/
 ├── config/              # Constants, url endpoints, drill-down registry
 ├── data/                # Static countries data, territories, UK/US regional mappings
 ├── hooks/               # useDrilldownGeography, useMapAnimation
-├── pages/               # Home, List, Analytics, Compare
+├── pages/               # Home, List, Analytics, Compare, About
 ├── store/               # Zustand store (places, theme, actions)
 └── utils/               # Map utilities, serialization, CacheStorage, TopoJSON processing
 ```
