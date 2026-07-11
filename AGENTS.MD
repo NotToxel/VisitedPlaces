@@ -1,6 +1,6 @@
 # AGENTS.MD — VisitedPlaces Project Guide
 
-> **Version**: 2.2.4  
+> **Version**: 2.2.5  
 > **Last Updated**: 2026-07-11  
 > **Status**: Active Development
 
@@ -252,7 +252,7 @@ We use [Semantic Versioning](https://semver.org/):
 
 ### Current Version
 
-`2.2.4` — Patch release resolving antimeridian division rendering and card visibility bugs for island nations (Fiji, Kiribati) by combining coordinate shifting with projection rotation, implementing dynamic card stroke-widths, and enhancing card shape visual contrast with higher-opacity unselected fills/strokes.
+`2.2.5` — Patch release resolving card view search and behavior on island tile grids. Implemented card text-based live filtering (bypassing map zoom triggers), disabled Express Mode features on card view (hiding banner & toggles), disabled default map region click-to-toggle shortcuts, and removed São Tomé and Príncipe (STP) from card-grid registry.
 
 ### Display
 

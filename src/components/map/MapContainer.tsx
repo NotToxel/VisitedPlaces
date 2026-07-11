@@ -27,7 +27,7 @@ interface ContextMenuState {
 }
 
 const CARD_GRID_COUNTRIES = new Set([
-  'FJI', 'KIR', 'MDV', 'SYC', 'FSM', 'MHL', 'PLW', 'CPV', 'COM', 'STP',
+  'FJI', 'KIR', 'MDV', 'SYC', 'FSM', 'MHL', 'PLW', 'CPV', 'COM',
   'ATF', 'PYF', 'COK', 'SHN', 'WLF', 'TON'
 ]);
 
@@ -40,6 +40,13 @@ export const MapContainer: React.FC = () => {
   const [expressMode, setExpressMode] = useState<boolean>(false);
   const [expressStatus, setExpressStatus] = useState<PlaceStatus>('VISITED');
   const [subRegions, setSubRegions] = useState<TopoRegion[]>([]);
+  const [searchQuery, setSearchQuery] = useState('');
+
+  useEffect(() => {
+    Promise.resolve().then(() => {
+      setSearchQuery('');
+    });
+  }, [activeCountry]);
 
   useEffect(() => {
     if (activeCountry) {
@@ -209,10 +216,12 @@ export const MapContainer: React.FC = () => {
         activeCountry={activeCountry}
         subRegions={subRegions}
         className={activeCountry ? "map-search-bar--drilldown" : ""}
+        isCardGrid={cardGridMode}
+        onSearchChange={setSearchQuery}
       />
 
       {/* Express Mode Active Banner */}
-      {expressMode && (
+      {expressMode && !cardGridMode && (
         <div className={`absolute left-1/2 -translate-x-1/2 z-30 flex items-center gap-1.5 sm:gap-2 bg-slate-900/85 backdrop-blur-md text-white font-extrabold px-2 py-1.5 sm:px-3.5 sm:py-2 rounded-2xl shadow-lg text-[11px] select-none border border-white/10 transition-all ${
           activeCountry ? 'top-[98px] sm:top-[88px]' : 'top-[88px]'
         }`}>
@@ -297,6 +306,7 @@ export const MapContainer: React.FC = () => {
             features={cardGridFeatures}
             places={places}
             onSetRegionStatus={handleSetRegionStatus}
+            searchQuery={searchQuery}
           />
         ) : mapStyle === 'STANDARD' ? (
           <StandardMap

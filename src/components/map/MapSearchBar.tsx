@@ -20,6 +20,8 @@ interface MapSearchBarProps {
   activeCountry?: string | null;
   subRegions?: TopoRegion[];
   className?: string;
+  isCardGrid?: boolean;
+  onSearchChange?: (val: string) => void;
 }
 
 export const MapSearchBar: React.FC<MapSearchBarProps> = ({
@@ -35,6 +37,8 @@ export const MapSearchBar: React.FC<MapSearchBarProps> = ({
   activeCountry = null,
   subRegions = [],
   className = '',
+  isCardGrid = false,
+  onSearchChange,
 }) => {
   const [searchVal, setSearchVal] = useState('');
   const [isDropdownOpen, setIsDropdownOpen] = useState(false);
@@ -78,6 +82,7 @@ export const MapSearchBar: React.FC<MapSearchBarProps> = ({
   const selectCountry = (country: Country | TopoRegion) => {
     setSearchVal(country.name);
     onCountrySelect(country.id);
+    onSearchChange?.(country.name);
     setIsDropdownOpen(false);
     setKbIndex(-1);
   };
@@ -85,6 +90,7 @@ export const MapSearchBar: React.FC<MapSearchBarProps> = ({
   const clearSearch = () => {
     setSearchVal('');
     onSearchClear();
+    onSearchChange?.('');
     setIsDropdownOpen(false);
     setKbIndex(-1);
   };
@@ -129,6 +135,8 @@ export const MapSearchBar: React.FC<MapSearchBarProps> = ({
           onChange={(e) => {
             const val = e.target.value;
             setSearchVal(val);
+            onSearchChange?.(val);
+            if (isCardGrid) return;
             setIsDropdownOpen(true);
             setKbIndex(-1);
             if (activeCountry) {
@@ -139,7 +147,9 @@ export const MapSearchBar: React.FC<MapSearchBarProps> = ({
               if (found) onCountrySelect(found.id);
             }
           }}
-          onFocus={() => setIsDropdownOpen(true)}
+          onFocus={() => {
+            if (!isCardGrid) setIsDropdownOpen(true);
+          }}
           onKeyDown={handleKeyDown}
         />
         {searchVal && (
@@ -179,13 +189,15 @@ export const MapSearchBar: React.FC<MapSearchBarProps> = ({
         )}
         
         {/* Express Mode Toggle */}
-        <button
-          className={`map-search-bar__style-btn ${expressMode ? 'map-search-bar__style-btn--active text-amber-500 border-amber-500/20 bg-amber-500/5' : ''}`}
-          onClick={() => setExpressMode?.(!expressMode)}
-          title={expressMode ? `Disable Express Mode (${expressStatus.charAt(0) + expressStatus.slice(1).toLowerCase()})` : "Enable Express Mode"}
-        >
-          <Zap size={13.5} fill={expressMode ? "currentColor" : "none"} className={expressMode ? "text-amber-500 animate-pulse" : ""} />
-        </button>
+        {!isCardGrid && (
+          <button
+            className={`map-search-bar__style-btn ${expressMode ? 'map-search-bar__style-btn--active text-amber-500 border-amber-500/20 bg-amber-500/5' : ''}`}
+            onClick={() => setExpressMode?.(!expressMode)}
+            title={expressMode ? `Disable Express Mode (${expressStatus.charAt(0) + expressStatus.slice(1).toLowerCase()})` : "Enable Express Mode"}
+          >
+            <Zap size={13.5} fill={expressMode ? "currentColor" : "none"} className={expressMode ? "text-amber-500 animate-pulse" : ""} />
+          </button>
+        )}
         {!activeCountry && mapStyle === 'HEXAGON' && (
           <label className="map-search-bar__hex-label-toggle" title="Show country labels on hexagons">
             <input
@@ -199,7 +211,7 @@ export const MapSearchBar: React.FC<MapSearchBarProps> = ({
       </div>
 
       {/* Autocomplete Dropdown */}
-      {isDropdownOpen && filteredSuggestions.length > 0 && (
+      {isDropdownOpen && filteredSuggestions.length > 0 && !isCardGrid && (
         <ul className="map-search-bar__dropdown">
           {filteredSuggestions.map((item, idx) => {
             const isHighlighted = idx === kbIndex;

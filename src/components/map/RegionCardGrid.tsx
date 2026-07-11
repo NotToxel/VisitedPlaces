@@ -10,6 +10,7 @@ interface RegionCardGridProps {
   features: NERegionFeature[];
   places: Record<string, { status: PlaceStatus; regions?: Record<string, PlaceStatus> }>;
   onSetRegionStatus: (countryId: string, regionId: string, status: PlaceStatus) => void;
+  searchQuery?: string;
 }
 
 const CARD_SVG_WIDTH = 160;
@@ -126,11 +127,6 @@ const RegionCardBase: React.FC<RegionCardProps> = ({
     return Math.max(0.6, Math.min(1.8, 1800 / projectionScale));
   }, [projectionScale]);
 
-  const handleMapClick = useCallback(() => {
-    const nextStatus = status === 'VISITED' ? 'NONE' : 'VISITED';
-    onSetRegionStatus(activeCountry, regionId, nextStatus);
-  }, [activeCountry, regionId, status, onSetRegionStatus]);
-
   const handleStatusClick = useCallback((s: PlaceStatus) => {
     onSetRegionStatus(activeCountry, regionId, status === s ? 'NONE' : s);
   }, [activeCountry, regionId, status, onSetRegionStatus]);
@@ -142,7 +138,6 @@ const RegionCardBase: React.FC<RegionCardProps> = ({
       <svg
         className="region-card__map"
         viewBox={`0 0 ${CARD_SVG_WIDTH} ${CARD_SVG_HEIGHT}`}
-        onClick={handleMapClick}
       >
         {svgPath ? (
           <path
@@ -168,12 +163,7 @@ const RegionCardBase: React.FC<RegionCardProps> = ({
       <div className="region-card__info">
         <FlagImage
           placeId={regionId}
-          className="region-card__flag cursor-pointer"
-          title="Click flag to instantly toggle Visited status"
-          onClick={(e) => {
-            e.stopPropagation();
-            handleMapClick();
-          }}
+          className="region-card__flag"
         />
         <span className="region-card__name" title={displayName}>{displayName}</span>
       </div>
@@ -201,7 +191,16 @@ const RegionCardGridBase: React.FC<RegionCardGridProps> = ({
   features,
   places,
   onSetRegionStatus,
+  searchQuery = '',
 }) => {
+  const filteredFeatures = useMemo(() => {
+    if (!searchQuery) return features;
+    const lowerQuery = searchQuery.toLowerCase();
+    return features.filter(
+      (f) => f.displayName.toLowerCase().includes(lowerQuery) || f.regionId.toLowerCase().includes(lowerQuery)
+    );
+  }, [features, searchQuery]);
+
   const visitedCount = useMemo(() => {
     return features.filter((f) => {
       const regionStatus = places[activeCountry]?.regions?.[f.regionId];
@@ -216,12 +215,9 @@ const RegionCardGridBase: React.FC<RegionCardGridProps> = ({
           <span className="region-card-grid__count">
             {visitedCount} / {features.length} regions visited
           </span>
-          <span className="region-card-grid__hint">
-            Click a region shape to toggle visited
-          </span>
         </div>
         <div className="region-card-grid__cards">
-          {features.map((rf) => {
+          {filteredFeatures.map((rf) => {
             const regionStatus = places[activeCountry]?.regions?.[rf.regionId] || 'NONE';
             return (
               <RegionCard
