@@ -48,6 +48,27 @@ function computeRegionPath(feature: NEFeature): string | null {
       check(geoFeature.geometry.coordinates);
     }
 
+    if (hasPositive && hasNegative && geoFeature.geometry && 'coordinates' in geoFeature.geometry) {
+      // Shift negative longitudes to positive space (+360) so they form a contiguous shape
+      // across the 180th meridian during bounding box calculations.
+      function shift(c: unknown) {
+        if (!Array.isArray(c)) return;
+        const first = c[0];
+        const second = c[1];
+        if (typeof first === 'number' && typeof second === 'number') {
+          const point = c as unknown as [number, number];
+          if (point[0] < 0) {
+            point[0] += 360;
+          }
+          return;
+        }
+        for (const sub of c) {
+          shift(sub);
+        }
+      }
+      shift(geoFeature.geometry.coordinates);
+    }
+
     const projection = geoMercator();
     if (hasPositive && hasNegative) {
       // Rotate the projection by 180 degrees so the antimeridian is projected contiguously at the center
