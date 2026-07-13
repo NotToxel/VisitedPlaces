@@ -73,7 +73,7 @@ const About: React.FC = () => {
 
         {/* License & Copyright Footer */}
         <div className="glass-panel border border-base-300/30 p-5 rounded-2xl flex flex-col gap-4">
-          <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-3">
+          <div className="flex flex-col sm:flex-row justify-between items-center sm:items-center text-center sm:text-left gap-4">
             <div>
               <p className="text-xs font-bold text-base-content">
                 &copy; {currentYear} VisitedPlaces project.
@@ -86,7 +86,7 @@ const About: React.FC = () => {
               href="https://github.com/NotToxel/VisitedPlaces" 
               target="_blank" 
               rel="noopener noreferrer"
-              className="btn btn-primary btn-xs gap-1.5 self-start sm:self-auto"
+              className="btn btn-primary btn-xs gap-1.5 self-center sm:self-auto"
             >
               <Github size={11} />
               <span>GitHub Repository</span>

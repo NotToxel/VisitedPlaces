@@ -323,6 +323,7 @@ npx playwright test   # E2E tests (requires Playwright browsers installed)
 - Use [Conventional Commits](https://www.conventionalcommits.org/): `feat:`, `fix:`, `chore:`, `refactor:`, `docs:`, `test:`
 - Each commit should be atomic — one logical change per commit.
 - Commit messages should explain *why*, not just *what*.
+- **No Auto-Commits**: Do NOT automatically commit code changes after every prompt. Only run `git commit` commands when the user explicitly requests a commit.
 - **Version Bumping**: You MUST bump the version number in `package.json`, `README.md` (the version badge), and this document (both the header and "Current Version" section) whenever you make changes and commit code. The new version number must be included at the bottom of the commit message (e.g., `Version: X.Y.Z`).
 
 ---
