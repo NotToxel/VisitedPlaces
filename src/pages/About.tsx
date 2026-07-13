@@ -1,5 +1,5 @@
 import React from 'react';
-import { Info, ShieldCheck, Share2, Compass, Cpu, Heart, ExternalLink } from 'lucide-react';
+import { Info, ShieldCheck, Share2, Compass, Cpu, Heart, ExternalLink, Github } from 'lucide-react';
 
 const About: React.FC = () => {
   const currentYear = new Date().getFullYear();
@@ -92,8 +92,9 @@ const About: React.FC = () => {
               href="https://github.com/NotToxel/VisitedPlaces" 
               target="_blank" 
               rel="noopener noreferrer"
-              className="btn btn-primary btn-xs gap-1 self-start sm:self-auto"
+              className="btn btn-primary btn-xs gap-1.5 self-start sm:self-auto"
             >
+              <Github size={11} />
               <span>GitHub Repository</span>
               <ExternalLink size={11} />
             </a>
@@ -102,7 +103,7 @@ const About: React.FC = () => {
 
         {/* Built with Heart Footer */}
         <div className="flex items-center justify-center gap-1 text-[11px] text-base-content/40 font-medium">
-          Built with <Heart size={10} className="text-red-400 fill-red-400" /> by NotToxel and team.
+          Built with <Heart size={10} className="text-red-400 fill-red-400" /> by NotToxel.
         </div>
       </div>
     </div>

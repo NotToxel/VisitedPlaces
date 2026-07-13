@@ -84,25 +84,4 @@ describe('Serialization / Deserialization of places', () => {
     expect(result).toBeNull();
   });
 
-  it('should automatically migrate legacy keys when deserializing', () => {
-    const rawPlaces = {
-      '724': {
-        status: 'VISITED',
-        regions: {}
-      },
-      'GBR': {
-        status: 'VISITED',
-        regions: {
-          'GBR-E06000023': 'VISITED'
-        }
-      }
-    };
-    const serialized = serializePlaces(rawPlaces as unknown as UserPlacesMap);
-    const deserialized = deserializePlaces(serialized);
-    expect(deserialized).toBeDefined();
-    expect(deserialized!['ESP']).toBeDefined();
-    expect(deserialized!['724']).toBeUndefined();
-    expect(deserialized!['GBR'].regions['GBR-GB-BST']).toBe('VISITED');
-    expect(deserialized!['GBR'].regions['GBR-E06000023']).toBeUndefined();
-  });
 });

@@ -6,7 +6,6 @@
 import { ISO3166_FLAGS_BASE } from '../config/urls';
 import { COUNTRIES } from '../data/countries';
 import { getAllTerritories } from '../data/territoriesRegistry';
-import { GB_FLAG_EXTENSIONS } from '../data/gbrRegionData';
 import { REGION_FLAG_REGISTRY } from '../data/regionFlagRegistry';
 
 /**
@@ -18,7 +17,7 @@ export function getRegionFlagUrl(iso3166_2: string): string {
   if (dashIndex === -1) return '';
   const countryPart = iso3166_2.substring(0, dashIndex);
   
-  const ext = REGION_FLAG_REGISTRY[iso3166_2] || GB_FLAG_EXTENSIONS[iso3166_2] || 'svg';
+  const ext = REGION_FLAG_REGISTRY[iso3166_2] || 'svg';
   
   return `${ISO3166_FLAGS_BASE}/${countryPart}/${iso3166_2}.${ext}`;
 }
@@ -53,8 +52,83 @@ export function getRegionFlagWithFallback(
  * - Territory: "GBR-GI", "USA-PR", "FRA-GP" (parent-territory, matches territory registry)
  * - Sub-region: "USA-US-CA", "FRA-FR-ARA" (parent-iso3166_2)
  */
+// In-memory cache of resolved blob URLs (placeId -> blobUrl)
+export const resolvedBlobUrlCache = new Map<string, string>();
+const activeFetches = new Map<string, Promise<string>>();
+const FLAG_CACHE_NAME = 'visited-places-flags-cache-v1';
+
+/**
+ * Fetches the flag image, caches it in CacheStorage, and returns a local blob URL.
+ */
+export async function fetchFlagAsBlobUrl(placeId: string, url: string): Promise<string> {
+  if (typeof window === 'undefined') return url;
+
+  // 1. Check in-memory cache first
+  if (resolvedBlobUrlCache.has(placeId)) {
+    return resolvedBlobUrlCache.get(placeId)!;
+  }
+
+  // 2. Check if there's an active fetch for this place ID
+  if (activeFetches.has(placeId)) {
+    return activeFetches.get(placeId)!;
+  }
+
+  const fetchPromise = (async () => {
+    try {
+      const hasCache = 'caches' in window;
+      let response: Response | undefined;
+
+      if (hasCache) {
+        try {
+          const cache = await caches.open(FLAG_CACHE_NAME);
+          const cachedResponse = await cache.match(url);
+          if (cachedResponse) {
+            response = cachedResponse;
+          }
+        } catch (err) {
+          console.warn('Cache Storage match failed:', err);
+        }
+      }
+
+      if (!response) {
+        const res = await fetch(url);
+        if (!res.ok) {
+          throw new Error(`HTTP error! status: ${res.status}`);
+        }
+        if (hasCache) {
+          try {
+            const cache = await caches.open(FLAG_CACHE_NAME);
+            await cache.put(url, res.clone());
+          } catch (err) {
+            console.warn('Cache Storage put failed:', err);
+          }
+        }
+        response = res;
+      }
+
+      const blob = await response.blob();
+      const blobUrl = URL.createObjectURL(blob);
+      resolvedBlobUrlCache.set(placeId, blobUrl);
+      return blobUrl;
+    } catch (error) {
+      console.warn(`Error caching flag for ${placeId} from ${url}:`, error);
+      return url; // Fallback: return the original URL on failure
+    } finally {
+      activeFetches.delete(placeId);
+    }
+  })();
+
+  activeFetches.set(placeId, fetchPromise);
+  return fetchPromise;
+}
+
 export function getPlaceFlagUrl(placeId: string): string | null {
   if (!placeId) return null;
+
+  // Check if we already have the blob URL cached
+  if (resolvedBlobUrlCache.has(placeId)) {
+    return resolvedBlobUrlCache.get(placeId)!;
+  }
 
   // 1. Check if it's a standard country ID (no dash)
   if (!placeId.includes('-')) {
@@ -70,7 +144,6 @@ export function getPlaceFlagUrl(placeId: string): string | null {
     return `https://flagcdn.com/${territory.flagCode}.svg`;
   }
 
-
   // 3. It's a sub-region — extract the ISO 3166-2 portion
   // Format: "{PARENT_A3}-{ISO_3166_2}" e.g., "USA-US-CA" → iso3166_2 = "US-CA"
   const parentEnd = 3; // ISO-A3 is always 3 characters
@@ -78,14 +151,8 @@ export function getPlaceFlagUrl(placeId: string): string | null {
     const iso3166_2 = placeId.substring(parentEnd + 1);
     // If it looks like an ISO 3166-2 code (has a dash), try the regional flag
     if (iso3166_2.includes('-')) {
-      if (iso3166_2.startsWith('GB-') && !GB_FLAG_EXTENSIONS[iso3166_2] && !REGION_FLAG_REGISTRY[iso3166_2]) {
-        // Fall back immediately to GBR flag
-        const parentCountry = COUNTRIES.find((c) => c.id === 'GBR');
-        return parentCountry?.flag || null;
-      }
-      
       // If the region code is not in the availability registry, skip CDN request entirely
-      if (!REGION_FLAG_REGISTRY[iso3166_2] && !GB_FLAG_EXTENSIONS[iso3166_2]) {
+      if (!REGION_FLAG_REGISTRY[iso3166_2]) {
         const parentA3 = placeId.substring(0, 3);
         const parentCountry = COUNTRIES.find((c) => c.id === parentA3);
         return parentCountry?.flag || null;
@@ -123,9 +190,8 @@ export function preloadPlaceFlags(placeIds: string[]): void {
   const startPreload = () => {
     placeIds.forEach((id) => {
       const url = getPlaceFlagUrl(id);
-      if (url) {
-        const img = new Image();
-        img.src = url;
+      if (url && !resolvedBlobUrlCache.has(id)) {
+        fetchFlagAsBlobUrl(id, url).catch(() => {});
       }
     });
   };

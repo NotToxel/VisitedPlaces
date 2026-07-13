@@ -1,8 +1,5 @@
 import { create } from 'zustand';
 import { persist } from 'zustand/middleware';
-import { ONS_TO_ISO } from '../data/gbrRegionData';
-import { US_FIPS_TO_ISO } from '../data/usaRegionData';
-import { NUMERIC_TO_A3 } from '../data/countries';
 
 // Enums and Types
 export type PlaceStatus = 'VISITED' | 'WISHLIST' | 'AVOID' | 'REVISIT' | 'NONE';
@@ -143,7 +140,7 @@ export const useStore = create<AppState>()(
         return { places: updatedPlaces };
       }),
       
-      loadPlaces: (places) => set({ places: migrateLegacyPlaces(places) })
+      loadPlaces: (places) => set({ places: sanitizePlaces(places) })
     }),
     {
       name: 'visited-places-storage',
@@ -155,7 +152,7 @@ export const useStore = create<AppState>()(
       // Automatically migrate legacy FIPS/ONS keys to ISO 3166-2 on store hydration
       onRehydrateStorage: () => (state) => {
         if (state && state.places) {
-          state.places = migrateLegacyPlaces(state.places);
+          state.places = sanitizePlaces(state.places);
         }
       }
     }
@@ -163,82 +160,52 @@ export const useStore = create<AppState>()(
 );
 
 /**
- * Migration helper to translate old FIPS keys (USA-XX) and ONS keys (GBR-EXXXXXXXX)
- * into standard ISO 3166-2 keys (USA-US-XX, GBR-GB-XXX).
+ * Sanitizes and validates the schema of incoming user place maps (e.g. from share codes).
+ * It filters prototype pollution keys, verifies data types, and normalizes status values.
  */
-export function migrateLegacyPlaces(places: UserPlacesMap): UserPlacesMap {
-  if (!places) return places;
+export function sanitizePlaces(places: UserPlacesMap): UserPlacesMap {
+  if (!places || typeof places !== 'object' || Array.isArray(places)) {
+    return {};
+  }
   
-  const migrated: UserPlacesMap = {};
+  const sanitized: UserPlacesMap = {};
+  const VALID_STATUSES = new Set<PlaceStatus>(['VISITED', 'WISHLIST', 'AVOID', 'REVISIT', 'NONE']);
   
   for (const [key, value] of Object.entries(places)) {
-    let newKey = key;
-    
-    // 1. Migrate numeric country code keys (e.g. "724" -> "ESP")
-    if (NUMERIC_TO_A3[newKey]) {
-      newKey = NUMERIC_TO_A3[newKey];
+    // 0. Prevent prototype pollution
+    if (key === '__proto__' || key === 'constructor') {
+      continue;
     }
-    
-    // 2. Migrate USA FIPS keys (e.g. USA-06 or just 06 -> USA-US-CA)
-    let fips = '';
-    if (newKey.startsWith('USA-')) {
-      fips = newKey.substring(4);
-    } else if (/^\d{2}$/.test(newKey)) {
-      fips = newKey;
+
+    // 1. Ensure value is a non-null object
+    if (!value || typeof value !== 'object' || Array.isArray(value)) {
+      continue;
     }
-    if (fips && US_FIPS_TO_ISO[fips]) {
-      newKey = `USA-${US_FIPS_TO_ISO[fips]}`;
-    }
-    
-    // 3. Migrate GBR ONS keys (e.g. GBR-E06000023 or E06000023 -> GBR-GB-BST)
-    let ons = '';
-    if (newKey.startsWith('GBR-')) {
-      ons = newKey.substring(4);
-    } else if (/^[ENSW]\d{8}$/.test(newKey)) {
-      ons = newKey;
-    }
-    if (ons && ONS_TO_ISO[ons]) {
-      newKey = `GBR-${ONS_TO_ISO[ons]}`;
-    }
-    
-    // Migrate nested region maps
-    let newRegions = value.regions;
-    if (value.regions && Object.keys(value.regions).length > 0) {
-      newRegions = {};
+
+    // 2. Validate status value
+    const rawStatus = String(value.status || 'NONE').toUpperCase();
+    const status = VALID_STATUSES.has(rawStatus as PlaceStatus) ? (rawStatus as PlaceStatus) : 'NONE';
+
+    // 3. Validate nested region maps
+    const cleanRegions: RegionData = {};
+    if (value.regions && typeof value.regions === 'object' && !Array.isArray(value.regions)) {
       for (const [rKey, rVal] of Object.entries(value.regions)) {
-        let newRKey = rKey;
-        
-        // USA regions
-        let rFips = '';
-        if (rKey.startsWith('USA-')) {
-          rFips = rKey.substring(4);
-        } else if (/^\d{2}$/.test(rKey)) {
-          rFips = rKey;
+        if (rKey === '__proto__' || rKey === 'constructor') {
+          continue;
         }
-        if (rFips && US_FIPS_TO_ISO[rFips]) {
-          newRKey = `USA-${US_FIPS_TO_ISO[rFips]}`;
+
+        const rawRVal = String(rVal || 'NONE').toUpperCase();
+        if (VALID_STATUSES.has(rawRVal as PlaceStatus)) {
+          cleanRegions[rKey] = rawRVal as PlaceStatus;
         }
-        
-        // GBR regions
-        let rOns = '';
-        if (rKey.startsWith('GBR-')) {
-          rOns = rKey.substring(4);
-        } else if (/^[ENSW]\d{8}$/.test(rKey)) {
-          rOns = rKey;
-        }
-        if (rOns && ONS_TO_ISO[rOns]) {
-          newRKey = `GBR-${ONS_TO_ISO[rOns]}`;
-        }
-        
-        newRegions[newRKey] = rVal;
       }
     }
     
-    migrated[newKey] = {
-      status: value.status,
-      regions: newRegions
+    sanitized[key] = {
+      status,
+      regions: cleanRegions
     };
   }
   
-  return migrated;
+  return sanitized;
 }

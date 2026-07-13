@@ -2,7 +2,7 @@ import React, { memo } from 'react';
 import { Geographies, Geography } from 'react-simple-maps';
 import { getFillColor, getRegionId, showMapTooltip, hideMapTooltip, formatStatusLabel } from '../../utils/mapUtils';
 import type { GeoFeature, GeoProperties } from '../../utils/mapUtils';
-import { getCleanGbrName } from '../../data/gbrRegionData';
+
 import type { PlaceStatus } from '../../store/useStore';
 
 interface MapGeographiesProps {
@@ -92,9 +92,7 @@ const MapGeographiesBase: React.FC<MapGeographiesProps> = ({
           if (countryName === 'Commonwealth of the Northern Mariana Islands') {
             countryName = 'Northern Mariana Islands';
           }
-          if (activeCountry === 'GBR') {
-            countryName = getCleanGbrName(countryName);
-          }
+
           if (activeCountry === 'SGP') {
             countryName = countryName.toLowerCase().replace(/(?:^|\s|-)\S/g, (match) => match.toUpperCase());
           }

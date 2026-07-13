@@ -16,8 +16,9 @@ import { getAllCountryFeaturesWithMeta } from '../../data/naturalEarthAdmin1';
 import type { NERegionFeature } from '../../data/naturalEarthAdmin1';
 import { getSubRegionUrl, fetchSubRegions } from '../../utils/topojsonCache';
 import type { TopoRegion } from '../../utils/topojsonCache';
-import { getPlaceFlagUrl, preloadPlaceFlags } from '../../utils/flagUtils';
+import { preloadPlaceFlags } from '../../utils/flagUtils';
 import { hideMapTooltip } from '../../utils/mapUtils';
+import { FlagImage } from '../common/FlagImage';
 
 interface ContextMenuState {
   countryId: string;
@@ -131,7 +132,7 @@ export const MapContainer: React.FC = () => {
     return activeCountry;
   })() : '';
 
-  const activeCountryFlag = activeCountry ? getPlaceFlagUrl(activeCountry) : null;
+
 
   const territories = activeCountry ? getTerritoriesForCountry(activeCountry) : [];
   const territoryLabel = activeCountry ? getTerritoryLabel(activeCountry) : '';
@@ -271,11 +272,9 @@ export const MapContainer: React.FC = () => {
             <span>Back to World</span>
           </button>
           <div className="map-drilldown-header__info">
-            {activeCountryFlag ? (
-              <img
-                key={activeCountryFlag}
-                src={activeCountryFlag}
-                alt=""
+            {activeCountry ? (
+              <FlagImage
+                placeId={activeCountry}
                 className="map-drilldown-header__flag"
               />
             ) : (

@@ -215,7 +215,6 @@ export const MapSearchBar: React.FC<MapSearchBarProps> = ({
         <ul className="map-search-bar__dropdown">
           {filteredSuggestions.map((item, idx) => {
             const isHighlighted = idx === kbIndex;
-            const flag = 'flag' in item ? (item as Country).flag : undefined;
             return (
               <li
                 key={item.id}
@@ -223,20 +222,10 @@ export const MapSearchBar: React.FC<MapSearchBarProps> = ({
                 onClick={() => selectCountry(item)}
                 onMouseEnter={() => setKbIndex(idx)}
               >
-                {activeCountry ? (
-                  <FlagImage
-                    placeId={item.id}
-                    className="map-search-bar__dropdown-flag object-cover rounded-sm"
-                  />
-                ) : flag ? (
-                  <img
-                    src={flag}
-                    alt=""
-                    className="map-search-bar__dropdown-flag"
-                  />
-                ) : (
-                  <div className="map-search-bar__dropdown-flag-placeholder" />
-                )}
+                <FlagImage
+                  placeId={item.id}
+                  className="map-search-bar__dropdown-flag object-cover rounded-sm"
+                />
                 <span className="map-search-bar__dropdown-name">{item.name}</span>
                 {!activeCountry && <span className="map-search-bar__dropdown-code">{item.id}</span>}
               </li>

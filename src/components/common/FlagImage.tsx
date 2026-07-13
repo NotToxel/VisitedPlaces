@@ -1,5 +1,10 @@
-import React, { useState } from 'react';
-import { getPlaceFlagUrl, getParentCountryFlagUrl } from '../../utils/flagUtils';
+import React, { useState, useEffect } from 'react';
+import { 
+  getPlaceFlagUrl, 
+  getParentCountryFlagUrl, 
+  fetchFlagAsBlobUrl, 
+  resolvedBlobUrlCache 
+} from '../../utils/flagUtils';
 
 interface FlagImageProps {
   placeId: string;
@@ -8,11 +13,6 @@ interface FlagImageProps {
   title?: string;
   onClick?: (e: React.MouseEvent<HTMLImageElement>) => void;
 }
-
-// Global in-memory cache of placeId -> resolved image URL (either the primary regional flag or fallback)
-const resolvedFlagCache = new Map<string, string>();
-// Global set of placeIds that failed to load their regional flag
-const failedRegionalFlags = new Set<string>();
 
 export const FlagImage: React.FC<FlagImageProps> = ({
   placeId,
@@ -23,41 +23,73 @@ export const FlagImage: React.FC<FlagImageProps> = ({
 }) => {
   const [prevPlaceId, setPrevPlaceId] = useState(placeId);
   const [src, setSrc] = useState<string | null>(() => {
-    if (resolvedFlagCache.has(placeId)) {
-      return resolvedFlagCache.get(placeId)!;
-    }
-    if (failedRegionalFlags.has(placeId)) {
-      return getParentCountryFlagUrl(placeId);
+    if (resolvedBlobUrlCache.has(placeId)) {
+      return resolvedBlobUrlCache.get(placeId)!;
     }
     return getPlaceFlagUrl(placeId);
   });
 
-  // Adjust state during render when placeId changes (standard React performance optimization pattern)
+  // Synchronize state during render when placeId changes
   if (placeId !== prevPlaceId) {
     setPrevPlaceId(placeId);
-    const resolved = resolvedFlagCache.has(placeId)
-      ? resolvedFlagCache.get(placeId)!
-      : failedRegionalFlags.has(placeId)
-      ? getParentCountryFlagUrl(placeId)
-      : getPlaceFlagUrl(placeId);
-    setSrc(resolved);
+    if (resolvedBlobUrlCache.has(placeId)) {
+      setSrc(resolvedBlobUrlCache.get(placeId)!);
+    } else {
+      setSrc(getPlaceFlagUrl(placeId));
+    }
   }
 
-  const handleError = () => {
-    const primaryUrl = getPlaceFlagUrl(placeId);
-    if (src && src === primaryUrl) {
-      failedRegionalFlags.add(placeId);
-      const fallback = getParentCountryFlagUrl(placeId);
-      if (fallback) {
-        resolvedFlagCache.set(placeId, fallback);
-        setSrc(fallback);
+  useEffect(() => {
+    let active = true;
+
+    // If already in blob cache, no need to perform async fetch
+    if (resolvedBlobUrlCache.has(placeId)) {
+      return;
+    }
+
+    async function loadFlag() {
+      const primaryUrl = getPlaceFlagUrl(placeId);
+      if (!primaryUrl) return;
+
+      try {
+        const blobUrl = await fetchFlagAsBlobUrl(placeId, primaryUrl);
+        if (active) {
+          setSrc(blobUrl);
+        }
+      } catch (err) {
+        console.warn(`Primary flag load failed for ${placeId}:`, err);
+        // Fallback to parent country flag if primary fails
+        const fallbackUrl = getParentCountryFlagUrl(placeId);
+        if (fallbackUrl) {
+          try {
+            const fallbackBlobUrl = await fetchFlagAsBlobUrl(placeId, fallbackUrl);
+            if (active) {
+              setSrc(fallbackBlobUrl);
+            }
+          } catch {
+            if (active) {
+              setSrc(fallbackUrl);
+            }
+          }
+        } else {
+          if (active) {
+            setSrc(primaryUrl);
+          }
+        }
       }
     }
-  };
 
-  const handleLoad = () => {
-    if (src) {
-      resolvedFlagCache.set(placeId, src);
+    loadFlag();
+
+    return () => {
+      active = false;
+    };
+  }, [placeId]);
+
+  const handleError = () => {
+    const fallbackUrl = getParentCountryFlagUrl(placeId);
+    if (fallbackUrl && src !== fallbackUrl) {
+      setSrc(fallbackUrl);
     }
   };
 
@@ -73,7 +105,6 @@ export const FlagImage: React.FC<FlagImageProps> = ({
       title={title}
       onClick={onClick}
       onError={handleError}
-      onLoad={handleLoad}
       loading="lazy"
     />
   );

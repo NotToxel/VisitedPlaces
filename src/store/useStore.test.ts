@@ -164,57 +164,7 @@ describe('Zustand App Store', () => {
     });
   });
 
-  describe('Legacy Places Migration', () => {
-    it('should migrate numeric country keys like 724 to ESP', () => {
-      const store = useStore;
-      const testMap = {
-        '724': {
-          status: 'VISITED' as const,
-          regions: {}
-        }
-      };
-      store.getState().loadPlaces(testMap);
-      expect(store.getState().places['ESP']).toBeDefined();
-      expect(store.getState().places['ESP'].status).toBe('VISITED');
-      expect(store.getState().places['724']).toBeUndefined();
-    });
 
-    it('should migrate flat legacy GBR and USA keys', () => {
-      const store = useStore;
-      const testMap = {
-        'GBR-E06000023': {
-          status: 'VISITED' as const,
-          regions: {}
-        },
-        '06': {
-          status: 'WISHLIST' as const,
-          regions: {}
-        }
-      };
-      store.getState().loadPlaces(testMap);
-      expect(store.getState().places['GBR-GB-BST']).toBeDefined();
-      expect(store.getState().places['GBR-GB-BST'].status).toBe('VISITED');
-      expect(store.getState().places['USA-US-CA']).toBeDefined();
-      expect(store.getState().places['USA-US-CA'].status).toBe('WISHLIST');
-    });
-
-    it('should migrate nested legacy keys inside regions map', () => {
-      const store = useStore;
-      const testMap = {
-        'GBR': {
-          status: 'VISITED' as const,
-          regions: {
-            'E06000023': 'VISITED' as const,
-            'GBR-E06000023': 'VISITED' as const
-          }
-        }
-      };
-      store.getState().loadPlaces(testMap);
-      expect(store.getState().places['GBR'].regions['GBR-GB-BST']).toBe('VISITED');
-      expect(store.getState().places['GBR'].regions['E06000023']).toBeUndefined();
-      expect(store.getState().places['GBR'].regions['GBR-E06000023']).toBeUndefined();
-    });
-  });
 
   describe('Dual Schema Sub-region Synchronization', () => {
     beforeEach(() => {

@@ -3,6 +3,7 @@ import { Check, Heart, Ban, RotateCcw, ChevronDown, ChevronUp } from 'lucide-rea
 import type { PlaceStatus } from '../../store/useStore';
 import type { Territory } from '../../data/territoriesRegistry';
 import { getFillColor } from '../../utils/mapUtils';
+import { FlagImage } from '../common/FlagImage';
 
 interface TerritoryListPanelProps {
   activeCountry: string;
@@ -77,9 +78,8 @@ export const TerritoryListPanel: React.FC<TerritoryListPanelProps> = ({
               >
                 <div className="territory-list-panel__item-info">
                   {territory.flagCode ? (
-                    <img
-                      src={`https://flagcdn.com/24x18/${territory.flagCode}.png`}
-                      alt=""
+                    <FlagImage
+                      placeId={territory.id}
                       className="territory-list-panel__item-flag"
                     />
                   ) : (

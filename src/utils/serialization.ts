@@ -1,4 +1,4 @@
-import { migrateLegacyPlaces } from '../store/useStore';
+import { sanitizePlaces } from '../store/useStore';
 import type { UserPlacesMap } from '../store/useStore';
 
 export const serializePlaces = (places: UserPlacesMap): string => {
@@ -31,7 +31,7 @@ export const deserializePlaces = (encodedStr: string): UserPlacesMap | null => {
 
     const jsonStr = decodeURIComponent(escape(atob(base64)));
     const parsed = JSON.parse(jsonStr) as UserPlacesMap;
-    return migrateLegacyPlaces(parsed);
+    return sanitizePlaces(parsed);
   } catch (e) {
     console.error("Failed to deserialize places data", e);
     return null;

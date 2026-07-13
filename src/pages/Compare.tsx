@@ -1,5 +1,5 @@
 import React, { useState, useMemo, useEffect, useRef, useCallback } from 'react';
-import { useStore, migrateLegacyPlaces } from '../store/useStore';
+import { useStore, sanitizePlaces } from '../store/useStore';
 import type { UserPlacesMap, PlaceStatus } from '../store/useStore';
 import { COUNTRIES, NUMERIC_TO_A3 } from '../data/countries';
 import { deserializePlaces, serializePlaces } from '../utils/serialization';
@@ -91,7 +91,7 @@ const Compare: React.FC = () => {
             ...g,
             friends: g.friends.map(f => ({
               ...f,
-              places: migrateLegacyPlaces(f.places)
+              places: sanitizePlaces(f.places)
             }))
           }));
         }

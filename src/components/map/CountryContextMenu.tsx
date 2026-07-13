@@ -3,7 +3,7 @@ import { Check, Heart, RotateCcw, Ban, X, ChevronRight } from 'lucide-react';
 import { COUNTRIES } from '../../data/countries';
 import type { PlaceStatus } from '../../store/useStore';
 import { hasDrilldownSupport } from '../../utils/topojsonCache';
-import { getPlaceFlagUrl } from '../../utils/mapUtils';
+import { FlagImage } from '../common/FlagImage';
 
 interface CountryContextMenuProps {
   countryId: string;
@@ -29,7 +29,7 @@ export const CountryContextMenu: React.FC<CountryContextMenuProps> = ({
   const menuRef = useRef<HTMLDivElement>(null);
   const country = COUNTRIES.find((c) => c.id === countryId);
   const resolvedName = displayName || country?.name || countryId;
-  const flagUrl = getPlaceFlagUrl(countryId);
+
   const hasDrillDown = hasDrilldownSupport(countryId);
 
   // Reposition if overflowing viewport
@@ -100,14 +100,10 @@ export const CountryContextMenu: React.FC<CountryContextMenuProps> = ({
       {/* Header */}
       <div className="country-context-menu__header">
         <div className="country-context-menu__country-info">
-          {flagUrl ? (
-            <img
-              key={flagUrl}
-              src={flagUrl}
-              alt=""
-              className="country-context-menu__flag"
-            />
-          ) : null}
+          <FlagImage
+            placeId={countryId}
+            className="country-context-menu__flag"
+          />
           <span className="country-context-menu__name">
             {resolvedName}
           </span>
