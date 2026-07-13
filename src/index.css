@@ -34,7 +34,7 @@
   --accent-highlight: #fbbf24;
   --map-fill-unselected: rgba(255, 255, 255, 0.05);
   --map-fill-hover: rgba(255, 255, 255, 0.15);
-  --map-stroke: rgba(255, 255, 255, 0.1);
+  --map-stroke: rgba(255, 255, 255, 0.3);
   --text-primary: #a9b1d6;
   --text-secondary: #787c99;
 
@@ -74,7 +74,7 @@
   --accent-highlight: #b8860b;
   --map-fill-unselected: rgba(0, 0, 0, 0.04);
   --map-fill-hover: rgba(0, 0, 0, 0.08);
-  --map-stroke: rgba(0, 0, 0, 0.08);
+  --map-stroke: rgba(0, 0, 0, 0.2);
   --text-primary: #374151;
   --text-secondary: #6b7280;
 
