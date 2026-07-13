@@ -1,5 +1,5 @@
 import React from 'react';
-import { Info, ShieldCheck, Share2, Compass, Cpu, Heart, ExternalLink, Github } from 'lucide-react';
+import { Info, ShieldCheck, Share2, Compass, WifiOff, Heart, ExternalLink, Github } from 'lucide-react';
 
 const About: React.FC = () => {
   const currentYear = new Date().getFullYear();
@@ -65,14 +65,14 @@ const About: React.FC = () => {
             </p>
           </div>
 
-          {/* Tech Stack */}
+          {/* Offline-First Experience */}
           <div className="glass-panel border border-base-300/30 p-5 rounded-2xl flex flex-col gap-2.5">
             <h4 className="text-sm font-bold text-base-content flex items-center gap-1.5">
-              <Cpu size={16} className="text-amber-400" />
-              <span>Modern Open Source Stack</span>
+              <WifiOff size={16} className="text-amber-400" />
+              <span>Offline-First Experience</span>
             </h4>
             <p className="text-xs text-base-content/70 leading-relaxed">
-              Crafted as an open-source showcase using <strong>React 19</strong>, <strong>TypeScript</strong>, <strong>Vite</strong>, and <strong>Zustand</strong>. It utilizes high-performance TopoJSON vectors processed with D3 for smooth zooming and touch panning.
+              Your maps, travel logs, search directories, and regional flags are fully functional without an active internet connection. Geometries and flags are cached in persistent browser storage for instant, network-free loading.
             </p>
           </div>
         </div>
