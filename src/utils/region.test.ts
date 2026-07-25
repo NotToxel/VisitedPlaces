@@ -3,12 +3,16 @@ import { geoArea, geoContains } from 'd3-geo';
 import { getPlaceFlagUrl } from './flagUtils';
 import { sanitizePlaces } from '../store/useStore';
 import { hasDrilldownSupport } from './topojsonCache';
-import { getKosovoWorldFeature } from '../data/naturalEarthAdmin1';
+import { getKosovoWorldFeature, getSomalilandWorldFeature } from '../data/naturalEarthAdmin1';
 
 describe('Region & Flag Helper Logic', () => {
   describe('hasDrilldownSupport', () => {
     it('should return true for Singapore (SGP)', () => {
       expect(hasDrilldownSupport('SGP')).toBe(true);
+    });
+
+    it('should return true for Somaliland (SOL)', () => {
+      expect(hasDrilldownSupport('SOL')).toBe(true);
     });
   });
 
@@ -57,6 +61,19 @@ describe('Region & Flag Helper Logic', () => {
       expect(area).toBeGreaterThan(0);
       expect(area).toBeLessThan(0.01);
       expect(geoContains(kosovoFeature as unknown as Parameters<typeof geoContains>[0], [21.16, 42.66])).toBe(true);
+    });
+
+    it('should generate valid Somaliland world feature and flag URL', () => {
+      const somalilandFeature = getSomalilandWorldFeature();
+      const sf = somalilandFeature as unknown as { id: string; properties: { name: string } };
+      expect(somalilandFeature).toBeDefined();
+      expect(sf.id).toBe('SOL');
+      expect(sf.properties.name).toBe('Somaliland');
+      const area = geoArea(somalilandFeature as unknown as Parameters<typeof geoArea>[0]);
+      expect(area).toBeGreaterThan(0);
+
+      const somalilandFlag = getPlaceFlagUrl('SOL');
+      expect(somalilandFlag).toBe('https://upload.wikimedia.org/wikipedia/commons/4/4d/Flag_of_Somaliland.svg');
     });
   });
 

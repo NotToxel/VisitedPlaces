@@ -1298,6 +1298,14 @@ export const COUNTRIES: Country[] = [
     "flag": "https://flagcdn.com/sb.svg"
   },
   {
+    "id": "SOL",
+    "cca2": "XS",
+    "ccn3": "-1",
+    "name": "Somaliland",
+    "continent": "Africa",
+    "flag": "https://upload.wikimedia.org/wikipedia/commons/4/4d/Flag_of_Somaliland.svg"
+  },
+  {
     "id": "SOM",
     "cca2": "SO",
     "ccn3": "706",

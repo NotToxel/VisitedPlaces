@@ -163,6 +163,13 @@ function getCountryMainlandFeatures(countryA3: string, data: NEFeatureCollection
         f.properties?.sov_a3 === 'KOS' ||
         f.properties?.sov_a3 === 'XKX'
       )) ||
+      (countryA3 === 'SOL' && (
+        f.properties?.adm0_a3 === 'SOL' ||
+        f.properties?.admin === 'Somaliland' ||
+        f.properties?.geounit === 'Somaliland' ||
+        f.properties?.gu_a3 === 'SOL' ||
+        f.properties?.sov_a3 === 'SOL'
+      )) ||
       (countryA3 === 'GBR' && f.properties?.adm0_a3 === 'IMN')
     ) &&
     f.properties?.name !== null &&
@@ -181,6 +188,15 @@ function getCountryMainlandFeatures(countryA3: string, data: NEFeatureCollection
              f.properties?.gu_a3 !== 'XKX' &&
              f.properties?.sov_a3 !== 'KOS' &&
              f.properties?.sov_a3 !== 'XKX'
+    );
+  } else if (countryA3 === 'SOM') {
+    // Exclude Somaliland sub-regions from Somalia
+    features = features.filter(
+      (f) => f.properties?.admin !== 'Somaliland' &&
+             f.properties?.geounit !== 'Somaliland' &&
+             f.properties?.adm0_a3 !== 'SOL' &&
+             f.properties?.gu_a3 !== 'SOL' &&
+             f.properties?.sov_a3 !== 'SOL'
     );
   } else if (countryA3 === 'FRA') {
     // Exclude overseas departments (Guadeloupe, Martinique, Reunion, Mayotte, French Guiana)
@@ -233,6 +249,17 @@ function getCountryMainlandFeatures(countryA3: string, data: NEFeatureCollection
  * Extracts ISO 3166-2 codes and display names from NE properties.
  */
 export async function getCountryRegions(countryA3: string): Promise<NERegion[]> {
+  if (countryA3 === 'SOL') {
+    return [
+      { iso_3166_2: 'SOL-AW', name: 'Awdal', parentA3: 'SOL' },
+      { iso_3166_2: 'SOL-WO', name: 'Maroodi Jeex (Woqooyi Galbeed)', parentA3: 'SOL' },
+      { iso_3166_2: 'SOL-SH', name: 'Sahil', parentA3: 'SOL' },
+      { iso_3166_2: 'SOL-TO', name: 'Togdheer', parentA3: 'SOL' },
+      { iso_3166_2: 'SOL-SA', name: 'Sanaag', parentA3: 'SOL' },
+      { iso_3166_2: 'SOL-SO', name: 'Sool', parentA3: 'SOL' },
+    ];
+  }
+
   const data = await fetchNEAdmin1();
   if (!data) return [];
 
@@ -300,6 +327,10 @@ export async function getCountryRegions(countryA3: string): Promise<NERegion[]> 
  * Returns a new GeoJSON FeatureCollection containing only that country's admin-1 geometries.
  */
 export async function getCountryGeoJSON(countryA3: string): Promise<NEFeatureCollection | null> {
+  if (countryA3 === 'SOL') {
+    return SOMALILAND_SUBREGIONS_GEOJSON;
+  }
+
   const data = await fetchNEAdmin1();
   if (!data) return null;
 
@@ -382,6 +413,11 @@ export async function getAllCountryFeaturesWithMeta(countryA3: string): Promise<
  * Used for auto-centering and auto-zooming the map.
  */
 export async function computeBoundingBox(countryA3: string): Promise<BBox | null> {
+  // SOL uses bundled sub-regions, not the NE admin-1 network data
+  if (countryA3 === 'SOL') {
+    return { minLng: 42.5, maxLng: 49.0, minLat: 7.9, maxLat: 11.5, centerLng: 45.75, centerLat: 9.7 };
+  }
+
   const data = await fetchNEAdmin1();
   if (!data) return null;
 
@@ -450,6 +486,9 @@ export function isNEDataLoaded(): boolean {
  * If loaded, scans the features list for matching country features.
  */
 export function hasNESubdivisionsSync(countryA3: string): boolean {
+  // SOL and XKX use bundled data — always subdivide
+  if (countryA3 === 'SOL' || countryA3 === 'XKX') return true;
+
   if (!cachedData) {
     const KNOWN_NO_SUBDIVISIONS = new Set([
       'VAT', 'MCO', 'SMR', 'LIE', 'AND', 'NRU', 'TUV', 'SGP', 'MLT',
@@ -519,3 +558,194 @@ const FALLBACK_KOSOVO_FEATURE: NEFeature = {
 export function getKosovoWorldFeature(): NEFeature {
   return FALLBACK_KOSOVO_FEATURE;
 }
+
+// Somaliland boundary decoded from exact 110m world-atlas@2.0.2 topology arcs [~114, ~580, ~582, 583]
+const FALLBACK_SOMALILAND_FEATURE: NEFeature = {
+  type: 'Feature',
+  id: 'SOL',
+  properties: {
+    ISO_A3: 'SOL',
+    iso_a3: 'SOL',
+    name: 'Somaliland',
+    admin: 'Somaliland'
+  },
+  geometry: {
+    type: 'Polygon',
+    coordinates: [[
+      // arc 114 reversed — eastern border (NE tip → Ethiopia tripoint)
+      [48.94788948, 11.41011393], // NE tip (shared with Somalia arc 115)
+      [48.94068941, 11.3948809],
+      [48.93708937, 10.9818966],
+      [48.93708937, 9.97313167],
+      [48.93708937, 9.45182362],
+      [48.48708487, 8.83742485],
+      [47.78867789, 8.00299346], // Ethiopia tripoint
+      // arc 580 reversed — Ethiopia border (→ northwest)
+      [46.9498695, 7.99622322],
+      [43.67743677, 9.18439936],
+      [43.29583296, 9.53983667],
+      [42.92862929, 10.02221587],
+      [42.55782558, 10.57229742],
+      [42.77742777, 10.92604217], // Djibouti/Ethiopia tripoint
+      // arc 582 reversed — Djibouti border
+      [43.14463145, 11.46258324], // Djibouti tripoint
+      // arc 583 — Gulf of Aden coastline (west → east, exact 110m vertices)
+      [43.47223472, 11.27809436],
+      [43.66663667, 10.8634175],
+      [44.11664117, 10.44535552],
+      [44.61344613, 10.44197041],
+      [45.55665557, 10.69754675],
+      [46.64386644, 10.81602586],
+      [47.52587526, 11.12745664],
+      [48.02268023, 11.19346643],
+      [48.37908379, 11.37626275],
+      [48.94788948, 11.41011393]  // close (back to NE tip)
+    ]]
+  }
+} as unknown as NEFeature;
+
+
+/**
+ * Returns Somaliland's country polygon for search-pan centroid computation.
+ * On the world map, the actual rendered geometry comes from the 110m topology
+ * (tagged with SOL id at decode time in useDrilldownGeography).
+ */
+export function getSomalilandWorldFeature(): NEFeature {
+  return FALLBACK_SOMALILAND_FEATURE;
+}
+
+/**
+ * Somaliland's 6 administrative sub-regions GeoJSON for interactive map drill-down.
+ *
+ * Northern coastline uses exact 110m arc 583 vertices from world-atlas@2.0.2.
+ * Interior dividers pass through arc 583 coast points so regions tile seamlessly.
+ *
+ * Coastline (arc 583, west → east, indices C0–C10):
+ *   C0  [43.14463145, 11.46258324]  Djibouti tripoint
+ *   C1  [43.47223472, 11.27809436]
+ *   C2  [43.66663667, 10.8634175]
+ *   C3  [44.11664117, 10.44535552]  ← Awdal/Sahil+WO divider meets coast
+ *   C4  [44.61344613, 10.44197041]
+ *   C5  [45.55665557, 10.69754675]  ← Sahil/Togdheer+Sanaag divider meets coast
+ *   C6  [46.64386644, 10.81602586]  ← Togdheer+Sanaag/Sool divider meets coast
+ *   C7  [47.52587526, 11.12745664]
+ *   C8  [48.02268023, 11.19346643]
+ *   C9  [48.37908379, 11.37626275]
+ *   C10 [48.94788948, 11.41011393]  NE tip
+ *
+ * Interior junction points (on Ethiopia border / arc 580):
+ *   E0  [47.78867789, 8.00299346]   Ethiopia tripoint (arc 114[0])
+ */
+export const SOMALILAND_SUBREGIONS_GEOJSON: NEFeatureCollection = {
+  type: 'FeatureCollection',
+  features: [
+    {
+      type: 'Feature',
+      properties: { iso_3166_2: 'SOL-AW', name: 'Awdal', adm0_a3: 'SOL', type_en: 'Region', admin: 'Somaliland' },
+      geometry: {
+        type: 'Polygon',
+        coordinates: [[
+          [43.14463145, 11.46258324],
+          [43.47223472, 11.27809436],
+          [43.66663667, 10.8634175],
+          [44.0, 10.4145],
+          [44.0, 9.0],
+          [43.67743677, 9.18439936],
+          [43.29583296, 9.53983667],
+          [42.92862929, 10.02221587],
+          [42.55782558, 10.57229742],
+          [42.77742777, 10.92604217],
+          [43.14463145, 11.46258324]
+        ]]
+      }
+    },
+    {
+      type: 'Feature',
+      properties: { iso_3166_2: 'SOL-SH', name: 'Sahil', adm0_a3: 'SOL', type_en: 'Region', admin: 'Somaliland' },
+      geometry: {
+        type: 'Polygon',
+        coordinates: [[
+          [44.0, 10.4145],
+          [44.11664117, 10.44535552],
+          [44.61344613, 10.44197041],
+          [45.55665557, 10.69754675],
+          [46.2, 10.75],
+          [46.2, 10.2],
+          [45.2, 10.2],
+          [44.0, 10.2],
+          [44.0, 10.4145]
+        ]]
+      }
+    },
+    {
+      type: 'Feature',
+      properties: { iso_3166_2: 'SOL-WO', name: 'Maroodi Jeex (Woqooyi Galbeed)', adm0_a3: 'SOL', type_en: 'Region', admin: 'Somaliland' },
+      geometry: {
+        type: 'Polygon',
+        coordinates: [[
+          [44.0, 10.2],
+          [45.2, 10.2],
+          [45.2, 8.6121],
+          [44.633, 8.7857],
+          [44.0, 9.0],
+          [44.0, 10.2]
+        ]]
+      }
+    },
+    {
+      type: 'Feature',
+      properties: { iso_3166_2: 'SOL-TO', name: 'Togdheer', adm0_a3: 'SOL', type_en: 'Region', admin: 'Somaliland' },
+      geometry: {
+        type: 'Polygon',
+        coordinates: [[
+          [45.2, 10.2],
+          [46.2, 10.2],
+          [46.8, 10.0],
+          [46.8, 8.05],
+          [46.1019, 8.2997],
+          [45.5144, 8.4965],
+          [45.2, 8.6121],
+          [45.2, 10.2]
+        ]]
+      }
+    },
+    {
+      type: 'Feature',
+      properties: { iso_3166_2: 'SOL-SA', name: 'Sanaag', adm0_a3: 'SOL', type_en: 'Region', admin: 'Somaliland' },
+      geometry: {
+        type: 'Polygon',
+        coordinates: [[
+          [46.2, 10.75],
+          [46.64386644, 10.81602586],
+          [47.52587526, 11.12745664],
+          [48.02268023, 11.19346643],
+          [48.37908379, 11.37626275],
+          [48.94788948, 11.41011393],
+          [48.94068941, 11.3948809],
+          [48.93708937, 10.9818966],
+          [48.93708937, 10.0],
+          [46.8, 10.0],
+          [46.2, 10.2],
+          [46.2, 10.75]
+        ]]
+      }
+    },
+    {
+      type: 'Feature',
+      properties: { iso_3166_2: 'SOL-SO', name: 'Sool', adm0_a3: 'SOL', type_en: 'Region', admin: 'Somaliland' },
+      geometry: {
+        type: 'Polygon',
+        coordinates: [[
+          [46.8, 10.0],
+          [48.93708937, 10.0],
+          [48.93708937, 9.45182362],
+          [48.48708487, 8.83742485],
+          [47.78867789, 8.00299346],
+          [46.9498695, 7.99622322],
+          [46.8, 8.05],
+          [46.8, 10.0]
+        ]]
+      }
+    }
+  ]
+};

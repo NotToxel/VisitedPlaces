@@ -35,6 +35,7 @@ export const getSubRegionUrl = (countryA3: string): string | null => {
 export const hasDrilldownSupport = (countryA3: string): boolean => {
   if (countryA3.includes('-')) return false;
   if (drilldownRegistry[countryA3]) return true;
+  if (getTerritoriesForCountry(countryA3).length > 0) return true;
   return hasNESubdivisionsSync(countryA3);
 };
 
@@ -169,14 +170,19 @@ async function fetchCuratedSubRegions(countryA3: string, url: string): Promise<T
 async function fetchNESubRegions(countryA3: string): Promise<TopoRegion[]> {
   try {
     const neRegions = await getCountryRegions(countryA3);
+    const territories = getTerritoriesForCountry(countryA3);
 
-    const regions: TopoRegion[] = neRegions.map((r) => ({
+    let regions: TopoRegion[] = neRegions.map((r) => ({
       id: `${countryA3}-${r.iso_3166_2}`,
       name: r.name,
     }));
 
+    // If NE only returned 1 generic country-level feature (like Somaliland) and we have explicit territories, replace it
+    if (territories.length > 0 && regions.length === 1 && (regions[0].name === 'Somaliland' || regions[0].id.includes('-99-'))) {
+      regions = [];
+    }
+
     // Inject territories from the registry
-    const territories = getTerritoriesForCountry(countryA3);
     territories.forEach((t) => {
       if (!regions.some((r) => r.id === t.id)) {
         regions.push({ id: t.id, name: t.name });

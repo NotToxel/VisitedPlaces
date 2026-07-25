@@ -43,19 +43,29 @@ export const TerritoryListPanel: React.FC<TerritoryListPanelProps> = ({
     }
   }, [highlightedTerritoryId, territories]);
 
+  const toggleCollapse = (e: React.MouseEvent) => {
+    e.stopPropagation();
+    setIsCollapsed((prev) => !prev);
+  };
+
   return (
-    <div className="territory-list-panel">
-      {/* Grab handle indicator for mobile bottom-sheet view */}
-      <div className="territory-list-panel__grab-handle" />
+    <div 
+      className={`territory-list-panel ${isCollapsed ? 'territory-list-panel--collapsed' : ''}`}
+      onClick={isCollapsed ? () => setIsCollapsed(false) : undefined}
+      role={isCollapsed ? 'button' : undefined}
+      tabIndex={isCollapsed ? 0 : undefined}
+    >
+
       
       <button
         className="territory-list-panel__header"
-        onClick={() => setIsCollapsed(!isCollapsed)}
+        onClick={toggleCollapse}
+        aria-expanded={!isCollapsed}
       >
         <span className="territory-list-panel__title">
-          {territoryLabel || 'Territories'}
+          {territoryLabel || 'Territories'} ({territories.length})
         </span>
-        {isCollapsed ? <ChevronDown size={12} /> : <ChevronUp size={12} />}
+        {isCollapsed ? <ChevronUp size={14} /> : <ChevronDown size={14} />}
       </button>
 
       {!isCollapsed && (

@@ -15,6 +15,8 @@ const NICKNAMES: Record<string, string[]> = {
   'vat': ['holy see'],
   'cd': ['drc'],
   'cod': ['drc'],
+  'sol': ['somaliland', 'hargeisa'],
+  'xs': ['somaliland', 'hargeisa'],
 };
 
 /** Normalize string by stripping accents/diacritics and converting to lowercase. */

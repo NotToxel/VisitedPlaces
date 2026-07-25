@@ -15,7 +15,7 @@ import { useDrilldownGeography } from '../../hooks/useDrilldownGeography';
 import { DrilldownControls } from './DrilldownControls';
 import { MapGeographies } from './MapGeographies';
 import { fetchRawTopology } from '../../utils/topojsonCache';
-import { getKosovoWorldFeature } from '../../data/naturalEarthAdmin1';
+import { getKosovoWorldFeature, getSomalilandWorldFeature } from '../../data/naturalEarthAdmin1';
 
 interface StandardMapProps {
   activeCountry: string | null;
@@ -60,6 +60,8 @@ const StandardMapBase: React.FC<StandardMapProps> = ({
       let found: unknown = null;
       if (cca3 === 'XKX') {
         found = getKosovoWorldFeature();
+      } else if (cca3 === 'SOL') {
+        found = getSomalilandWorldFeature();
       }
 
       if (!found && topo) {
@@ -108,6 +110,8 @@ const StandardMapBase: React.FC<StandardMapProps> = ({
       console.warn('Could not pan to country', err);
     }
   }, [numericToA3, animateTo]);
+
+  const currentConfig = activeCountry ? drilldownRegistry[activeCountry] : null;
 
   const tryPanToRegion = useCallback((geo: unknown, regionId: string) => {
     try {
@@ -165,6 +169,7 @@ const StandardMapBase: React.FC<StandardMapProps> = ({
         if (center && isFinite(center[0]) && isFinite(center[1])) {
           const isMobile = typeof window !== 'undefined' && window.innerWidth <= 768;
           let targetZoom = activeCountry === 'USA' ? 3 : 5;
+          const targetLng = center[0];
           let targetLat = center[1];
 
           if (bounds && Array.isArray(bounds[0]) && Array.isArray(bounds[1])) {
@@ -173,23 +178,25 @@ const StandardMapBase: React.FC<StandardMapProps> = ({
             const effectiveLngSpan = lngSpan > 180 ? 360 - lngSpan : lngSpan;
             const maxSpan = Math.max(effectiveLngSpan, latSpan, 0.2);
 
-            const baseZoom = Math.min(Math.max(120 / maxSpan, 3.5), 14);
-            targetZoom = isMobile ? Math.min(baseZoom * 1.3, 16) : baseZoom;
+            const countrySpan = countryBBox ? Math.max(countryBBox.maxLng - countryBBox.minLng, countryBBox.maxLat - countryBBox.minLat, 1) : 10;
+            const sizeRatio = Math.max(countrySpan / maxSpan, 1);
+            const baseZoom = Math.min(Math.max(1.5 * Math.pow(sizeRatio, 0.45), 1.3), 4.5);
+            targetZoom = isMobile ? Math.min(baseZoom * 1.25, 5.5) : baseZoom;
           } else if (isMobile) {
-            targetZoom = targetZoom * 1.35;
+            targetZoom = targetZoom * 1.25;
           }
 
           if (isMobile) {
-            targetLat = center[1] - (8 / targetZoom);
+            targetLat = targetLat - (8 / targetZoom);
           }
 
-          animateTo(center[0], targetLat, targetZoom);
+          animateTo(targetLng, targetLat, targetZoom);
         }
       }
     } catch (err) {
       console.warn('Could not pan to region', err);
     }
-  }, [activeCountry, numericToA3, animateTo]);
+  }, [activeCountry, countryBBox, numericToA3, animateTo]);
 
   // Pan to searched country/region when highlightedCountry changes
   useEffect(() => {
@@ -262,8 +269,6 @@ const StandardMapBase: React.FC<StandardMapProps> = ({
   }, [activeCountry, setSubRegionCenter, setSubRegionZoom, setMapCenter, setMapZoom]);
 
   // Compute projection config: curated override or auto-computed from bounding box
-  const currentConfig = activeCountry ? drilldownRegistry[activeCountry] : null;
-
   const { projectionScale, projectionCenter, projectionRotate, drilldownDefaultCenter, drilldownDefaultZoom } = useMemo(() => {
     if (currentConfig) {
       // Curated drill-down (USA, GBR)
@@ -279,10 +284,10 @@ const StandardMapBase: React.FC<StandardMapProps> = ({
       // NE-based drill-down — auto-compute scale and rotation from bounding box
       const lngSpan = countryBBox.maxLng - countryBBox.minLng;
       const latSpan = countryBBox.maxLat - countryBBox.minLat;
-      const maxSpan = Math.max(lngSpan, latSpan, 1);
-      // Scale heuristic: target fitting within a portion of the 800x500 viewport with generous padding
-      // Cap scale at 24000 to allow very small countries (like Hong Kong, Nauru, Singapore) to zoom in comfortably.
-      const autoScale = Math.min(18000 / maxSpan, 24000);
+      const maxSpan = Math.max(lngSpan, latSpan, 0.5);
+      // Non-linear power scaling (maxSpan^0.65) ensures large countries (USA, China, Australia) zoom in nicely
+      // while preventing small countries (Luxembourg, Singapore) from over-zooming.
+      const autoScale = Math.min(22000 / Math.pow(maxSpan, 0.65), 24000);
       
       const centerLng = countryBBox.centerLng;
       const centerLat = countryBBox.centerLat;
@@ -314,10 +319,9 @@ const StandardMapBase: React.FC<StandardMapProps> = ({
   // Reset sub-region view when entering a new drill-down
   useEffect(() => {
     if (activeCountry && drilldownDefaultCenter) {
-      setSubRegionCenter(drilldownDefaultCenter);
-      setSubRegionZoom(drilldownDefaultZoom);
+      animateTo(drilldownDefaultCenter[0], drilldownDefaultCenter[1], drilldownDefaultZoom, true);
     }
-  }, [activeCountry, drilldownDefaultCenter, drilldownDefaultZoom, setSubRegionCenter, setSubRegionZoom]);
+  }, [activeCountry, drilldownDefaultCenter, drilldownDefaultZoom, animateTo]);
 
   return (
     <div className={`standard-map-wrapper ${activeCountry ? 'standard-map-wrapper--drilldown' : ''}`} style={{ width: '100%', height: '100%', position: 'relative', display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center' }}>

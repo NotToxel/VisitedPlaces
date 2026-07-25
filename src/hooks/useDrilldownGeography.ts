@@ -35,12 +35,21 @@ export function useDrilldownGeography(activeCountry: string | null, setActiveCou
               const topoData = data as unknown as Parameters<typeof topojson.feature>[0];
               const topoObj = (data as { objects?: Record<string, unknown> })?.objects?.countries as Parameters<typeof topojson.feature>[1];
               if (topoObj) {
-                type WorldFeature = { id?: string | number; properties?: { ISO_A3?: string } };
+                type WorldFeature = { id?: string | number; properties?: { ISO_A3?: string; name?: string } };
                 const fc = topojson.feature(topoData, topoObj) as unknown as { type: string; features: WorldFeature[] };
                 
                 const kosovoFeature = getKosovoWorldFeature();
                 if (kosovoFeature && !fc.features.some((f) => f.id === 'XKX' || f.properties?.ISO_A3 === 'XKX')) {
                   fc.features.push(kosovoFeature as unknown as WorldFeature);
+                }
+                
+                // Tag the existing Somaliland geometry (id: undefined in the 110m topo)
+                // with the SOL code so it's clickable, searchable, and status-trackable.
+                // The 110m topology already separates Somalia (706) and Somaliland via shared arcs.
+                const solFeature = fc.features.find((f) => f.id == null && f.properties?.name === 'Somaliland');
+                if (solFeature) {
+                  solFeature.id = 'SOL';
+                  solFeature.properties = { ...solFeature.properties, ISO_A3: 'SOL', name: 'Somaliland' };
                 }
                 setGeoData(fc);
               } else {
@@ -118,8 +127,10 @@ export function useDrilldownGeography(activeCountry: string | null, setActiveCou
     if (!activeCountry || !countryBBox) return null;
     const lngSpan = countryBBox.maxLng - countryBBox.minLng;
     const latSpan = countryBBox.maxLat - countryBBox.minLat;
-    const maxSpan = Math.max(lngSpan, latSpan, 1);
-    return Math.min(18000 / maxSpan, 24000);
+    const maxSpan = Math.max(lngSpan, latSpan, 0.5);
+    // Non-linear power scaling (maxSpan^0.65) ensures large countries (USA, China, Australia) zoom in nicely
+    // while preventing small countries (Luxembourg, Singapore) from over-zooming.
+    return Math.min(22000 / Math.pow(maxSpan, 0.65), 24000);
   }, [activeCountry, countryBBox]);
 
   return { geoData, isLoading, setGeoData, countryBBox, autoScale };

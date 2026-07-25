@@ -1831,20 +1831,13 @@ path.rsm-geography:active {
     border-radius: 16px;
     z-index: 50;
     box-shadow: 0 -4px 24px rgba(0, 0, 0, 0.35);
+    transition: max-height 0.25s cubic-bezier(0.16, 1, 0.3, 1);
   }
 
-  .territory-list-panel__grab-handle {
-    display: block;
-    width: 36px;
-    height: 4px;
-    background: rgba(255, 255, 255, 0.2);
-    border-radius: 2px;
-    margin: 8px auto 0;
+  .territory-list-panel--collapsed {
+    cursor: pointer;
   }
 
-  [data-theme="light"] .territory-list-panel__grab-handle {
-    background: rgba(0, 0, 0, 0.15);
-  }
 
   .territory-list-panel__action-btn {
     width: 28px;

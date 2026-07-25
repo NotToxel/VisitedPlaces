@@ -784,6 +784,11 @@ export const hexGridData: Record<string, {name: string, x: number, y: number}> =
     "x": 26,
     "y": 18
   },
+  "SOL": {
+    "name": "Somaliland",
+    "x": 19,
+    "y": 14
+  },
   "SOM": {
     "name": "Somalia",
     "x": 18,

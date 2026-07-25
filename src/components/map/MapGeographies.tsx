@@ -127,7 +127,7 @@ const MapGeographiesBase: React.FC<MapGeographiesProps> = ({
           );
 
           let fill = getFillColor(status, isHighlighted, !!activeCountry, showVisited, showWishlist, showAvoid, showRevisit);
-          if (!activeCountry && countryId === 'XKX' && status === 'NONE' && !isHighlighted) {
+          if (!activeCountry && (countryId === 'XKX' || countryId === 'SOL') && status === 'NONE' && !isHighlighted) {
             fill = 'transparent';
           }
 
