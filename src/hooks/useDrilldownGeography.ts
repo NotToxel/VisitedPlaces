@@ -32,25 +32,40 @@ export function useDrilldownGeography(activeCountry: string | null, setActiveCou
         .then((data) => {
           if (active && data) {
             try {
-              const topoData = data as unknown as Parameters<typeof topojson.feature>[0];
-              const topoObj = (data as { objects?: Record<string, unknown> })?.objects?.countries as Parameters<typeof topojson.feature>[1];
-              if (topoObj) {
+              const topoCopy = JSON.parse(JSON.stringify(data));
+              const topoData = topoCopy as unknown as Parameters<typeof topojson.feature>[0];
+              const topoObj = (topoCopy as { objects?: Record<string, unknown> })?.objects?.countries;
+              if (topoObj && Array.isArray((topoObj as { geometries?: unknown[] }).geometries)) {
+                type TopoGeom = { id?: string | number; arcs?: number[][]; properties?: Record<string, unknown> };
+                const geoms = (topoObj as { geometries: TopoGeom[] }).geometries;
+                
+                // 1. Tag Somaliland geometry as SOL
+                const solGeom = geoms.find((g) => g.properties?.name === 'Somaliland');
+                if (solGeom) {
+                  solGeom.id = 'SOL';
+                  solGeom.properties = { ...solGeom.properties, ISO_A3: 'SOL', name: 'Somaliland' };
+                }
+
+                // 2. Adjust Somalia (706) arcs so it only covers Somalia proper (no overlap with Somaliland)
+                const somGeom = geoms.find((g) => g.id === '706' || g.id === 706);
+                if (somGeom) {
+                  somGeom.arcs = [[112, 113, 114, -583, -581, 583]];
+                }
+
                 type WorldFeature = { id?: string | number; properties?: { ISO_A3?: string; name?: string } };
-                const fc = topojson.feature(topoData, topoObj) as unknown as { type: string; features: WorldFeature[] };
+                const fc = topojson.feature(topoData, topoObj as Parameters<typeof topojson.feature>[1]) as unknown as { type: string; features: WorldFeature[] };
                 
                 const kosovoFeature = getKosovoWorldFeature();
                 if (kosovoFeature && !fc.features.some((f) => f.id === 'XKX' || f.properties?.ISO_A3 === 'XKX')) {
                   fc.features.push(kosovoFeature as unknown as WorldFeature);
                 }
-                
-                // Tag the existing Somaliland geometry (id: undefined in the 110m topo)
-                // with the SOL code so it's clickable, searchable, and status-trackable.
-                // The 110m topology already separates Somalia (706) and Somaliland via shared arcs.
-                const solFeature = fc.features.find((f) => f.id == null && f.properties?.name === 'Somaliland');
+
+                const solFeature = fc.features.find((f) => f.properties?.name === 'Somaliland');
                 if (solFeature) {
                   solFeature.id = 'SOL';
                   solFeature.properties = { ...solFeature.properties, ISO_A3: 'SOL', name: 'Somaliland' };
                 }
+                
                 setGeoData(fc);
               } else {
                 setGeoData(data as object);

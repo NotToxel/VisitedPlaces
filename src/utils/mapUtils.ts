@@ -67,6 +67,9 @@ export const getRegionId = (
 ): string => {
   // World view — resolve country ISO-A3
   if (!activeCountry) {
+    if (geo.properties?.name === 'Somaliland') {
+      return 'SOL';
+    }
     const rawId = geo.properties?.ISO_A3 || geo.id?.toString() || '';
     return numericToA3[rawId] || rawId;
   }

@@ -2,6 +2,7 @@ import React, { memo } from 'react';
 import { Geographies, Geography } from 'react-simple-maps';
 import { getFillColor, getRegionId, showMapTooltip, hideMapTooltip, formatStatusLabel } from '../../utils/mapUtils';
 import type { GeoFeature, GeoProperties } from '../../utils/mapUtils';
+import { UI_COLORS } from '../../config/colors';
 import type { PlaceStatus } from '../../store/useStore';
 
 interface MapGeographiesProps {
@@ -127,8 +128,13 @@ const MapGeographiesBase: React.FC<MapGeographiesProps> = ({
           );
 
           let fill = getFillColor(status, isHighlighted, !!activeCountry, showVisited, showWishlist, showAvoid, showRevisit);
-          if (!activeCountry && (countryId === 'XKX' || countryId === 'SOL') && status === 'NONE' && !isHighlighted) {
-            fill = 'transparent';
+          // SOL (Somaliland) and XKX (Kosovo) sit on top of parent-country geometries (Somalia/Serbia)
+          // whose arcs have been rewritten to carve out their area. When unvisited:
+          //  - Fill with the standard unselected color so there's no visible hole
+          //  - Suppress the stroke so we don't get a double-border that darkens the region
+          const isUnstatusedOverlay = !activeCountry && (countryId === 'XKX' || countryId === 'SOL') && status === 'NONE' && !isHighlighted;
+          if (isUnstatusedOverlay) {
+            fill = UI_COLORS.mapFillUnselected;
           }
 
           // Build tooltip text

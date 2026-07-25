@@ -1,7 +1,7 @@
 # AGENTS.MD — VisitedPlaces Project Guide
 
-> **Version**: 2.2.9  
-> **Last Updated**: 2026-07-25  
+> **Version**: 2.2.10  
+> **Last Updated**: 2026-07-26  
 > **Status**: Active Development
 
 ---
@@ -252,7 +252,7 @@ We use [Semantic Versioning](https://semver.org/):
 
 ### Current Version
 
-`2.2.9` — Patch release refactoring drill-down Mercator projection rotation mechanics and sub-region search panning alignment.
+`2.2.10` — Patch release resolving Somaliland map overlay fill and border stroke rendering.
 
 ### Display
 
