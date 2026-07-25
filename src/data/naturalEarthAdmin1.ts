@@ -151,14 +151,38 @@ function shiftUsaCoords(coords: unknown): void {
  */
 function getCountryMainlandFeatures(countryA3: string, data: NEFeatureCollection): NEFeature[] {
   let features = data.features.filter(
-    (f) => (f.properties?.adm0_a3 === countryA3 ||
-           (countryA3 === 'GBR' && f.properties?.adm0_a3 === 'IMN')) &&
-           f.properties?.name !== null &&
-           f.properties?.name !== undefined &&
-           f.properties?.name !== ''
+    (f) => (
+      f.properties?.adm0_a3 === countryA3 ||
+      (countryA3 === 'XKX' && (
+        f.properties?.adm0_a3 === 'KOS' ||
+        f.properties?.adm0_a3 === 'XKX' ||
+        f.properties?.admin === 'Kosovo' ||
+        f.properties?.geounit === 'Kosovo' ||
+        f.properties?.gu_a3 === 'KOS' ||
+        f.properties?.gu_a3 === 'XKX' ||
+        f.properties?.sov_a3 === 'KOS' ||
+        f.properties?.sov_a3 === 'XKX'
+      )) ||
+      (countryA3 === 'GBR' && f.properties?.adm0_a3 === 'IMN')
+    ) &&
+    f.properties?.name !== null &&
+    f.properties?.name !== undefined &&
+    f.properties?.name !== ''
   );
 
-  if (countryA3 === 'FRA') {
+  if (countryA3 === 'SRB') {
+    // Exclude Kosovo sub-regions from Serbia
+    features = features.filter(
+      (f) => f.properties?.admin !== 'Kosovo' &&
+             f.properties?.geounit !== 'Kosovo' &&
+             f.properties?.adm0_a3 !== 'KOS' &&
+             f.properties?.adm0_a3 !== 'XKX' &&
+             f.properties?.gu_a3 !== 'KOS' &&
+             f.properties?.gu_a3 !== 'XKX' &&
+             f.properties?.sov_a3 !== 'KOS' &&
+             f.properties?.sov_a3 !== 'XKX'
+    );
+  } else if (countryA3 === 'FRA') {
     // Exclude overseas departments (Guadeloupe, Martinique, Reunion, Mayotte, French Guiana)
     features = features.filter(
       (f) => f.properties?.type_en !== 'Overseas department' &&
@@ -305,10 +329,8 @@ export async function getAllCountryFeaturesWithMeta(countryA3: string): Promise<
   const data = await fetchNEAdmin1();
   if (!data) return [];
 
-  // Get ALL features for this country (no mainland filtering)
-  const features = data.features.filter(
-    (f) => f.properties?.adm0_a3 === countryA3
-  );
+  // Get features for this country (using mainland filtering to respect entity boundaries like Kosovo)
+  const features = getCountryMainlandFeatures(countryA3, data);
 
   if (features.length === 0) return [];
 
@@ -412,18 +434,7 @@ export async function computeBoundingBox(countryA3: string): Promise<BBox | null
 export async function hasNESubdivisions(countryA3: string): Promise<boolean> {
   const data = await fetchNEAdmin1();
   if (!data) return false;
-
-  let count = 0;
-  for (const f of data.features) {
-    if (f.properties?.adm0_a3 === countryA3 &&
-        f.properties?.name !== null &&
-        f.properties?.name !== undefined &&
-        f.properties?.name !== '') {
-      count++;
-      if (count >= 2) return true;
-    }
-  }
-  return false;
+  return getCountryMainlandFeatures(countryA3, data).length >= 2;
 }
 
 /**
@@ -447,18 +458,7 @@ export function hasNESubdivisionsSync(countryA3: string): boolean {
     ]);
     return !KNOWN_NO_SUBDIVISIONS.has(countryA3);
   }
-
-  let count = 0;
-  for (const f of cachedData.features) {
-    if (f.properties?.adm0_a3 === countryA3 &&
-        f.properties?.name !== null &&
-        f.properties?.name !== undefined &&
-        f.properties?.name !== '') {
-      count++;
-      if (count >= 2) return true;
-    }
-  }
-  return false;
+  return getCountryMainlandFeatures(countryA3, cachedData).length >= 2;
 }
 
 // ── Helpers ───────────────────────────────────────────────────────────────
@@ -471,4 +471,51 @@ function slugify(name: string): string {
     .replace(/[\u0300-\u036f]/g, '') // strip diacritics
     .replace(/[^a-z0-9]+/g, '-')
     .replace(/^-+|-+$/g, '');
+}
+
+const FALLBACK_KOSOVO_FEATURE: NEFeature = {
+  type: 'Feature',
+  id: 'XKX',
+  properties: {
+    ISO_A3: 'XKX',
+    iso_a3: 'XKX',
+    name: 'Kosovo',
+    admin: 'Kosovo'
+  },
+  geometry: {
+    // Exact 110m Natural Earth topology ring matching world-atlas@2.0.2 (clockwise for D3)
+    type: 'Polygon',
+    coordinates: [[
+      [21.5768, 42.2451],
+      [21.3536, 42.2062],
+      [20.7632, 42.0522],
+      [20.7164, 41.8474],
+      [20.5904, 41.8559],
+      [20.522, 42.2181],
+      [20.2844, 42.3196],
+      [20.072, 42.5887],
+      [20.2592, 42.8122],
+      [20.4968, 42.8849],
+      [20.6336, 43.2167],
+      [20.8136, 43.2725],
+      [20.9576, 43.1304],
+      [21.1448, 43.0694],
+      [21.2744, 42.9103],
+      [21.44, 42.8629],
+      [21.6344, 42.6767],
+      [21.7748, 42.6835],
+      [21.6632, 42.4398],
+      [21.5444, 42.3196],
+      [21.5768, 42.2451]
+    ]]
+  }
+} as unknown as NEFeature;
+
+/**
+ * Returns Kosovo's country polygon for the main world map.
+ * Uses a single clean outline rather than merged admin-1 sub-regions
+ * to avoid rendering internal district boundaries on the world view.
+ */
+export function getKosovoWorldFeature(): NEFeature {
+  return FALLBACK_KOSOVO_FEATURE;
 }

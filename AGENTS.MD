@@ -1,7 +1,7 @@
 # AGENTS.MD — VisitedPlaces Project Guide
 
-> **Version**: 2.2.6  
-> **Last Updated**: 2026-07-13  
+> **Version**: 2.2.7  
+> **Last Updated**: 2026-07-25  
 > **Status**: Active Development
 
 ---
@@ -252,7 +252,7 @@ We use [Semantic Versioning](https://semver.org/):
 
 ### Current Version
 
-`2.2.6` — Patch release adding location pin emoji favicon, adding GitHub icon to the repository link in About page, removing "and team" from footer subtext, and implementing robust two-tier persistent flag caching using CacheStorage and in-memory Blob URLs to eliminate rendering flicker/latency.
+`2.2.7` — Patch release resolving Kosovo interactive map tracking, search pan/zoom animation stuttering lock, exact 1:110m Natural Earth topology ring alignment, and unselected fill color transparency layering.
 
 ### Display
 

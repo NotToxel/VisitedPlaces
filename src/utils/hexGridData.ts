@@ -454,7 +454,7 @@ export const hexGridData: Record<string, {name: string, x: number, y: number}> =
     "x": 25,
     "y": 7
   },
-  "UNK": {
+  "XKX": {
     "name": "Kosovo",
     "x": 16,
     "y": 8

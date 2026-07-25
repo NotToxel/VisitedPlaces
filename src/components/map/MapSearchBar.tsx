@@ -85,6 +85,7 @@ export const MapSearchBar: React.FC<MapSearchBarProps> = ({
     onSearchChange?.(country.name);
     setIsDropdownOpen(false);
     setKbIndex(-1);
+    (document.activeElement as HTMLElement)?.blur();
   };
 
   const clearSearch = () => {

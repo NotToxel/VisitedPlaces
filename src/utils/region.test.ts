@@ -1,7 +1,9 @@
 import { describe, it, expect } from 'vitest';
+import { geoArea, geoContains } from 'd3-geo';
 import { getPlaceFlagUrl } from './flagUtils';
 import { sanitizePlaces } from '../store/useStore';
 import { hasDrilldownSupport } from './topojsonCache';
+import { getKosovoWorldFeature } from '../data/naturalEarthAdmin1';
 
 describe('Region & Flag Helper Logic', () => {
   describe('hasDrilldownSupport', () => {
@@ -38,6 +40,23 @@ describe('Region & Flag Helper Logic', () => {
 
       const gbUrl = getPlaceFlagUrl('GBR-GB-XYZ');
       expect(gbUrl).toBe('https://flagcdn.com/gb.svg');
+    });
+
+    it('should resolve Kosovo (XKX) flag URL correctly', () => {
+      const kosovoUrl = getPlaceFlagUrl('XKX');
+      expect(kosovoUrl).toBe('https://flagcdn.com/xk.svg');
+    });
+
+    it('should generate valid Kosovo world feature matching 110m map topology', () => {
+      const kosovoFeature = getKosovoWorldFeature();
+      const kf = kosovoFeature as unknown as { id: string; properties: { name: string } };
+      expect(kosovoFeature).toBeDefined();
+      expect(kf.id).toBe('XKX');
+      expect(kf.properties.name).toBe('Kosovo');
+      const area = geoArea(kosovoFeature as unknown as Parameters<typeof geoArea>[0]);
+      expect(area).toBeGreaterThan(0);
+      expect(area).toBeLessThan(0.01);
+      expect(geoContains(kosovoFeature as unknown as Parameters<typeof geoContains>[0], [21.16, 42.66])).toBe(true);
     });
   });
 

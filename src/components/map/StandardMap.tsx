@@ -5,7 +5,7 @@ import { useStore } from '../../store/useStore';
 import type { PlaceStatus } from '../../store/useStore';
 import { MICROSTATES } from '../../data/mapData';
 import * as topojson from 'topojson-client';
-import { geoCentroid } from 'd3-geo';
+import { geoCentroid, geoBounds } from 'd3-geo';
 import { getFillColor, getRegionId, showMapTooltip, hideMapTooltip, formatStatusLabel } from '../../utils/mapUtils';
 import type { GeoFeature } from '../../utils/mapUtils';
 import { WORLD_GEO_URL } from '../../config/urls';
@@ -15,6 +15,7 @@ import { useDrilldownGeography } from '../../hooks/useDrilldownGeography';
 import { DrilldownControls } from './DrilldownControls';
 import { MapGeographies } from './MapGeographies';
 import { fetchRawTopology } from '../../utils/topojsonCache';
+import { getKosovoWorldFeature } from '../../data/naturalEarthAdmin1';
 
 interface StandardMapProps {
   activeCountry: string | null;
@@ -56,22 +57,51 @@ const StandardMapBase: React.FC<StandardMapProps> = ({
 
   const tryPanToCountry = useCallback((topo: unknown, cca3: string) => {
     try {
-      const topoData = topo as { objects?: { countries?: unknown } };
-      if (!topoData || !topoData.objects || !topoData.objects.countries) return;
-      const featureCollection = topojson.feature(
-        topoData as unknown as Parameters<typeof topojson.feature>[0],
-        topoData.objects.countries as unknown as Parameters<typeof topojson.feature>[1]
-      ) as unknown as { features: { id?: string | number; [key: string]: unknown }[] };
-      const features = featureCollection.features;
-      const found = features.find((f) => {
-        const idStr = f.id?.toString() || '';
-        const a3 = numericToA3[idStr] || idStr;
-        return a3 === cca3;
-      });
+      let found: unknown = null;
+      if (cca3 === 'XKX') {
+        found = getKosovoWorldFeature();
+      }
+
+      if (!found && topo) {
+        const topoData = topo as { objects?: { countries?: unknown } };
+        if (topoData && topoData.objects && topoData.objects.countries) {
+          const featureCollection = topojson.feature(
+            topoData as unknown as Parameters<typeof topojson.feature>[0],
+            topoData.objects.countries as unknown as Parameters<typeof topojson.feature>[1]
+          ) as unknown as { features: { id?: string | number; [key: string]: unknown }[] };
+          const features = featureCollection.features;
+          found = features.find((f) => {
+            const idStr = f.id?.toString() || '';
+            const a3 = numericToA3[idStr] || idStr;
+            return a3 === cca3;
+          });
+        }
+      }
       if (found) {
         const center = geoCentroid(found as unknown as Parameters<typeof geoCentroid>[0]);
+        const bounds = geoBounds(found as unknown as Parameters<typeof geoBounds>[0]);
         if (center && isFinite(center[0]) && isFinite(center[1])) {
-          animateTo(center[0], center[1], 4);
+          const isMobile = typeof window !== 'undefined' && window.innerWidth <= 768;
+          let targetZoom = 4;
+          let targetLat = center[1];
+
+          if (bounds && Array.isArray(bounds[0]) && Array.isArray(bounds[1])) {
+            const lngSpan = Math.abs(bounds[1][0] - bounds[0][0]);
+            const latSpan = Math.abs(bounds[1][1] - bounds[0][1]);
+            const effectiveLngSpan = lngSpan > 180 ? 360 - lngSpan : lngSpan;
+            const maxSpan = Math.max(effectiveLngSpan, latSpan, 0.5);
+
+            const baseZoom = Math.min(Math.max(160 / maxSpan, 2.2), 10);
+            targetZoom = isMobile ? Math.min(baseZoom * 1.35, 14) : baseZoom;
+          } else {
+            targetZoom = isMobile ? 5.5 : 4;
+          }
+
+          if (isMobile) {
+            targetLat = center[1] - (10 / targetZoom);
+          }
+
+          animateTo(center[0], targetLat, targetZoom);
         }
       }
     } catch (err) {
@@ -131,8 +161,29 @@ const StandardMapBase: React.FC<StandardMapProps> = ({
 
       if (found) {
         const center = geoCentroid(found as unknown as Parameters<typeof geoCentroid>[0]);
+        const bounds = geoBounds(found as unknown as Parameters<typeof geoBounds>[0]);
         if (center && isFinite(center[0]) && isFinite(center[1])) {
-          animateTo(center[0], center[1], activeCountry === 'USA' ? 3 : 5);
+          const isMobile = typeof window !== 'undefined' && window.innerWidth <= 768;
+          let targetZoom = activeCountry === 'USA' ? 3 : 5;
+          let targetLat = center[1];
+
+          if (bounds && Array.isArray(bounds[0]) && Array.isArray(bounds[1])) {
+            const lngSpan = Math.abs(bounds[1][0] - bounds[0][0]);
+            const latSpan = Math.abs(bounds[1][1] - bounds[0][1]);
+            const effectiveLngSpan = lngSpan > 180 ? 360 - lngSpan : lngSpan;
+            const maxSpan = Math.max(effectiveLngSpan, latSpan, 0.2);
+
+            const baseZoom = Math.min(Math.max(120 / maxSpan, 3.5), 14);
+            targetZoom = isMobile ? Math.min(baseZoom * 1.3, 16) : baseZoom;
+          } else if (isMobile) {
+            targetZoom = targetZoom * 1.35;
+          }
+
+          if (isMobile) {
+            targetLat = center[1] - (8 / targetZoom);
+          }
+
+          animateTo(center[0], targetLat, targetZoom);
         }
       }
     } catch (err) {
@@ -151,7 +202,15 @@ const StandardMapBase: React.FC<StandardMapProps> = ({
 
     const ms = MICROSTATES.find(m => m.id === highlightedCountry);
     if (ms) {
-      animateTo(ms.coordinates[0], ms.coordinates[1], 6);
+      const isMobile = typeof window !== 'undefined' && window.innerWidth <= 768;
+      const targetZoom = isMobile ? 8.5 : 6;
+      const targetLat = isMobile ? ms.coordinates[1] - (6 / targetZoom) : ms.coordinates[1];
+      animateTo(ms.coordinates[0], targetLat, targetZoom);
+      return;
+    }
+
+    if (highlightedCountry === 'XKX') {
+      tryPanToCountry(worldTopoRef.current, 'XKX');
       return;
     }
 

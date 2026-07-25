@@ -158,10 +158,11 @@ const HexagonMapBase: React.FC<HexagonMapProps> = ({
     const dot = (hexGridData as Record<string, { x: number; y: number; name: string }>)[baseHighlighted];
     if (!dot) return;
     const { cx, cy } = hexCenter(dot);
-    const targetZoom = 3.5;
+    const isMobile = typeof window !== 'undefined' && window.innerWidth <= 768;
+    const targetZoom = isMobile ? 4.8 : 3.5;
     // Centre (cx, cy) in viewbox: targetZoom*(cx + targetTx) = SVG_W/2
     const targetTx = SVG_W / 2 / targetZoom - cx;
-    const targetTy = SVG_H / 2 / targetZoom - cy;
+    const targetTy = (SVG_H / (isMobile ? 1.7 : 2)) / targetZoom - cy;
     animateTo(targetTx, targetTy, targetZoom);
   }, [baseHighlighted, animateTo]);
 

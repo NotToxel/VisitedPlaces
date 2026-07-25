@@ -730,6 +730,14 @@ export const COUNTRIES: Country[] = [
     "flag": "https://flagcdn.com/ki.svg"
   },
   {
+    "id": "XKX",
+    "cca2": "XK",
+    "ccn3": "383",
+    "name": "Kosovo",
+    "continent": "Europe",
+    "flag": "https://flagcdn.com/xk.svg"
+  },
+  {
     "id": "KWT",
     "cca2": "KW",
     "ccn3": "414",
@@ -1667,6 +1675,10 @@ export const NUMERIC_TO_A3: Record<string, string> = {
   "372": "IRL",
   "376": "ISR",
   "380": "ITA",
+  "383": "XKX",
+  "-99": "XKX",
+  "KOS": "XKX",
+  "XKX": "XKX",
   "384": "CIV",
   "388": "JAM",
   "392": "JPN",

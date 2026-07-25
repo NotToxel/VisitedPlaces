@@ -5,7 +5,12 @@ import { drilldownRegistry } from '../config/drilldownConfig';
 import { getCountryGeoJSON, computeBoundingBox } from '../data/naturalEarthAdmin1';
 import type { BBox } from '../data/naturalEarthAdmin1';
 
+import * as topojson from 'topojson-client';
+import { useStore } from '../store/useStore';
+import { getKosovoWorldFeature } from '../data/naturalEarthAdmin1';
+
 export function useDrilldownGeography(activeCountry: string | null, setActiveCountry: (id: string | null) => void) {
+  const { neDataLoaded } = useStore();
   const [geoData, setGeoData] = useState<string | object>(() => {
     return activeCountry ? { type: 'FeatureCollection', features: [] } : WORLD_GEO_URL;
   });
@@ -26,7 +31,24 @@ export function useDrilldownGeography(activeCountry: string | null, setActiveCou
       fetchRawTopology(WORLD_GEO_URL)
         .then((data) => {
           if (active && data) {
-            setGeoData(data as object);
+            try {
+              const topoData = data as unknown as Parameters<typeof topojson.feature>[0];
+              const topoObj = (data as { objects?: Record<string, unknown> })?.objects?.countries as Parameters<typeof topojson.feature>[1];
+              if (topoObj) {
+                type WorldFeature = { id?: string | number; properties?: { ISO_A3?: string } };
+                const fc = topojson.feature(topoData, topoObj) as unknown as { type: string; features: WorldFeature[] };
+                
+                const kosovoFeature = getKosovoWorldFeature();
+                if (kosovoFeature && !fc.features.some((f) => f.id === 'XKX' || f.properties?.ISO_A3 === 'XKX')) {
+                  fc.features.push(kosovoFeature as unknown as WorldFeature);
+                }
+                setGeoData(fc);
+              } else {
+                setGeoData(data as object);
+              }
+            } catch {
+              setGeoData(data as object);
+            }
             setIsLoading(false);
           }
         })
@@ -89,7 +111,7 @@ export function useDrilldownGeography(activeCountry: string | null, setActiveCou
     }
 
     return () => { active = false; };
-  }, [activeCountry, setActiveCountry]);
+  }, [activeCountry, setActiveCountry, neDataLoaded]);
 
   // Compute projection scale from bounding box for StandardMap
   const autoScale = useMemo(() => {

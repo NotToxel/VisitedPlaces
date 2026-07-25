@@ -10,10 +10,12 @@ export function useMapAnimation(initialCenter: [number, number] = [0, 0], initia
   const [subRegionZoom, setSubRegionZoom] = useState(1);
 
   const animFrameRef = useRef<number | null>(null);
+  const isAnimatingRef = useRef(false);
   const liveRef = useRef({ cx: initialCenter[0], cy: initialCenter[1], zoom: initialZoom });
 
-  // Sync liveRef with manual changes to prevent jumps on subsequent animations
+  // Sync liveRef with manual user drag/zoom changes (ignored during active program animation)
   useEffect(() => {
+    if (isAnimatingRef.current) return;
     if (isDrilldown) {
       liveRef.current.cx = subRegionCenter[0];
       liveRef.current.cy = subRegionCenter[1];
@@ -27,11 +29,12 @@ export function useMapAnimation(initialCenter: [number, number] = [0, 0], initia
 
   const animateTo = useCallback((targetCx: number, targetCy: number, targetZoom: number, forceDrilldown?: boolean) => {
     if (animFrameRef.current) cancelAnimationFrame(animFrameRef.current);
+    isAnimatingRef.current = true;
     const targetIsDrill = forceDrilldown !== undefined ? forceDrilldown : isDrilldown;
     
     const step = () => {
       const live = liveRef.current;
-      const factor = 0.1; // ease-out speed
+      const factor = 0.12; // smooth ease-out
       live.cx += (targetCx - live.cx) * factor;
       live.cy += (targetCy - live.cy) * factor;
       live.zoom += (targetZoom - live.zoom) * factor;
@@ -48,10 +51,10 @@ export function useMapAnimation(initialCenter: [number, number] = [0, 0], initia
       const dy = Math.abs(targetCy - live.cy);
       const dz = Math.abs(targetZoom - live.zoom);
       
-      if (dx > 0.01 || dy > 0.01 || dz > 0.005) {
+      if (dx > 0.005 || dy > 0.005 || dz > 0.002) {
         animFrameRef.current = requestAnimationFrame(step);
       } else {
-        // Snap to final values
+        // Snap to final values and unlock animation
         live.cx = targetCx; live.cy = targetCy; live.zoom = targetZoom;
         if (targetIsDrill) {
           setSubRegionCenter([targetCx, targetCy]);
@@ -60,6 +63,7 @@ export function useMapAnimation(initialCenter: [number, number] = [0, 0], initia
           setMapCenter([targetCx, targetCy]);
           setMapZoom(targetZoom);
         }
+        isAnimatingRef.current = false;
       }
     };
     animFrameRef.current = requestAnimationFrame(step);

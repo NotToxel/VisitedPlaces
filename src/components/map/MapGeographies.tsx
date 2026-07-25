@@ -2,7 +2,6 @@ import React, { memo } from 'react';
 import { Geographies, Geography } from 'react-simple-maps';
 import { getFillColor, getRegionId, showMapTooltip, hideMapTooltip, formatStatusLabel } from '../../utils/mapUtils';
 import type { GeoFeature, GeoProperties } from '../../utils/mapUtils';
-
 import type { PlaceStatus } from '../../store/useStore';
 
 interface MapGeographiesProps {
@@ -71,7 +70,21 @@ const MapGeographiesBase: React.FC<MapGeographiesProps> = ({
           }
         }
 
-        return (geographies as RsmGeography[]).map((geo) => {
+        const featureList = [...(geographies as RsmGeography[])];
+
+        if (highlightedCountry) {
+          featureList.sort((a, b) => {
+            const aId = getRegionId({ id: a.id, properties: a.properties }, numericToA3, activeCountry, duplicateIsos, duplicateNames);
+            const bId = getRegionId({ id: b.id, properties: b.properties }, numericToA3, activeCountry, duplicateIsos, duplicateNames);
+            const aHigh = highlightedCountry === aId || highlightedCountry === (a.properties?.ISO_A3 || a.properties?.iso_a3 || a.properties?.cca3) || !!(a.id && numericToA3[a.id] && highlightedCountry === numericToA3[a.id]);
+            const bHigh = highlightedCountry === bId || highlightedCountry === (b.properties?.ISO_A3 || b.properties?.iso_a3 || b.properties?.cca3) || !!(b.id && numericToA3[b.id] && highlightedCountry === numericToA3[b.id]);
+            if (aHigh && !bHigh) return 1;
+            if (!aHigh && bHigh) return -1;
+            return 0;
+          });
+        }
+
+        return featureList.map((geo) => {
           const feature: GeoFeature = {
             id: geo.id,
             properties: geo.properties
@@ -113,7 +126,10 @@ const MapGeographiesBase: React.FC<MapGeographiesProps> = ({
             || !!(geo.id && numericToA3[geo.id] && highlightedCountry === numericToA3[geo.id])
           );
 
-          const fill = getFillColor(status, isHighlighted, !!activeCountry, showVisited, showWishlist, showAvoid, showRevisit);
+          let fill = getFillColor(status, isHighlighted, !!activeCountry, showVisited, showWishlist, showAvoid, showRevisit);
+          if (!activeCountry && countryId === 'XKX' && status === 'NONE' && !isHighlighted) {
+            fill = 'transparent';
+          }
 
           // Build tooltip text
           const tooltipParts = [countryName];
