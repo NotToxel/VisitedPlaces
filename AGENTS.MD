@@ -1,6 +1,6 @@
 # AGENTS.MD — VisitedPlaces Project Guide
 
-> **Version**: 2.3.3  
+> **Version**: 2.3.4  
 > **Last Updated**: 2026-07-26  
 > **Status**: Active Development
 
@@ -252,7 +252,7 @@ We use [Semantic Versioning](https://semver.org/):
 
 ### Current Version
 
-`2.3.3` — Patch release fixing mobile viewport height clipping via h-[100dvh] dynamic viewport height and adding glassmorphic sub-region preloading indicators for slow network connections.
+`2.3.4` — Patch release switching mobile map controls (filter bar, overseas territory list panel, reset zoom, and drilldown header) to fixed viewport-anchored positioning (`position: fixed !important`, `z-index: 90/95 !important`).
 
 ### Display
 

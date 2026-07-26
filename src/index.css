@@ -1873,31 +1873,34 @@ path.rsm-geography:active {
 
 @media (max-width: 640px) {
   .map-drilldown-header {
-    top: 8px;
-    left: 8px;
+    position: fixed !important;
+    top: max(10px, calc(6px + env(safe-area-inset-top, 0px))) !important;
+    left: 10px !important;
+    z-index: 95 !important;
     gap: 6px;
     padding: 5px 8px;
   }
 
   .territory-list-panel {
-    width: auto;
-    left: 8px;
-    right: 8px;
-    bottom: max(68px, calc(62px + env(safe-area-inset-bottom, 0px)));
-    top: auto;
-    max-height: 42vh;
-    border-radius: 14px;
-    z-index: 50;
-    box-shadow: 0 -4px 24px rgba(0, 0, 0, 0.35);
-    transition: max-height 0.25s cubic-bezier(0.16, 1, 0.3, 1), opacity 0.2s ease;
-    touch-action: pan-y;
+    position: fixed !important;
+    left: 8px !important;
+    right: 8px !important;
+    bottom: max(68px, calc(62px + env(safe-area-inset-bottom, 0px))) !important;
+    top: auto !important;
+    width: auto !important;
+    max-height: 42vh !important;
+    border-radius: 14px !important;
+    z-index: 95 !important;
+    box-shadow: 0 -4px 24px rgba(0, 0, 0, 0.4) !important;
+    transition: max-height 0.25s cubic-bezier(0.16, 1, 0.3, 1), opacity 0.2s ease !important;
+    touch-action: pan-y !important;
   }
 
   .territory-list-panel--collapsed {
-    max-height: 38px;
-    cursor: pointer;
-    border-radius: 12px;
-    box-shadow: 0 4px 16px rgba(0, 0, 0, 0.25);
+    max-height: 38px !important;
+    cursor: pointer !important;
+    border-radius: 12px !important;
+    box-shadow: 0 4px 16px rgba(0, 0, 0, 0.25) !important;
   }
 
   .territory-list-panel__action-btn {
@@ -1916,24 +1919,47 @@ path.rsm-geography:active {
   }
 
   .map-filter-bar {
-    bottom: max(18px, calc(14px + env(safe-area-inset-bottom, 0px)));
-    gap: 4px;
-    padding: 5px 8px;
-    max-width: calc(100vw - 16px);
-    z-index: 45;
-    touch-action: manipulation;
+    position: fixed !important;
+    bottom: max(16px, calc(12px + env(safe-area-inset-bottom, 0px))) !important;
+    left: 50% !important;
+    transform: translateX(-50%) !important;
+    z-index: 90 !important;
+    gap: 4px !important;
+    padding: 6px 10px !important;
+    max-width: calc(100vw - 20px) !important;
+    background: rgba(15, 23, 42, 0.94) !important;
+    backdrop-filter: blur(20px) !important;
+    -webkit-backdrop-filter: blur(20px) !important;
+    border: 1px solid rgba(255, 255, 255, 0.15) !important;
+    border-radius: 9999px !important;
+    box-shadow: 0 10px 32px rgba(0, 0, 0, 0.5) !important;
+    touch-action: manipulation !important;
+  }
+
+  [data-theme="light"] .map-filter-bar {
+    background: rgba(255, 255, 255, 0.95) !important;
+    border-color: rgba(0, 0, 0, 0.12) !important;
+    box-shadow: 0 10px 32px rgba(0, 0, 0, 0.12) !important;
+  }
+
+  .map-filter-bar__pill {
+    padding: 5px 9px !important;
+    gap: 4px !important;
+    font-size: 0.68rem !important;
   }
 
   .map-reset-zoom {
-    top: 60px;
-    right: 12px;
+    position: fixed !important;
+    top: max(60px, calc(52px + env(safe-area-inset-top, 0px))) !important;
+    right: 10px !important;
+    z-index: 90 !important;
     padding: 5px 12px;
     font-size: 0.65rem;
     border-radius: 8px;
   }
 
   .standard-map-wrapper--drilldown .map-reset-zoom {
-    top: 104px;
+    top: max(100px, calc(92px + env(safe-area-inset-top, 0px))) !important;
   }
 
   .region-card-grid {
