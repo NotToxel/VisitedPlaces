@@ -1390,6 +1390,15 @@ path.rsm-geography:active {
   overflow: hidden;
 }
 
+.territory-list-panel--collapsed {
+  max-height: 42px;
+  cursor: pointer;
+}
+
+.territory-list-panel--collapsed .territory-list-panel__header {
+  border-bottom: none;
+}
+
 [data-theme="light"] .territory-list-panel {
   background: rgba(226, 232, 240, 0.96);
   box-shadow: 0 8px 32px rgba(0, 0, 0, 0.08);
@@ -1834,19 +1843,22 @@ path.rsm-geography:active {
     width: auto;
     left: 8px;
     right: 8px;
-    bottom: 8px;
+    bottom: calc(56px + env(safe-area-inset-bottom, 0px));
     top: auto;
-    max-height: 42%;
-    border-radius: 16px;
+    max-height: 42vh;
+    border-radius: 14px;
     z-index: 50;
     box-shadow: 0 -4px 24px rgba(0, 0, 0, 0.35);
-    transition: max-height 0.25s cubic-bezier(0.16, 1, 0.3, 1);
+    transition: max-height 0.25s cubic-bezier(0.16, 1, 0.3, 1), opacity 0.2s ease;
+    touch-action: pan-y;
   }
 
   .territory-list-panel--collapsed {
+    max-height: 38px;
     cursor: pointer;
+    border-radius: 12px;
+    box-shadow: 0 4px 16px rgba(0, 0, 0, 0.25);
   }
-
 
   .territory-list-panel__action-btn {
     width: 28px;
@@ -1863,8 +1875,12 @@ path.rsm-geography:active {
     gap: 6px;
   }
 
-  .map-search-bar--drilldown ~ .map-filter-bar {
-    bottom: 54px;
+  .map-filter-bar {
+    bottom: calc(10px + env(safe-area-inset-bottom, 0px));
+    gap: 4px;
+    padding: 5px 6px;
+    z-index: 45;
+    touch-action: manipulation;
   }
 
   .map-reset-zoom {

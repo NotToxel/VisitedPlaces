@@ -1,6 +1,6 @@
 # AGENTS.MD — VisitedPlaces Project Guide
 
-> **Version**: 2.3.0  
+> **Version**: 2.3.1  
 > **Last Updated**: 2026-07-26  
 > **Status**: Active Development
 
@@ -252,7 +252,7 @@ We use [Semantic Versioning](https://semver.org/):
 
 ### Current Version
 
-`2.3.0` — Minor release introducing exact Mercator integral auto-scaling, preloaded 1-to-1 drilldown transition animations with SVG pre-render settling, and mainland filtering for New Zealand (NZL) and Chile (CHL).
+`2.3.1` — Patch release fixing mobile layout collision between bottom filter bar and collapsed overseas territory list panel on Mobile Chrome and Samsung Internet.
 
 ### Display
 
