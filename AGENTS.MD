@@ -1,6 +1,6 @@
 # AGENTS.MD — VisitedPlaces Project Guide
 
-> **Version**: 2.3.2  
+> **Version**: 2.3.3  
 > **Last Updated**: 2026-07-26  
 > **Status**: Active Development
 
@@ -252,7 +252,7 @@ We use [Semantic Versioning](https://semver.org/):
 
 ### Current Version
 
-`2.3.2` — Patch release setting overseas territory list panel to collapse by default on mobile viewports and elevating bottom control bar offsets to clear Mobile Chrome and Samsung Internet navigation bars.
+`2.3.3` — Patch release fixing mobile viewport height clipping via h-[100dvh] dynamic viewport height and adding glassmorphic sub-region preloading indicators for slow network connections.
 
 ### Display
 

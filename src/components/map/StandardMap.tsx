@@ -1,9 +1,10 @@
 import React, { memo, useEffect, useRef, useCallback, useMemo, useState } from 'react';
 import { ComposableMap, ZoomableGroup, Marker } from 'react-simple-maps';
-import { RefreshCw } from 'lucide-react';
+import { RefreshCw, Loader2 } from 'lucide-react';
 import { useStore } from '../../store/useStore';
 import type { PlaceStatus } from '../../store/useStore';
 import { MICROSTATES } from '../../data/mapData';
+import { COUNTRIES } from '../../data/countries';
 import * as topojson from 'topojson-client';
 import { geoCentroid, geoBounds } from 'd3-geo';
 import { getFillColor, getRegionId, showMapTooltip, hideMapTooltip, formatStatusLabel } from '../../utils/mapUtils';
@@ -15,7 +16,7 @@ import { useDrilldownGeography } from '../../hooks/useDrilldownGeography';
 import { DrilldownControls } from './DrilldownControls';
 import { MapGeographies } from './MapGeographies';
 import { fetchRawTopology } from '../../utils/topojsonCache';
-import { getKosovoWorldFeature, getSomalilandWorldFeature, computeBoundingBox, getCountryGeoJSON, computeAutoScale } from '../../data/naturalEarthAdmin1';
+import { getKosovoWorldFeature, getSomalilandWorldFeature, computeBoundingBox, getCountryGeoJSON, getPreloadedCountryDataSync, computeAutoScale } from '../../data/naturalEarthAdmin1';
 
 interface StandardMapProps {
   activeCountry: string | null;
@@ -41,6 +42,10 @@ const StandardMapBase: React.FC<StandardMapProps> = ({
   const { places } = useStore();
   const worldTopoRef = useRef<unknown>(null);
   const [isTransitioning, setIsTransitioning] = useState(false);
+  const [preloadStatus, setPreloadStatus] = useState<{
+    countryId: string;
+    countryName: string;
+  } | null>(null);
 
   const { 
     mapCenter, setMapCenter, mapZoom, setMapZoom, 
@@ -344,6 +349,12 @@ const StandardMapBase: React.FC<StandardMapProps> = ({
 
     async function runPhase1() {
       const countryId = pendingDrilldown!;
+      const countryName = COUNTRIES.find((c) => c.id === countryId)?.name || countryId;
+
+      // Show preloading badge if data is not yet in sync memory cache
+      if (!getPreloadedCountryDataSync(countryId)) {
+        setPreloadStatus({ countryId, countryName });
+      }
 
       // 1. Preload sub-region data and bounding box BEFORE panning finishes
       let bbox = await computeBoundingBox(countryId);
@@ -359,6 +370,7 @@ const StandardMapBase: React.FC<StandardMapProps> = ({
       if (isCancelled) return;
 
       if (!bbox) {
+        setPreloadStatus(null);
         onDrilldownReady?.(countryId);
         return;
       }
@@ -366,6 +378,8 @@ const StandardMapBase: React.FC<StandardMapProps> = ({
       // Preload GeoJSON into sync memory cache
       await getCountryGeoJSON(countryId);
       if (isCancelled) return;
+
+      setPreloadStatus(null);
 
       // 2. Compute exact Mercator-aware target scale & zoom for world map
       const autoScale = drilldownRegistry[countryId]?.scale || computeAutoScale(bbox);
@@ -411,6 +425,7 @@ const StandardMapBase: React.FC<StandardMapProps> = ({
 
     return () => {
       isCancelled = true;
+      setPreloadStatus(null);
     };
   }, [pendingDrilldown, activeCountry, animateTo, onDrilldownReady]);
 
@@ -511,6 +526,13 @@ const StandardMapBase: React.FC<StandardMapProps> = ({
           })}
         </ZoomableGroup>
       </ComposableMap>
+
+      {preloadStatus && (
+        <div className="map-preload-badge">
+          <Loader2 size={14} className="animate-spin text-amber-400" />
+          <span>Loading {preloadStatus.countryName} sub-regions...</span>
+        </div>
+      )}
 
       {isLoading && (
         <div className="map-loading-overlay">

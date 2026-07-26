@@ -5,7 +5,7 @@ import { PageLoader } from './PageLoader';
 
 export const AppLayout: React.FC = () => {
   return (
-    <div className="flex flex-col h-screen overflow-hidden bg-transparent text-base-content">
+    <div className="flex flex-col h-screen h-[100dvh] w-full overflow-hidden bg-transparent text-base-content">
       <Navbar />
       <main className="flex-1 overflow-hidden relative">
         <Suspense fallback={<PageLoader />}>
