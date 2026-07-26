@@ -45,10 +45,46 @@ export interface BBox {
   centerLat: number;
 }
 
+/**
+ * Computes the Mercator-aware projection scale for a drilldown view.
+ * Uses the exact Mercator projection formula to compute how many pixels
+ * the country's lat/lng extent would occupy, then picks the scale that
+ * makes both dimensions fit within the 800×500 viewport.
+ *
+ * d3 geoMercator at scale S:
+ *   x = S · λ           (λ in radians)
+ *   y = S · ln(tan(π/4 + φ/2))   (φ in radians)
+ */
+export function computeAutoScale(bbox: BBox): number {
+  const DEG2RAD = Math.PI / 180;
+
+  // Horizontal extent in projection units (radians of longitude)
+  const lngSpanRad = (bbox.maxLng - bbox.minLng) * DEG2RAD;
+
+  // Vertical extent using exact Mercator formula
+  const mercatorY = (latDeg: number): number => {
+    const latRad = latDeg * DEG2RAD;
+    return Math.log(Math.tan(Math.PI / 4 + latRad / 2));
+  };
+  const mercatorHeight = Math.abs(mercatorY(bbox.maxLat) - mercatorY(bbox.minLat));
+
+  // Scale that fits each dimension in the viewport (800×500)
+  const scaleForWidth = lngSpanRad > 0.001 ? 800 / lngSpanRad : 24000;
+  const scaleForHeight = mercatorHeight > 0.001 ? 500 / mercatorHeight : 24000;
+
+  // Use the most constrained dimension, with 15% padding
+  const fitScale = Math.min(scaleForWidth, scaleForHeight) * 0.85;
+
+  // Clamp: don't over-zoom tiny countries
+  return Math.min(Math.max(fitScale, 50), 24000);
+}
+
 // ── In-memory cache ───────────────────────────────────────────────────────
 
 let cachedData: NEFeatureCollection | null = null;
 let pendingFetch: Promise<NEFeatureCollection | null> | null = null;
+const countryGeoCache: Record<string, NEFeatureCollection> = {};
+const countryBBoxCache: Record<string, BBox> = {};
 
 /**
  * Fetches and caches the global NE admin-1 GeoJSON.
@@ -216,8 +252,84 @@ function getCountryMainlandFeatures(countryA3: string, data: NEFeatureCollection
     features = features.filter(
       (f) => !f.properties?.iso_3166_2 || !EXCLUDED_PRT_ISOS.has(f.properties.iso_3166_2)
     );
-  } else if (countryA3 === 'RUS' || countryA3 === 'NZL' || countryA3 === 'FJI' || countryA3 === 'KIR') {
-    // Russia, New Zealand, Fiji, and Kiribati span the antimeridian.
+  } else if (countryA3 === 'NZL') {
+    // Exclude Chatham Islands, Kermadec Islands, and Subantarctic Islands
+    // from the main map so New Zealand centers cleanly on North/South Islands.
+    features = features.filter((f) => {
+      const name = (f.properties?.name || '').toString();
+      const iso = (f.properties?.iso_3166_2 || '').toString();
+      if (
+        name.includes('Chatham') ||
+        name.includes('Kermadec') ||
+        name.includes('Area Outside') ||
+        iso === 'NZ-CIT' ||
+        iso === 'NZ-CHA' ||
+        iso === 'NZ-KER'
+      ) {
+        return false;
+      }
+      let maxLat = -90;
+      let minLat = 90;
+      let maxLng = -360;
+      let minLng = 360;
+      function checkCoords(coords: unknown) {
+        if (!Array.isArray(coords)) return;
+        if (typeof coords[0] === 'number' && typeof coords[1] === 'number') {
+          const [rawLng, lat] = coords as [number, number];
+          let lng = rawLng;
+          if (lng < 0) lng += 360;
+          if (lat < minLat) minLat = lat;
+          if (lat > maxLat) maxLat = lat;
+          if (lng < minLng) minLng = lng;
+          if (lng > maxLng) maxLng = lng;
+          return;
+        }
+        for (const item of coords) checkCoords(item);
+      }
+      checkCoords(f.geometry?.coordinates);
+      // Mainland NZ lat range: -47.5 to -34.0, lng range: 166.0 to 178.8
+      if (maxLat > -33.5 || minLat < -47.8 || maxLng > 179.0 || minLng < 165.0) {
+        return false;
+      }
+      return true;
+    });
+    features.forEach((f) => {
+      if (f.geometry?.coordinates) {
+        shiftRussiaCoords(f.geometry.coordinates);
+      }
+    });
+  } else if (countryA3 === 'CHL') {
+    // Exclude Easter Island (Rapa Nui), Juan Fernández Islands, and Desventuradas Islands
+    // so mainland Chile centers cleanly on South America (-75.6°W to -66.5°W).
+    features = features.filter((f) => {
+      const name = (f.properties?.name || '').toString();
+      const iso = (f.properties?.iso_3166_2 || '').toString();
+      if (
+        name.includes('Pascua') ||
+        name.includes('Easter') ||
+        name.includes('Fernández') ||
+        name.includes('Desventuradas') ||
+        iso === 'CL-EA'
+      ) {
+        return false;
+      }
+      let minLng = 180;
+      function checkCoords(coords: unknown) {
+        if (!Array.isArray(coords)) return;
+        if (typeof coords[0] === 'number' && typeof coords[1] === 'number') {
+          const [lng] = coords as [number, number];
+          if (lng < minLng) minLng = lng;
+          return;
+        }
+        for (const item of coords) checkCoords(item);
+      }
+      checkCoords(f.geometry?.coordinates);
+      // Mainland Chile longitude range: -76.0°W to -66.0°W
+      if (minLng < -76.5) return false;
+      return true;
+    });
+  } else if (countryA3 === 'RUS' || countryA3 === 'FJI' || countryA3 === 'KIR') {
+    // Russia, Fiji, and Kiribati span the antimeridian.
     // Shift any negative longitudes by +360 degrees so D3 maps can project them contiguously
     // with the rest of their landmass instead of wrapping around the globe.
     features.forEach((f) => {
@@ -327,7 +439,9 @@ export async function getCountryRegions(countryA3: string): Promise<NERegion[]> 
  * Returns a new GeoJSON FeatureCollection containing only that country's admin-1 geometries.
  */
 export async function getCountryGeoJSON(countryA3: string): Promise<NEFeatureCollection | null> {
+  if (countryGeoCache[countryA3]) return countryGeoCache[countryA3];
   if (countryA3 === 'SOL') {
+    countryGeoCache[countryA3] = SOMALILAND_SUBREGIONS_GEOJSON;
     return SOMALILAND_SUBREGIONS_GEOJSON;
   }
 
@@ -338,10 +452,12 @@ export async function getCountryGeoJSON(countryA3: string): Promise<NEFeatureCol
 
   if (features.length === 0) return null;
 
-  return {
+  const result: NEFeatureCollection = {
     type: 'FeatureCollection',
     features,
   };
+  countryGeoCache[countryA3] = result;
+  return result;
 }
 
 /** A single region's NE feature paired with resolved metadata. */
@@ -408,21 +524,7 @@ export async function getAllCountryFeaturesWithMeta(countryA3: string): Promise<
   return result;
 }
 
-/**
- * Computes the bounding box of a country's admin-1 geometries.
- * Used for auto-centering and auto-zooming the map.
- */
-export async function computeBoundingBox(countryA3: string): Promise<BBox | null> {
-  // SOL uses bundled sub-regions, not the NE admin-1 network data
-  if (countryA3 === 'SOL') {
-    return { minLng: 42.5, maxLng: 49.0, minLat: 7.9, maxLat: 11.5, centerLng: 45.75, centerLat: 9.7 };
-  }
-
-  const data = await fetchNEAdmin1();
-  if (!data) return null;
-
-  const features = getCountryMainlandFeatures(countryA3, data);
-
+export function computeBBoxFromFeatures(features: NEFeature[]): BBox | null {
   if (features.length === 0) return null;
 
   let minLng = Infinity;
@@ -461,6 +563,57 @@ export async function computeBoundingBox(countryA3: string): Promise<BBox | null
     centerLng: (minLng + maxLng) / 2,
     centerLat: (minLat + maxLat) / 2,
   };
+}
+
+/**
+ * Computes the bounding box of a country's admin-1 geometries.
+ * Used for auto-centering and auto-zooming the map.
+ */
+export async function computeBoundingBox(countryA3: string): Promise<BBox | null> {
+  if (countryBBoxCache[countryA3]) return countryBBoxCache[countryA3];
+  if (countryA3 === 'SOL') {
+    const bbox = { minLng: 42.5, maxLng: 49.0, minLat: 7.9, maxLat: 11.5, centerLng: 45.75, centerLat: 9.7 };
+    countryBBoxCache[countryA3] = bbox;
+    return bbox;
+  }
+
+  const data = await fetchNEAdmin1();
+  if (!data) return null;
+
+  const features = getCountryMainlandFeatures(countryA3, data);
+
+  if (features.length === 0) return null;
+
+  const bbox = computeBBoxFromFeatures(features);
+  if (bbox) countryBBoxCache[countryA3] = bbox;
+  return bbox;
+}
+
+/**
+ * Returns preloaded GeoJSON and BBox synchronously if the NE dataset is in memory.
+ */
+export function getPreloadedCountryDataSync(countryA3: string): { geoJson: NEFeatureCollection; bbox: BBox } | null {
+  if (countryA3 === 'SOL') {
+    return {
+      geoJson: SOMALILAND_SUBREGIONS_GEOJSON,
+      bbox: { minLng: 42.5, maxLng: 49.0, minLat: 7.9, maxLat: 11.5, centerLng: 45.75, centerLat: 9.7 }
+    };
+  }
+  if (countryGeoCache[countryA3] && countryBBoxCache[countryA3]) {
+    return {
+      geoJson: countryGeoCache[countryA3],
+      bbox: countryBBoxCache[countryA3]
+    };
+  }
+  if (!cachedData) return null;
+  const features = getCountryMainlandFeatures(countryA3, cachedData);
+  if (features.length === 0) return null;
+  const geoJson: NEFeatureCollection = { type: 'FeatureCollection', features };
+  const bbox = computeBBoxFromFeatures(features);
+  if (!bbox) return null;
+  countryGeoCache[countryA3] = geoJson;
+  countryBBoxCache[countryA3] = bbox;
+  return { geoJson, bbox };
 }
 
 /**

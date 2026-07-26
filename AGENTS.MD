@@ -1,6 +1,6 @@
 # AGENTS.MD — VisitedPlaces Project Guide
 
-> **Version**: 2.2.10  
+> **Version**: 2.3.0  
 > **Last Updated**: 2026-07-26  
 > **Status**: Active Development
 
@@ -252,7 +252,7 @@ We use [Semantic Versioning](https://semver.org/):
 
 ### Current Version
 
-`2.2.10` — Patch release resolving Somaliland map overlay fill and border stroke rendering.
+`2.3.0` — Minor release introducing exact Mercator integral auto-scaling, preloaded 1-to-1 drilldown transition animations with SVG pre-render settling, and mainland filtering for New Zealand (NZL) and Chile (CHL).
 
 ### Display
 

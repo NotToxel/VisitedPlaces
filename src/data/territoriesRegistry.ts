@@ -77,9 +77,12 @@ const AUS_TERRITORIES: Territory[] = [
 
 // ── New Zealand — Associated States & Territories ─────────────────────────
 const NZL_TERRITORIES: Territory[] = [
-  { id: 'NZL-CK', name: 'Cook Islands', parent: 'NZL', coordinates: [-159.7776, -21.2367], flagCode: 'ck' },
-  { id: 'NZL-NU', name: 'Niue',         parent: 'NZL', coordinates: [-169.8672, -19.0544], flagCode: 'nu' },
-  { id: 'NZL-TK', name: 'Tokelau',      parent: 'NZL', coordinates: [-171.8484, -9.2002],  flagCode: 'tk' },
+  { id: 'NZL-CK',  name: 'Cook Islands',                      parent: 'NZL', coordinates: [-159.7776, -21.2367], flagCode: 'ck' },
+  { id: 'NZL-NU',  name: 'Niue',                              parent: 'NZL', coordinates: [-169.8672, -19.0544], flagCode: 'nu' },
+  { id: 'NZL-TK',  name: 'Tokelau',                           parent: 'NZL', coordinates: [-171.8484, -9.2002],  flagCode: 'tk' },
+  { id: 'NZL-CIT', name: 'Chatham Islands',                   parent: 'NZL', coordinates: [-176.5404, -43.9585], flagCode: 'nz' },
+  { id: 'NZL-KER', name: 'Kermadec Islands',                  parent: 'NZL', coordinates: [-177.85, -29.25],     flagCode: 'nz' },
+  { id: 'NZL-OUT', name: 'Subantarctic & Outlying Islands', parent: 'NZL', coordinates: [169.15, -52.55],    flagCode: 'nz' },
 ];
 
 // ── China — Special Administrative Regions ────────────────────────────────
@@ -113,6 +116,12 @@ const MUS_TERRITORIES: Territory[] = [
   { id: 'MUS-AG', name: 'Agaléga',   parent: 'MUS', coordinates: [56.6111, -10.4344], flagCode: 'mu' },
 ];
 
+// ── Chile — Insular Territories ───────────────────────────────────────────
+const CHL_TERRITORIES: Territory[] = [
+  { id: 'CHL-EA', name: 'Easter Island (Rapa Nui)', parent: 'CHL', coordinates: [-109.3497, -27.1127], flagCode: 'cl' },
+  { id: 'CHL-JF', name: 'Juan Fernández Islands',    parent: 'CHL', coordinates: [-78.8315, -33.6358],  flagCode: 'cl' },
+];
+
 // ── Consolidated registry ─────────────────────────────────────────────────
 export const TERRITORIES_REGISTRY: Record<string, Territory[]> = {
   'GBR': GBR_TERRITORIES,
@@ -122,6 +131,7 @@ export const TERRITORIES_REGISTRY: Record<string, Territory[]> = {
   'DNK': DNK_TERRITORIES,
   'AUS': AUS_TERRITORIES,
   'NZL': NZL_TERRITORIES,
+  'CHL': CHL_TERRITORIES,
   'CHN': CHN_TERRITORIES,
   'PRT': PRT_TERRITORIES,
   'ESP': ESP_TERRITORIES,
@@ -144,6 +154,7 @@ export function getTerritoryLabel(countryA3: string): string {
     'DNK': 'Autonomous Territories',
     'AUS': 'External Territories',
     'NZL': 'Associated States & Dependencies',
+    'CHL': 'Insular Territories',
     'CHN': 'Special Administrative Regions',
     'PRT': 'Autonomous Regions',
     'ESP': 'Autonomous Cities & Canary Islands',

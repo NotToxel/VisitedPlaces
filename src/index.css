@@ -217,6 +217,15 @@ body {
   }
 }
 
+/* Drilldown transition: smooth opacity cross-fade during projection swap */
+.standard-map-wrapper {
+  transition: opacity 0.5s ease-in-out;
+}
+
+.standard-map-wrapper--transitioning {
+  opacity: 0;
+}
+
 /* Glassmorphism panel helper utilities */
 .glass-panel {
   background: var(--glass-bg);

@@ -38,6 +38,7 @@ export const MapContainer: React.FC = () => {
   const [mapStyle, setMapStyle] = useState<'STANDARD' | 'HEXAGON'>('STANDARD');
   const [showHexLabels, setShowHexLabels] = useState(false);
   const [activeCountry, setActiveCountry] = useState<string | null>(null);
+  const [pendingDrilldown, setPendingDrilldown] = useState<string | null>(null);
   const [expressMode, setExpressMode] = useState<boolean>(false);
   const [expressStatus, setExpressStatus] = useState<PlaceStatus>('VISITED');
   const [subRegions, setSubRegions] = useState<TopoRegion[]>([]);
@@ -183,13 +184,22 @@ export const MapContainer: React.FC = () => {
     [setRegionStatus]
   );
 
-  // Drill-down trigger — now works for all countries
+  // Drill-down trigger — Phase 1: zoom into country on world map first
   const handleDrillDown = useCallback(
     (countryId: string) => {
-      setActiveCountry(countryId);
       setMapStyle('STANDARD');
+      setPendingDrilldown(countryId);
     },
     [setMapStyle]
+  );
+
+  // Phase 2 callback: world map zoom-in is done, now switch to drilldown view
+  const handleDrilldownReady = useCallback(
+    (countryId: string) => {
+      setPendingDrilldown(null);
+      setActiveCountry(countryId);
+    },
+    []
   );
 
   // Search handlers
@@ -318,6 +328,8 @@ export const MapContainer: React.FC = () => {
             showAvoid={showAvoid}
             showRevisit={showRevisit}
             onCountryClick={handleCountryClick}
+            pendingDrilldown={pendingDrilldown}
+            onDrilldownReady={handleDrilldownReady}
           />
         ) : (
           <HexagonMap

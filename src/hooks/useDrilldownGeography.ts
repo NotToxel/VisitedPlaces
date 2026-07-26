@@ -2,7 +2,7 @@ import { useState, useEffect, useMemo } from 'react';
 import { WORLD_GEO_URL } from '../config/urls';
 import { getSubRegionUrl, fetchRawTopology } from '../utils/topojsonCache';
 import { drilldownRegistry } from '../config/drilldownConfig';
-import { getCountryGeoJSON, computeBoundingBox } from '../data/naturalEarthAdmin1';
+import { getCountryGeoJSON, computeBoundingBox, getPreloadedCountryDataSync, computeAutoScale } from '../data/naturalEarthAdmin1';
 import type { BBox } from '../data/naturalEarthAdmin1';
 
 import * as topojson from 'topojson-client';
@@ -12,10 +12,19 @@ import { getKosovoWorldFeature } from '../data/naturalEarthAdmin1';
 export function useDrilldownGeography(activeCountry: string | null, setActiveCountry: (id: string | null) => void) {
   const { neDataLoaded } = useStore();
   const [geoData, setGeoData] = useState<string | object>(() => {
-    return activeCountry ? { type: 'FeatureCollection', features: [] } : WORLD_GEO_URL;
+    if (!activeCountry) return WORLD_GEO_URL;
+    const sync = getPreloadedCountryDataSync(activeCountry);
+    return sync ? sync.geoJson : { type: 'FeatureCollection', features: [] };
   });
-  const [isLoading, setIsLoading] = useState(true);
-  const [countryBBox, setCountryBBox] = useState<BBox | null>(null);
+  const [isLoading, setIsLoading] = useState<boolean>(() => {
+    if (!activeCountry) return true;
+    return !getPreloadedCountryDataSync(activeCountry);
+  });
+  const [countryBBox, setCountryBBox] = useState<BBox | null>(() => {
+    if (!activeCountry) return null;
+    const sync = getPreloadedCountryDataSync(activeCountry);
+    return sync ? sync.bbox : null;
+  });
 
   useEffect(() => {
     let active = true;
@@ -83,6 +92,18 @@ export function useDrilldownGeography(activeCountry: string | null, setActiveCou
     }
 
     // ── Drill-down view ────────────────────────────────────────────────
+    const preloadedSync = getPreloadedCountryDataSync(activeCountry);
+    if (preloadedSync) {
+      Promise.resolve().then(() => {
+        if (active) {
+          setGeoData(preloadedSync.geoJson);
+          setCountryBBox(preloadedSync.bbox);
+          setIsLoading(false);
+        }
+      });
+      return () => { active = false; };
+    }
+
     Promise.resolve().then(() => {
       if (active) setIsLoading(true);
     });
@@ -137,15 +158,10 @@ export function useDrilldownGeography(activeCountry: string | null, setActiveCou
     return () => { active = false; };
   }, [activeCountry, setActiveCountry, neDataLoaded]);
 
-  // Compute projection scale from bounding box for StandardMap
+  // Compute projection scale from bounding box for StandardMap (Mercator-aware)
   const autoScale = useMemo(() => {
     if (!activeCountry || !countryBBox) return null;
-    const lngSpan = countryBBox.maxLng - countryBBox.minLng;
-    const latSpan = countryBBox.maxLat - countryBBox.minLat;
-    const maxSpan = Math.max(lngSpan, latSpan, 0.5);
-    // Non-linear power scaling (maxSpan^0.65) ensures large countries (USA, China, Australia) zoom in nicely
-    // while preventing small countries (Luxembourg, Singapore) from over-zooming.
-    return Math.min(22000 / Math.pow(maxSpan, 0.65), 24000);
+    return computeAutoScale(countryBBox);
   }, [activeCountry, countryBBox]);
 
   return { geoData, isLoading, setGeoData, countryBBox, autoScale };

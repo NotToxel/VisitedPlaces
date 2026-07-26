@@ -34,7 +34,7 @@ export function useMapAnimation(initialCenter: [number, number] = [0, 0], initia
     }
   }, [mapCenter, mapZoom, subRegionCenter, subRegionZoom, isDrilldown]);
 
-  const animateTo = useCallback((targetCx: number, targetCy: number, targetZoom: number, forceDrilldown?: boolean) => {
+  const animateTo = useCallback((targetCx: number, targetCy: number, targetZoom: number, forceDrilldown?: boolean, onConverged?: () => void) => {
     const last = lastTargetRef.current;
     // If already animating to the exact same target, skip — prevents effect-loop re-triggers
     if (last && last.cx === targetCx && last.cy === targetCy && last.zoom === targetZoom && isAnimatingRef.current) {
@@ -51,6 +51,7 @@ export function useMapAnimation(initialCenter: [number, number] = [0, 0], initia
     ) {
       isAnimatingRef.current = false;
       lastTargetRef.current = { cx: targetCx, cy: targetCy, zoom: targetZoom };
+      onConverged?.();
       return;
     }
 
@@ -98,6 +99,7 @@ export function useMapAnimation(initialCenter: [number, number] = [0, 0], initia
       } else {
         isAnimatingRef.current = false;
         animFrameRef.current = null;
+        onConverged?.();
       }
     };
 
@@ -106,6 +108,18 @@ export function useMapAnimation(initialCenter: [number, number] = [0, 0], initia
 
   // Cleanup on unmount
   useEffect(() => () => { if (animFrameRef.current) cancelAnimationFrame(animFrameRef.current); }, []);
+
+  const resetSubRegionView = useCallback((center: [number, number], zoom: number) => {
+    if (animFrameRef.current) {
+      cancelAnimationFrame(animFrameRef.current);
+      animFrameRef.current = null;
+    }
+    isAnimatingRef.current = false;
+    lastTargetRef.current = null;
+    liveRef.current = { cx: center[0], cy: center[1], zoom };
+    setSubRegionCenter(center);
+    setSubRegionZoom(zoom);
+  }, []);
 
   return {
     mapCenter,
@@ -116,6 +130,7 @@ export function useMapAnimation(initialCenter: [number, number] = [0, 0], initia
     setSubRegionCenter,
     subRegionZoom,
     setSubRegionZoom,
+    resetSubRegionView,
     animateTo
   };
 }
