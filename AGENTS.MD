@@ -1,6 +1,6 @@
 # AGENTS.MD — VisitedPlaces Project Guide
 
-> **Version**: 2.3.1  
+> **Version**: 2.3.2  
 > **Last Updated**: 2026-07-26  
 > **Status**: Active Development
 
@@ -252,7 +252,7 @@ We use [Semantic Versioning](https://semver.org/):
 
 ### Current Version
 
-`2.3.1` — Patch release fixing mobile layout collision between bottom filter bar and collapsed overseas territory list panel on Mobile Chrome and Samsung Internet.
+`2.3.2` — Patch release setting overseas territory list panel to collapse by default on mobile viewports and elevating bottom control bar offsets to clear Mobile Chrome and Samsung Internet navigation bars.
 
 ### Display
 

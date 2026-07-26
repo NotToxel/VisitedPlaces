@@ -1843,7 +1843,7 @@ path.rsm-geography:active {
     width: auto;
     left: 8px;
     right: 8px;
-    bottom: calc(56px + env(safe-area-inset-bottom, 0px));
+    bottom: max(78px, calc(70px + env(safe-area-inset-bottom, 0px)));
     top: auto;
     max-height: 42vh;
     border-radius: 14px;
@@ -1876,7 +1876,7 @@ path.rsm-geography:active {
   }
 
   .map-filter-bar {
-    bottom: calc(10px + env(safe-area-inset-bottom, 0px));
+    bottom: max(28px, calc(22px + env(safe-area-inset-bottom, 0px)));
     gap: 4px;
     padding: 5px 6px;
     z-index: 45;

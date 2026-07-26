@@ -21,7 +21,12 @@ export const TerritoryListPanel: React.FC<TerritoryListPanelProps> = ({
   onSetStatus,
   highlightedTerritoryId,
 }) => {
-  const [isCollapsed, setIsCollapsed] = useState(false);
+  const [isCollapsed, setIsCollapsed] = useState(() => {
+    if (typeof window !== 'undefined') {
+      return window.innerWidth <= 640;
+    }
+    return false;
+  });
   const highlightedRef = useRef<HTMLDivElement | null>(null);
 
   // Auto-expand panel and scroll to the highlighted territory when searched
