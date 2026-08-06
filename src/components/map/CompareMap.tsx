@@ -2,14 +2,14 @@ import React, { memo, useState, useEffect } from 'react';
 import { ComposableMap, Geographies, Geography, ZoomableGroup, Marker } from 'react-simple-maps';
 import type { MapCompareResult } from '../../pages/Compare';
 import { MICROSTATES } from '../../data/mapData';
-import { WORLD_GEO_URL } from '../../config/urls';
-import { fetchRawTopology } from '../../utils/topojsonCache';
+import { fetchWorldFeatureCollection, getCachedWorldFeatureCollectionSync } from '../../utils/topojsonCache';
 import { showMapTooltip, hideMapTooltip } from '../../utils/mapUtils';
 
 interface CompareMapProps {
   mergedData: Record<string, MapCompareResult>;
   numericToA3: Record<string, string>;
 }
+
 
 const getCompareColor = (result: MapCompareResult | undefined) => {
   if (!result) return 'var(--map-fill-unselected)';
@@ -85,15 +85,20 @@ const CompareMapGeographiesBase: React.FC<CompareMapGeographiesProps> = ({
 const CompareMapGeographies = memo(CompareMapGeographiesBase);
 
 const CompareMapBase: React.FC<CompareMapProps> = ({ mergedData, numericToA3 }) => {
-  const [worldData, setWorldData] = useState<object | string | null>(null);
-  const [isLoading, setIsLoading] = useState(true);
+  const [worldData, setWorldData] = useState<object | string | null>(() => getCachedWorldFeatureCollectionSync());
+  const [isLoading, setIsLoading] = useState(() => !getCachedWorldFeatureCollectionSync());
 
   useEffect(() => {
     let active = true;
-    fetchRawTopology(WORLD_GEO_URL)
-      .then(data => {
-        if (active && data) {
-          setWorldData(data as object);
+    const cached = getCachedWorldFeatureCollectionSync();
+    if (cached) {
+      return () => { active = false; };
+    }
+
+    fetchWorldFeatureCollection()
+      .then(fc => {
+        if (active && fc) {
+          setWorldData(fc);
           setIsLoading(false);
         }
       })
@@ -102,6 +107,7 @@ const CompareMapBase: React.FC<CompareMapProps> = ({ mergedData, numericToA3 }) 
       });
     return () => { active = false; };
   }, []);
+
 
   return (
     <div className="w-full h-full relative flex flex-col items-center justify-center">

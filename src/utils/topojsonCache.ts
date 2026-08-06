@@ -4,8 +4,10 @@
 
 import { drilldownRegistry } from '../config/drilldownConfig';
 import type { TopologyData, TopologyGeometry } from '../config/drilldownConfig';
-import { getCountryRegions, hasNESubdivisionsSync } from '../data/naturalEarthAdmin1';
+import { getCountryRegions, hasNESubdivisionsSync, getKosovoWorldFeature } from '../data/naturalEarthAdmin1';
 import { getTerritoriesForCountry } from '../data/territoriesRegistry';
+import { WORLD_GEO_URL } from '../config/urls';
+import * as topojson from 'topojson-client';
 
 
 export interface TopoRegion {
@@ -254,3 +256,74 @@ export const fetchRawTopology = async (url: string): Promise<unknown> => {
 
   return promise;
 };
+
+// ── World FeatureCollection cache (processed with Somaliland/Somalia & Kosovo adjustments) ──
+
+let cachedWorldFc: object | null = null;
+let pendingWorldFcPromise: Promise<object | null> | null = null;
+
+export function processWorldTopology(data: unknown): object | null {
+  if (!data) return null;
+  try {
+    const topoCopy = JSON.parse(JSON.stringify(data));
+    const topoData = topoCopy as unknown as Parameters<typeof topojson.feature>[0];
+    const topoObj = (topoCopy as { objects?: Record<string, unknown> })?.objects?.countries;
+    if (topoObj && Array.isArray((topoObj as { geometries?: unknown[] }).geometries)) {
+      type TopoGeom = { id?: string | number; arcs?: number[][]; properties?: Record<string, unknown> };
+      const geoms = (topoObj as { geometries: TopoGeom[] }).geometries;
+      
+      // 1. Tag Somaliland geometry as SOL
+      const solGeom = geoms.find((g) => g.properties?.name === 'Somaliland');
+      if (solGeom) {
+        solGeom.id = 'SOL';
+        solGeom.properties = { ...solGeom.properties, ISO_A3: 'SOL', name: 'Somaliland' };
+      }
+
+
+      type WorldFeature = { id?: string | number; properties?: { ISO_A3?: string; name?: string } };
+      const fc = topojson.feature(topoData, topoObj as Parameters<typeof topojson.feature>[1]) as unknown as { type: string; features: WorldFeature[] };
+      
+      const kosovoFeature = getKosovoWorldFeature();
+      if (kosovoFeature && !fc.features.some((f) => f.id === 'XKX' || f.properties?.ISO_A3 === 'XKX')) {
+        fc.features.push(kosovoFeature as unknown as WorldFeature);
+      }
+
+      const solFeature = fc.features.find((f) => f.properties?.name === 'Somaliland');
+      if (solFeature) {
+        solFeature.id = 'SOL';
+        solFeature.properties = { ...solFeature.properties, ISO_A3: 'SOL', name: 'Somaliland' };
+      }
+      
+      return fc;
+    }
+  } catch (err) {
+    console.error('Failed to process world topology:', err);
+  }
+  return data as object;
+}
+
+export const getCachedWorldFeatureCollectionSync = (): object | null => {
+  return cachedWorldFc;
+};
+
+export const fetchWorldFeatureCollection = async (): Promise<object | null> => {
+  if (cachedWorldFc) return cachedWorldFc;
+  if (pendingWorldFcPromise) return pendingWorldFcPromise;
+
+  pendingWorldFcPromise = (async () => {
+    const data = await fetchRawTopology(WORLD_GEO_URL);
+    if (!data) return null;
+    const processed = processWorldTopology(data);
+    if (processed) {
+      cachedWorldFc = processed;
+    }
+    return processed;
+  })();
+
+  pendingWorldFcPromise.finally(() => {
+    pendingWorldFcPromise = null;
+  });
+
+  return pendingWorldFcPromise;
+};
+

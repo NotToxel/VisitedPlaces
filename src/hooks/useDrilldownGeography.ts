@@ -1,23 +1,23 @@
 import { useState, useEffect, useMemo } from 'react';
-import { WORLD_GEO_URL } from '../config/urls';
-import { getSubRegionUrl, fetchRawTopology } from '../utils/topojsonCache';
+import { getSubRegionUrl, fetchRawTopology, fetchWorldFeatureCollection, getCachedWorldFeatureCollectionSync } from '../utils/topojsonCache';
 import { drilldownRegistry } from '../config/drilldownConfig';
+
 import { getCountryGeoJSON, computeBoundingBox, getPreloadedCountryDataSync, computeAutoScale } from '../data/naturalEarthAdmin1';
 import type { BBox } from '../data/naturalEarthAdmin1';
 
-import * as topojson from 'topojson-client';
 import { useStore } from '../store/useStore';
-import { getKosovoWorldFeature } from '../data/naturalEarthAdmin1';
 
 export function useDrilldownGeography(activeCountry: string | null, setActiveCountry: (id: string | null) => void) {
   const { neDataLoaded } = useStore();
   const [geoData, setGeoData] = useState<string | object>(() => {
-    if (!activeCountry) return WORLD_GEO_URL;
+    if (!activeCountry) {
+      return getCachedWorldFeatureCollectionSync() || { type: 'FeatureCollection', features: [] };
+    }
     const sync = getPreloadedCountryDataSync(activeCountry);
     return sync ? sync.geoJson : { type: 'FeatureCollection', features: [] };
   });
   const [isLoading, setIsLoading] = useState<boolean>(() => {
-    if (!activeCountry) return true;
+    if (!activeCountry) return !getCachedWorldFeatureCollectionSync();
     return !getPreloadedCountryDataSync(activeCountry);
   });
   const [countryBBox, setCountryBBox] = useState<BBox | null>(() => {
@@ -31,65 +31,33 @@ export function useDrilldownGeography(activeCountry: string | null, setActiveCou
 
     // ── World view ─────────────────────────────────────────────────────
     if (!activeCountry) {
+      const cached = getCachedWorldFeatureCollectionSync();
       Promise.resolve().then(() => {
-        if (active) {
-          setCountryBBox(null);
+        if (!active) return;
+        setCountryBBox(null);
+        if (cached) {
+          setGeoData(cached);
+          setIsLoading(false);
+        } else {
           setIsLoading(true);
         }
       });
-      fetchRawTopology(WORLD_GEO_URL)
-        .then((data) => {
-          if (active && data) {
-            try {
-              const topoCopy = JSON.parse(JSON.stringify(data));
-              const topoData = topoCopy as unknown as Parameters<typeof topojson.feature>[0];
-              const topoObj = (topoCopy as { objects?: Record<string, unknown> })?.objects?.countries;
-              if (topoObj && Array.isArray((topoObj as { geometries?: unknown[] }).geometries)) {
-                type TopoGeom = { id?: string | number; arcs?: number[][]; properties?: Record<string, unknown> };
-                const geoms = (topoObj as { geometries: TopoGeom[] }).geometries;
-                
-                // 1. Tag Somaliland geometry as SOL
-                const solGeom = geoms.find((g) => g.properties?.name === 'Somaliland');
-                if (solGeom) {
-                  solGeom.id = 'SOL';
-                  solGeom.properties = { ...solGeom.properties, ISO_A3: 'SOL', name: 'Somaliland' };
-                }
 
-                // 2. Adjust Somalia (706) arcs so it only covers Somalia proper (no overlap with Somaliland)
-                const somGeom = geoms.find((g) => g.id === '706' || g.id === 706);
-                if (somGeom) {
-                  somGeom.arcs = [[112, 113, 114, -583, -581, 583]];
-                }
-
-                type WorldFeature = { id?: string | number; properties?: { ISO_A3?: string; name?: string } };
-                const fc = topojson.feature(topoData, topoObj as Parameters<typeof topojson.feature>[1]) as unknown as { type: string; features: WorldFeature[] };
-                
-                const kosovoFeature = getKosovoWorldFeature();
-                if (kosovoFeature && !fc.features.some((f) => f.id === 'XKX' || f.properties?.ISO_A3 === 'XKX')) {
-                  fc.features.push(kosovoFeature as unknown as WorldFeature);
-                }
-
-                const solFeature = fc.features.find((f) => f.properties?.name === 'Somaliland');
-                if (solFeature) {
-                  solFeature.id = 'SOL';
-                  solFeature.properties = { ...solFeature.properties, ISO_A3: 'SOL', name: 'Somaliland' };
-                }
-                
-                setGeoData(fc);
-              } else {
-                setGeoData(data as object);
-              }
-            } catch {
-              setGeoData(data as object);
+      if (!cached) {
+        fetchWorldFeatureCollection()
+          .then((fc) => {
+            if (active && fc) {
+              setGeoData(fc);
+              setIsLoading(false);
             }
-            setIsLoading(false);
-          }
-        })
-        .catch(() => {
-          if (active) setIsLoading(false);
-        });
+          })
+          .catch(() => {
+            if (active) setIsLoading(false);
+          });
+      }
       return () => { active = false; };
     }
+
 
     // ── Drill-down view ────────────────────────────────────────────────
     const preloadedSync = getPreloadedCountryDataSync(activeCountry);
@@ -129,7 +97,7 @@ export function useDrilldownGeography(activeCountry: string | null, setActiveCou
           if (!active) return;
           setIsLoading(false);
           setActiveCountry(null);
-          setGeoData(WORLD_GEO_URL);
+          setGeoData(getCachedWorldFeatureCollectionSync() || {});
         });
     } else {
       // Path B: Natural Earth admin-1 GeoJSON
