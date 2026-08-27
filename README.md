@@ -1,10 +1,56 @@
 # 🌍 VisitedPlaces
 
-**An interactive world travel tracker** — mark countries and regions you've visited, explore your travel analytics, and compare maps with friends using shareable codes.
+**An interactive world travel tracker** — mark countries and regions you've visited, explore your travel analytics, and compare maps with friends using serverless shareable codes.
 
 [![Version](https://img.shields.io/badge/version-2.3.5-blue.svg)](package.json)
 [![License: AGPL-3.0](https://img.shields.io/badge/License-AGPL--3.0-blue.svg)](LICENSE)
 [![TypeScript](https://img.shields.io/badge/TypeScript-Strict-3178C6.svg)](tsconfig.app.json)
+
+---
+
+## 📸 Overview & Interface Preview
+
+### 🗺️ Interactive World Map
+Track visited places, bucket-list destinations, revisit goals, and avoided regions with smooth zooming, panning, and microstate support.
+
+![Interactive World Map](docs/screenshots/01-world-map.png)
+
+---
+
+### ⬡ Hexagonal Grid View
+A stylized honeycomb grid visualization providing equal visual weight to nations and territories across the globe.
+
+![Hexagonal Honeycomb Map](docs/screenshots/02-hexagon-map.png)
+
+---
+
+### 📊 Travel Analytics & Traveler Persona
+Deep dive into your travel footprint with continent coverage breakdowns, progress toward world exploration milestones, regional comparison charts, and gamified traveler badges.
+
+![Travel Analytics Dashboard](docs/screenshots/04-analytics-dashboard.png)
+
+---
+
+### 🤝 Social Compare Mode
+Compare travel maps side-by-side with friends using compact, serverless share codes. Identify mutual destinations, discover trip recommendations, and see travel overlaps in real time.
+
+![Social Compare Mode](docs/screenshots/05-compare-mode.png)
+
+---
+
+### 🏛️ Sub-Region Drill-Down & Territory Exploration
+Drill down into sub-national states, provinces, and territories (US states, Canadian provinces, UK counties, and admin-1 divisions worldwide) directly on the interactive map or through the dedicated sub-regions explorer panel.
+
+| Interactive Regional Drill-down (US States) | Sub-regions Explorer Drawer |
+|:---:|:---:|
+| ![Regional Drill-down](docs/screenshots/06-regional-drilldown.png) | ![Sub-region Explorer](docs/screenshots/07-subregions-drawer.png) |
+
+---
+
+### 📋 Searchable Country Directory
+Browse 199+ countries grouped by continent with progress bars, sorting options, and quick status actions.
+
+![Country Directory](docs/screenshots/03-country-directory.png)
 
 ---
 
@@ -13,20 +59,20 @@
 | Feature | Description |
 |---|---|
 | 🗺️ **Interactive World Map** | Click countries to open a context menu to change their status or drill into sub-regions (US states, UK counties, and admin-1 sub-divisions globally). |
-| 📋 **Country Directory** | Searchable list of all countries grouped by continent, with sub-region expansion and stats. |
-| 📊 **Analytics Dashboard** | Coverage stats, continent breakdowns, pie charts, and traveler persona badges. |
-| 🤝 **Compare Mode** | Paste friends' share codes to see a side-by-side map with common destinations, recommendations, and overlaps. |
-| 🔄 **Share Codes** | Export your map as a compact base64 code. Import codes from friends to compare or restore backups. |
-| 🌓 **Dark & Light Mode** | Toggle between dark and light themes from the Settings panel. |
-| ⬡ **Hexagon Map** | Alternative hexagonal visualization for a unique view of global coverage. |
-| 🔒 **Privacy First** | Zero server, zero accounts. All data stays in your browser's local state. |
+| ⬡ **Hexagon Map** | Alternative hexagonal honeycomb visualization for an equalized, stylized view of global coverage. |
+| 📋 **Country Directory** | Searchable directory of 199+ countries grouped by continent, with sub-region expansion, sorting, and stats. |
+| 📊 **Analytics Dashboard** | Coverage stats, continent breakdowns, regional distribution charts, and gamified milestone levels. |
+| 🤝 **Compare Mode** | Paste friends' share codes to see a merged map highlighting common destinations, individual travels, and overlaps. |
+| 🔄 **Zero-Server Share Codes** | Export your map as a compact, URL-safe base64 code. Import codes from friends to compare or restore backups. |
+| 🌓 **Dark & Light Mode** | Sleek modern dark mode interface with light theme support. |
+| 🔒 **Privacy First** | Zero servers, zero telemetry, zero accounts. 100% of your data remains in your browser's local storage. |
 
 ### Status Types
 
-- ✅ **Visited** — You've been there
-- 💜 **Wishlist** — You want to go
-- 🔄 **Revisit** — You'd go back
-- 🚫 **Avoid** — Not interested
+- 🟢 **Visited** — Places you have traveled to
+- 🟣 **Wishlist** — Bucket-list destinations you plan to visit
+- 🟠 **Revisit** — Places you've loved and want to return to
+- 🔴 **Avoid** — Places you do not wish to visit
 
 ---
 
@@ -60,6 +106,15 @@ npm run dev
 
 Open [http://localhost:5173](http://localhost:5173) in your browser.
 
+### Automated Screenshots
+
+Generate the latest high-resolution screenshots with demo travel data automatically:
+
+```bash
+# With dev server running on localhost:5173
+npm run screenshots
+```
+
 ### Build for Production
 
 ```bash
@@ -67,7 +122,7 @@ npm run build     # TypeScript check + Vite production bundle → dist/
 npm run preview   # Preview the production build locally
 ```
 
-The `dist/` folder is a static site — deploy it to GitHub Pages, Netlify, Vercel, or any static host. No server or environment variables needed.
+The `dist/` folder is a static site — deploy it to GitHub Pages, Netlify, Vercel, or any static host. No backend required.
 
 ---
 
@@ -80,10 +135,10 @@ The `dist/` folder is a static site — deploy it to GitHub Pages, Netlify, Verc
 | Styling | TailwindCSS 4 + Vanilla CSS Variables | Tailwind 4.3 |
 | State | Zustand 5 + localStorage persistence | Zustand 5.0 |
 | Routing | React Router 7 | React Router 7.13 |
-| Maps | react-simple-maps + D3 (TopoJSON) | react-simple-maps 3.0 |
+| Maps | react-simple-maps + D3 (TopoJSON & Hexbin) | react-simple-maps 3.0 |
 | Charts | Recharts | Recharts 3.8 |
 | Icons | Lucide React | Lucide 0.577 |
-| Testing | Vitest | Vitest 4.1 |
+| Testing & Automation | Vitest + Playwright | Vitest 4.1 / Playwright 1.62 |
 
 ---
 
@@ -107,12 +162,12 @@ src/
 
 ## 🤝 How Sharing Works
 
-1. Open **Settings** → your map is encoded as a compact, URL-safe base64 string
-2. Copy the code and send it to a friend
+1. Open **Settings** → your travel map is encoded as a compact, URL-safe base64 string
+2. Copy the code and share it with a friend
 3. Your friend pastes it into the **Compare** page
-4. A merged map shows common destinations, recommendations, and travel overlaps
+4. A merged visualization shows mutual destinations, unique travels, and trip overlaps
 
-No server involved — the code contains your data directly.
+No server or database involved — your travel state is stored directly within the compact share code.
 
 ---
 
@@ -149,5 +204,3 @@ refactor: extract map tooltip into component
 ## 📄 License
 
 This project is licensed under the **GNU Affero General Public License v3.0** — see the [LICENSE](LICENSE) file for details.
-
-In short: you're free to use, modify, and distribute this software, but if you run a modified version on a public server, you must make the source code available to users of that server.

@@ -10,7 +10,8 @@
     "lint": "eslint .",
     "preview": "vite preview",
     "test": "vitest",
-    "test:run": "vitest run"
+    "test:run": "vitest run",
+    "screenshots": "node scripts/capture-screenshots.mjs"
   },
   "dependencies": {
     "d3-geo": "^3.1.1",
@@ -40,6 +41,7 @@
     "eslint-plugin-react-hooks": "^7.0.1",
     "eslint-plugin-react-refresh": "^0.4.24",
     "globals": "^16.5.0",
+    "playwright": "^1.62.1",
     "tailwindcss": "^4.3.1",
     "typescript": "~5.9.3",
     "typescript-eslint": "^8.48.0",
