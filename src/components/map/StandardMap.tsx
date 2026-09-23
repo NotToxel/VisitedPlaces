@@ -328,12 +328,6 @@ const StandardMapBase: React.FC<StandardMapProps> = ({
       drilldownDefaultZoom: 1,
     };
   }, [currentConfig, activeCountry, countryBBox]);
-  const customStrokeWidth = useMemo(() => {
-    if (activeCountry) {
-      return Math.max(0.06, 0.3 / subRegionZoom);
-    }
-    return Math.max(0.12, 0.45 / mapZoom);
-  }, [activeCountry, subRegionZoom, mapZoom]);
 
   const transitionParamsRef = useRef<{
     countryId: string;
@@ -504,7 +498,6 @@ const StandardMapBase: React.FC<StandardMapProps> = ({
             showAvoid={showAvoid}
             showRevisit={showRevisit}
             handleCountryClick={handleCountryClick}
-            strokeWidth={customStrokeWidth}
           />
 
           {!activeCountry && !isLoading && MICROSTATES.map((marker) => {

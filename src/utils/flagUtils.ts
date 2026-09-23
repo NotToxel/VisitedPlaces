@@ -60,7 +60,7 @@ const FLAG_CACHE_NAME = 'visited-places-flags-cache-v1';
 /**
  * Fetches the flag image, caches it in CacheStorage, and returns a local blob URL.
  */
-export async function fetchFlagAsBlobUrl(placeId: string, url: string): Promise<string> {
+export async function fetchFlagAsBlobUrl(placeId: string, url: string, priority: 'auto' | 'low' = 'auto'): Promise<string> {
   if (typeof window === 'undefined') return url;
 
   // 1. Check in-memory cache first
@@ -91,7 +91,7 @@ export async function fetchFlagAsBlobUrl(placeId: string, url: string): Promise<
       }
 
       if (!response) {
-        const res = await fetch(url);
+        const res = await fetch(url, priority === 'low' ? { priority: 'low' } : undefined);
         if (!res.ok) {
           throw new Error(`HTTP error! status: ${res.status}`);
         }
@@ -180,25 +180,59 @@ export function getParentCountryFlagUrl(placeId: string): string | null {
   return country?.flag || null;
 }
 
-/**
- * Preloads flag images in the background for a list of place IDs.
- * Uses getPlaceFlagUrl and schedules loading during browser idle periods.
- */
-export function preloadPlaceFlags(placeIds: string[]): void {
-  if (typeof window === 'undefined') return;
+/** Preload unique regional flags gradually, without competing with visible images. */
+export function preloadPlaceFlags(placeIds: string[]): () => void {
+  if (typeof window === 'undefined') return () => {};
+  const connection = (navigator as Navigator & { connection?: { saveData?: boolean } }).connection;
+  if (connection?.saveData) return () => {};
 
-  const startPreload = () => {
-    placeIds.forEach((id) => {
-      const url = getPlaceFlagUrl(id);
-      if (url && !resolvedBlobUrlCache.has(id)) {
-        fetchFlagAsBlobUrl(id, url).catch(() => {});
-      }
-    });
+  const ids = [...new Set(placeIds)].filter((id) => {
+    const url = getPlaceFlagUrl(id);
+    return !!url && url !== getParentCountryFlagUrl(id) && !resolvedBlobUrlCache.has(id);
+  });
+  let nextIndex = 0;
+  let inFlight = 0;
+  let cancelled = false;
+  let idleId: number | null = null;
+  let timerId: ReturnType<typeof setTimeout> | null = null;
+
+  const schedule = () => {
+    if (cancelled || nextIndex >= ids.length || document.hidden || idleId !== null || timerId !== null) return;
+    if ('requestIdleCallback' in window) {
+      idleId = window.requestIdleCallback(runBatch, { timeout: 1000 });
+    } else {
+      timerId = setTimeout(runBatch, 100);
+    }
   };
 
-  if ('requestIdleCallback' in window) {
-    window.requestIdleCallback(() => startPreload(), { timeout: 2000 });
-  } else {
-    setTimeout(startPreload, 200);
-  }
+  const runBatch = () => {
+    idleId = null;
+    timerId = null;
+    while (!cancelled && !document.hidden && inFlight < 2 && nextIndex < ids.length) {
+      const id = ids[nextIndex++];
+      if (resolvedBlobUrlCache.has(id)) continue;
+      const url = getPlaceFlagUrl(id);
+      if (!url) continue;
+      inFlight++;
+      fetchFlagAsBlobUrl(id, url, 'low')
+        .catch(() => {})
+        .finally(() => {
+          inFlight--;
+          schedule();
+        });
+    }
+  };
+
+  const onVisibilityChange = () => {
+    if (!document.hidden) schedule();
+  };
+  document.addEventListener('visibilitychange', onVisibilityChange);
+  schedule();
+
+  return () => {
+    cancelled = true;
+    document.removeEventListener('visibilitychange', onVisibilityChange);
+    if (idleId !== null) window.cancelIdleCallback(idleId);
+    if (timerId !== null) clearTimeout(timerId);
+  };
 }

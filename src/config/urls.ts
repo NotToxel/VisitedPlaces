@@ -1,4 +1,4 @@
-export const WORLD_GEO_URL = 'https://unpkg.com/world-atlas@2.0.2/countries-110m.json';
+export const WORLD_GEO_URL = `${import.meta.env.BASE_URL}countries-110m.json`;
 
 // Natural Earth admin-1 (states/provinces) — 10m resolution GeoJSON containing subdivisions for all countries
 export const NE_ADMIN1_URL =

@@ -1,4 +1,8 @@
 @import "tailwindcss";
+/* Keep a new place's flag blank until its own image has loaded. */
+.flag-image--pending {
+  opacity: 0;
+}
 
 html,
 body,

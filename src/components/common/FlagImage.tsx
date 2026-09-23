@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import { 
   getPlaceFlagUrl, 
   getParentCountryFlagUrl, 
@@ -21,6 +21,9 @@ export const FlagImage: React.FC<FlagImageProps> = ({
   title,
   onClick,
 }) => {
+  const imageRef = useRef<HTMLImageElement>(null);
+  const [isNearViewport, setIsNearViewport] = useState(false);
+  const [loadedImageKey, setLoadedImageKey] = useState<string | null>(null);
   const [prevPlaceId, setPrevPlaceId] = useState(placeId);
   const [src, setSrc] = useState<string | null>(() => {
     if (resolvedBlobUrlCache.has(placeId)) {
@@ -40,6 +43,23 @@ export const FlagImage: React.FC<FlagImageProps> = ({
   }
 
   useEffect(() => {
+    if (isNearViewport) return;
+    const image = imageRef.current;
+    if (!image || !('IntersectionObserver' in window)) {
+      return;
+    }
+    const observer = new IntersectionObserver((entries) => {
+      if (entries[0]?.isIntersecting) {
+        setIsNearViewport(true);
+        observer.disconnect();
+      }
+    }, { rootMargin: '300px' });
+    observer.observe(image);
+    return () => observer.disconnect();
+  }, [src, isNearViewport]);
+
+  useEffect(() => {
+    if (!isNearViewport && 'IntersectionObserver' in window) return;
     let active = true;
 
     // If already in blob cache, no need to perform async fetch
@@ -84,7 +104,7 @@ export const FlagImage: React.FC<FlagImageProps> = ({
     return () => {
       active = false;
     };
-  }, [placeId]);
+  }, [placeId, isNearViewport]);
 
   const handleError = () => {
     const fallbackUrl = getParentCountryFlagUrl(placeId);
@@ -93,17 +113,22 @@ export const FlagImage: React.FC<FlagImageProps> = ({
     }
   };
 
+  const imageKey = `${placeId}:${src}`;
+
   if (!src) {
     return <div className={`flag-placeholder ${className}`} style={{ backgroundColor: 'var(--color-base-300)', opacity: 0.15 }} />;
   }
 
   return (
     <img
+      key={imageKey}
+      ref={imageRef}
       src={src}
       alt={alt}
-      className={className}
+      className={`${className} ${loadedImageKey === imageKey ? '' : 'flag-image--pending'}`}
       title={title}
       onClick={onClick}
+      onLoad={() => setLoadedImageKey(imageKey)}
       onError={handleError}
       loading="lazy"
     />

@@ -80,7 +80,7 @@ const STATUS_GROUP_LABELS: Record<string, string> = {
 };
 
 const List: React.FC = () => {
-  const { places, setCountryStatus, neDataLoaded } = useStore();
+  const { places, setCountryStatus } = useStore();
   
   // Search & Filters State
   const [search, setSearch] = useState('');
@@ -113,27 +113,32 @@ const List: React.FC = () => {
     setLoadingSubRegions(prev => ({ ...prev, [id]: false }));
   }, [subRegionsByCountry, loadingSubRegions]);
 
-  // When sub-region search is enabled, bulk-load sub-regions for every country.
+  // Load the searchable index once, then publish it in a single update.
   useEffect(() => {
     if (!searchSubRegions) return;
-    const timer = setTimeout(() => {
-      COUNTRIES.forEach(c => loadSubRegions(c.id));
-    }, 0);
-    return () => clearTimeout(timer);
-  }, [searchSubRegions, neDataLoaded, loadSubRegions]);
+    let active = true;
+    Promise.all(COUNTRIES.map(async (country) => [country.id, await fetchSubRegions(country.id)] as const))
+      .then((entries) => {
+        if (active) setSubRegionsByCountry(Object.fromEntries(entries));
+      });
+    return () => { active = false; };
+  }, [searchSubRegions]);
 
   // Trigger sub-regions load when a country with sub-regions is selected
   useEffect(() => {
     if (selectedCountryId && hasDrilldownSupport(selectedCountryId)) {
       Promise.resolve().then(async () => {
         await loadSubRegions(selectedCountryId);
-        const subRegs = subRegionsByCountry[selectedCountryId];
-        if (subRegs) {
-          preloadPlaceFlags(subRegs.map(r => r.id));
-        }
       });
     }
   }, [selectedCountryId, loadSubRegions, subRegionsByCountry]);
+
+  useEffect(() => {
+    if (!selectedCountryId) return;
+    const regions = subRegionsByCountry[selectedCountryId];
+    if (!regions) return;
+    return preloadPlaceFlags(regions.map((region) => region.id));
+  }, [selectedCountryId, subRegionsByCountry]);
 
 
 
@@ -331,17 +336,13 @@ const List: React.FC = () => {
 
   // Count visited subregions dynamically
   const getSubregionsProgressString = useCallback((countryId: string) => {
-    const isCurated = countryId === 'USA' || countryId === 'GBR';
-    if (!neDataLoaded && !isCurated && !subRegionsByCountry[countryId]) {
-      return '...';
-    }
     const visited = Object.keys(places).filter(k => k.startsWith(`${countryId}-`) && (places[k]?.status === 'VISITED' || places[k]?.status === 'REVISIT')).length;
     const regions = subRegionsByCountry[countryId];
     if (regions && regions.length > 0) {
       return `${visited}/${regions.length}`;
     }
     return visited > 0 ? `${visited}` : 'Map';
-  }, [places, subRegionsByCountry, neDataLoaded]);
+  }, [places, subRegionsByCountry]);
 
   // Get accent color for a status
   const getAccentColor = (status: PlaceStatus): string => {
@@ -847,7 +848,7 @@ const List: React.FC = () => {
                             {/* Main row: Flag + Name + Status badge */}
                             <div className="list-country-card__main">
                               {country.flag ? (
-                                <img src={country.flag} alt="" className="list-country-card__flag" />
+                                <img src={country.flag} alt="" loading="lazy" decoding="async" className="list-country-card__flag" />
                               ) : (
                                 <div className="list-country-card__flag-placeholder" />
                               )}

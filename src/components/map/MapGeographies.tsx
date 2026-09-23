@@ -16,7 +16,6 @@ interface MapGeographiesProps {
   showAvoid: boolean;
   showRevisit: boolean;
   handleCountryClick: (countryId: string, event: React.MouseEvent, displayName?: string) => void;
-  strokeWidth?: number;
 }
 
 interface RsmGeography {
@@ -42,8 +41,7 @@ const MapGeographiesBase: React.FC<MapGeographiesProps> = ({
   showWishlist,
   showAvoid,
   showRevisit,
-  handleCountryClick,
-  strokeWidth
+  handleCountryClick
 }) => {
   return (
     <Geographies key={activeCountry || 'world'} geography={geoData}>
@@ -152,7 +150,8 @@ const MapGeographiesBase: React.FC<MapGeographiesProps> = ({
               onClick={(e) => handleCountryClick(countryId, e, countryName)}
               fill={fill}
               stroke={isHighlighted ? "var(--accent-highlight)" : 'var(--map-stroke)'}
-              strokeWidth={isHighlighted ? (strokeWidth ? strokeWidth * 2 : 1.5) : (strokeWidth ?? (activeCountry ? 0.7 : 0.5))}
+              strokeWidth={isHighlighted ? 1.5 : (activeCountry ? 0.7 : 0.5)}
+              vectorEffect="non-scaling-stroke"
               style={GEOGRAPHY_STYLE}
             />
           );

@@ -1,7 +1,7 @@
 # AGENTS.MD — VisitedPlaces Project Guide
 
-> **Version**: 2.3.5  
-> **Last Updated**: 2026-07-26  
+> **Version**: 2.3.6
+> **Last Updated**: 2026-09-23
 > **Status**: Active Development
 
 ---
@@ -252,7 +252,7 @@ We use [Semantic Versioning](https://semver.org/):
 
 ### Current Version
 
-`2.3.5` — Patch release pre-processing world FeatureCollection topology in `topojsonCache.ts` and preventing raw URL string passing to `react-simple-maps`. Fixes initial load rendering race conditions for Somalia and Somaliland, removes corrupted arc overrides, and ensures seamless map state synchronization when exiting sub-region drilldowns.
+`2.3.6` — Patch release bundling the world map locally, deferring the large Natural Earth subdivision dataset until needed, reducing map redraws during zoom, and loading regional flags without stale images or unbounded background requests.
 
 ### Display
 

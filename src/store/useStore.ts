@@ -21,13 +21,11 @@ export interface AppState {
   // Current user's places
   places: UserPlacesMap;
   theme: 'dark' | 'light';
-  neDataLoaded: boolean;
   
   // Actions
   setCountryStatus: (countryCode: string, status: PlaceStatus) => void;
   setRegionStatus: (countryCode: string, regionCode: string, status: PlaceStatus) => void;
   toggleTheme: () => void;
-  setNeDataLoaded: (loaded: boolean) => void;
   
   // Load whole state (for sharing / resetting)
   loadPlaces: (places: UserPlacesMap) => void;
@@ -38,10 +36,8 @@ export const useStore = create<AppState>()(
     (set) => ({
       places: {},
       theme: 'dark',
-      neDataLoaded: false,
 
       toggleTheme: () => set((state) => ({ theme: state.theme === 'dark' ? 'light' : 'dark' })),
-      setNeDataLoaded: (loaded) => set({ neDataLoaded: loaded }),
       
       setCountryStatus: (countryCode, status) => set((state) => {
         const updatedPlaces = { ...state.places };

@@ -140,19 +140,6 @@ async function fetchNEAdmin1(): Promise<NEFeatureCollection | null> {
   return pendingFetch;
 }
 
-/**
- * Low-priority prefetch — call on app mount.
- * Resolves to true if fetch succeeded, false otherwise.
- */
-export async function prefetchNaturalEarth(): Promise<boolean> {
-  try {
-    const data = await fetchNEAdmin1();
-    return data !== null;
-  } catch {
-    return false;
-  }
-}
-
 function shiftRussiaCoords(coords: unknown): void {
   if (!Array.isArray(coords)) return;
   if (typeof coords[0] === 'number' && typeof coords[1] === 'number') {

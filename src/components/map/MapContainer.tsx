@@ -16,8 +16,8 @@ import { getAllCountryFeaturesWithMeta } from '../../data/naturalEarthAdmin1';
 import type { NERegionFeature } from '../../data/naturalEarthAdmin1';
 import { getSubRegionUrl, fetchSubRegions } from '../../utils/topojsonCache';
 import type { TopoRegion } from '../../utils/topojsonCache';
-import { preloadPlaceFlags } from '../../utils/flagUtils';
 import { hideMapTooltip } from '../../utils/mapUtils';
+import { preloadPlaceFlags } from '../../utils/flagUtils';
 import { FlagImage } from '../common/FlagImage';
 
 interface ContextMenuState {
@@ -33,8 +33,7 @@ const CARD_GRID_COUNTRIES = new Set([
 ]);
 
 export const MapContainer: React.FC = () => {
-  const { places, setCountryStatus, setRegionStatus, neDataLoaded } = useStore();
-  if (neDataLoaded) { /* Trigger re-render on load */ }
+  const { places, setCountryStatus, setRegionStatus } = useStore();
   const [mapStyle, setMapStyle] = useState<'STANDARD' | 'HEXAGON'>('STANDARD');
   const [showHexLabels, setShowHexLabels] = useState(false);
   const [activeCountry, setActiveCountry] = useState<string | null>(null);
@@ -51,18 +50,27 @@ export const MapContainer: React.FC = () => {
   }, [activeCountry]);
 
   useEffect(() => {
+    let active = true;
+    let cancelPreload = () => {};
     if (activeCountry) {
       fetchSubRegions(activeCountry)
         .then((regions) => {
+          if (!active) return;
           setSubRegions(regions);
-          preloadPlaceFlags(regions.map((r) => r.id));
+          cancelPreload = preloadPlaceFlags(regions.map((region) => region.id));
         })
         .catch(() => {
-          Promise.resolve().then(() => setSubRegions([]));
+          if (active) setSubRegions([]);
         });
     } else {
-      Promise.resolve().then(() => setSubRegions([]));
+      Promise.resolve().then(() => {
+        if (active) setSubRegions([]);
+      });
     }
+    return () => {
+      active = false;
+      cancelPreload();
+    };
   }, [activeCountry]);
 
   // Visibility filters

@@ -5,10 +5,8 @@ import { drilldownRegistry } from '../config/drilldownConfig';
 import { getCountryGeoJSON, computeBoundingBox, getPreloadedCountryDataSync, computeAutoScale } from '../data/naturalEarthAdmin1';
 import type { BBox } from '../data/naturalEarthAdmin1';
 
-import { useStore } from '../store/useStore';
 
 export function useDrilldownGeography(activeCountry: string | null, setActiveCountry: (id: string | null) => void) {
-  const { neDataLoaded } = useStore();
   const [geoData, setGeoData] = useState<string | object>(() => {
     if (!activeCountry) {
       return getCachedWorldFeatureCollectionSync() || { type: 'FeatureCollection', features: [] };
@@ -124,7 +122,7 @@ export function useDrilldownGeography(activeCountry: string | null, setActiveCou
     }
 
     return () => { active = false; };
-  }, [activeCountry, setActiveCountry, neDataLoaded]);
+  }, [activeCountry, setActiveCountry]);
 
   // Compute projection scale from bounding box for StandardMap (Mercator-aware)
   const autoScale = useMemo(() => {
