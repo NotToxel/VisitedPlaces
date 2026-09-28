@@ -537,7 +537,7 @@ const List: React.FC = () => {
                             {/* Main row: Flag + Name + Status badge */}
                             <div className="list-country-card__main">
                               {country.flag && (
-                                <img src={country.flag} alt="" loading="lazy" decoding="async" className="list-country-card__flag" />
+                                <img src={country.flag} alt="" loading="lazy" decoding="async" className="flag-image--shape list-country-card__flag" />
                               )}
                               <div className="list-country-card__info">
                                 <span className="list-country-card__name" title={country.name}>{country.name}</span>

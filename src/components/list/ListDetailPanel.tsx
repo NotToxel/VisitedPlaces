@@ -134,7 +134,7 @@ export function ListDetailPanel({
                 key={selectedCountry.flag}
                 src={selectedCountry.flag}
                 alt=""
-                className="w-7 h-5 object-cover rounded-sm border border-base-300/40 shrink-0"
+                className="flag-image--shape w-7 h-5 object-contain shrink-0"
               />
             ) : (
               <div className="w-7 h-5 bg-base-300 rounded-sm shrink-0" />
@@ -330,7 +330,7 @@ export function ListDetailPanel({
                               >
                                 <FlagImage
                                   placeId={state.id}
-                                  className="w-7.5 h-5 object-cover rounded-sm border border-base-300/20"
+                                  className="flag-image--shape w-7.5 h-5 object-contain"
                                 />
                               </div>
                               <span className="truncate flex-1 font-bold">{state.name}</span>

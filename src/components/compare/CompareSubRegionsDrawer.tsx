@@ -209,7 +209,7 @@ export const CompareSubRegionsDrawer: React.FC<CompareSubRegionsDrawerProps> = (
         <div className="compare-drawer__header">
           <div className="compare-drawer__title-container">
             {countryInfo?.flag && (
-              <img src={countryInfo.flag} alt="" className="compare-drawer__flag" />
+              <img src={countryInfo.flag} alt="" className="flag-image--shape compare-drawer__flag" />
             )}
             <h3 className="compare-drawer__title">{countryInfo?.name || countryId} Sub-regions</h3>
           </div>

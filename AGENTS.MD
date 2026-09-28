@@ -1,6 +1,6 @@
 # AGENTS.MD — VisitedPlaces Project Guide
 
-> **Version**: 2.4.1
+> **Version**: 2.4.2
 > **Last Updated**: 2026-09-28
 > **Status**: Active Development
 
@@ -260,7 +260,7 @@ We use [Semantic Versioning](https://semver.org/):
 
 ### Current Version
 
-`2.4.1` — Patch release ensuring the outgoing sidebar panel moves fully beyond its padded edge during country drill-down transitions.
+`2.4.2` — Patch release keeping map status controls fixed while counts roll, centering country headings, and displaying flags at their native proportions.
 
 ### Display
 

@@ -497,7 +497,7 @@ const Analytics: React.FC = () => {
                   <div className="flex items-center justify-between">
                     <div className="flex items-center gap-2 min-w-0">
                       {item.flag ? (
-                        <img src={item.flag} alt="" className="w-6 h-4 object-cover rounded-sm border border-base-300/30 shrink-0" />
+                        <img src={item.flag} alt="" className="flag-image--shape w-6 h-4 object-contain shrink-0" />
                       ) : (
                         <div className="w-6 h-4 bg-base-300 rounded-sm shrink-0" />
                       )}

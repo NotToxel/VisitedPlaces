@@ -500,7 +500,6 @@ export const MapContainer: React.FC = () => {
         setShowRevisit={setShowRevisit}
         activeCountry={sidebarCountry}
         subRegions={sidebarRegions}
-        isExiting={sidebarExiting}
       />
 
       {/* Country Context Menu */}

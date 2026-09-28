@@ -255,7 +255,7 @@ export const MapSearchBar: React.FC<MapSearchBarProps> = ({
                   onClick={() => selectResult(item)} onMouseEnter={() => setKbIndex(idx)}>
                   <FlagImage
                   placeId={item.kind === 'country' ? item.id : item.countryId}
-                    className="map-search-bar__dropdown-flag object-cover rounded-sm"
+                    className="flag-image--shape map-search-bar__dropdown-flag object-contain"
                   />
                   <span className="map-search-bar__dropdown-name">
                     {item.name}

@@ -292,7 +292,7 @@ const Compare: React.FC = () => {
           <img
             src={data.flag}
             alt=""
-            className="compare-country-pill__flag"
+            className="flag-image--shape compare-country-pill__flag"
             onError={(e) => {
               e.currentTarget.src = "data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='16' height='11'><rect width='16' height='11' fill='%23333333' opacity='0.15'/></svg>";
             }}
@@ -917,7 +917,7 @@ const Compare: React.FC = () => {
                           <img
                             src={countryData[code]?.flag}
                             alt=""
-                            className="compare-insight-card__item-flag"
+                            className="flag-image--shape compare-insight-card__item-flag"
                             onError={(e) => {
                               e.currentTarget.src = "data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='18' height='13'><rect width='18' height='13' fill='%23333333' opacity='0.15'/></svg>";
                             }}
@@ -953,7 +953,7 @@ const Compare: React.FC = () => {
                             <img
                               src={countryData[code]?.flag}
                               alt=""
-                              className="compare-insight-card__item-flag"
+                              className="flag-image--shape compare-insight-card__item-flag"
                               onError={(e) => {
                                 e.currentTarget.src = "data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='18' height='13'><rect width='18' height='13' fill='%23333333' opacity='0.15'/></svg>";
                               }}

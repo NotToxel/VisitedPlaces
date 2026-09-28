@@ -125,7 +125,7 @@ export const FlagImage: React.FC<FlagImageProps> = ({
       ref={imageRef}
       src={src}
       alt={alt}
-      className={`${className} ${loadedImageKey === imageKey ? '' : 'flag-image--pending'}`}
+      className={`flag-image--shape ${className} ${loadedImageKey === imageKey ? '' : 'flag-image--pending'}`}
       title={title}
       onClick={onClick}
       onLoad={() => setLoadedImageKey(imageKey)}
