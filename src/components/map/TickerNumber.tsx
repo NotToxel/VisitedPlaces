@@ -38,11 +38,19 @@ export function TickerNumber({ value, className = '' }: TickerNumberProps) {
   const digitCount = Math.max(String(display.from).length, String(display.to).length);
   const from = String(display.from).padStart(digitCount, ' ');
   const to = String(display.to).padStart(digitCount, ' ');
+  const changingDigitCount = String(display.from).length !== String(display.to).length;
 
   return (
     <span className={`ticker-number ${className}`}>
       <span className="ticker-number__spoken">{value}</span>
-      {Array.from({ length: digitCount }, (_, index) => {
+      {changingDigitCount ? (
+        <span className="ticker-number__whole" aria-hidden="true">
+          <span className="ticker-number__whole-roll" key={display.revision}>
+            <span>{display.from}</span>
+            <span>{display.to}</span>
+          </span>
+        </span>
+      ) : Array.from({ length: digitCount }, (_, index) => {
         const oldDigit = from[index] ?? ' ';
         const newDigit = to[index] ?? ' ';
         const changed = oldDigit !== newDigit;

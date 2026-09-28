@@ -1,6 +1,6 @@
 # AGENTS.MD — VisitedPlaces Project Guide
 
-> **Version**: 2.4.2
+> **Version**: 2.4.3
 > **Last Updated**: 2026-09-28
 > **Status**: Active Development
 
@@ -260,7 +260,7 @@ We use [Semantic Versioning](https://semver.org/):
 
 ### Current Version
 
-`2.4.2` — Patch release keeping map status controls fixed while counts roll, centering country headings, and displaying flags at their native proportions.
+`2.4.3` — Patch release refining the drill-down sidebar header and keeping status counters centered as digit lengths change.
 
 ### Display
 

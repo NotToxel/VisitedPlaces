@@ -486,7 +486,7 @@ export const MapContainer: React.FC = () => {
             </button>
             <div className="map-drilldown-header__info">
               <FlagImage placeId={sidebarCountry} className="map-drilldown-header__flag" />
-              <span className="map-drilldown-header__name">{sidebarCountryName}</span>
+              <span className={`map-drilldown-header__name${(sidebarCountryName?.length ?? 0) > 26 ? ' map-drilldown-header__name--long' : ''}`}>{sidebarCountryName}</span>
             </div>
           </div>
         )}
