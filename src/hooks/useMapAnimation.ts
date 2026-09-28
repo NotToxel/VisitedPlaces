@@ -61,29 +61,29 @@ export function useMapAnimation(initialCenter: [number, number] = [0, 0], initia
     isAnimatingRef.current = true;
     const targetIsDrill = forceDrilldown !== undefined ? forceDrilldown : isDrilldown;
 
-    const step = () => {
+    const start = { ...liveRef.current };
+    const toMercatorY = (lat: number): number => Math.log(Math.tan(Math.PI / 4 + Math.max(-85, Math.min(85, lat)) * Math.PI / 360));
+    const fromMercatorY = (y: number): number => Math.atan(Math.sinh(y)) * 180 / Math.PI;
+    const startY = toMercatorY(start.cy);
+    const targetY = toMercatorY(targetCy);
+    const reduceMotion = typeof window !== 'undefined' && window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+    const duration = reduceMotion ? 0 : 520;
+    let startTime: number | null = null;
+
+    const step = (time: number) => {
+      if (startTime === null) startTime = time;
       const l = liveRef.current;
-      const prevCx = l.cx;
-      const prevCy = l.cy;
-      const prevZoom = l.zoom;
+      const progress = duration === 0 ? 1 : Math.min((time - startTime) / duration, 1);
+      const eased = 1 - Math.pow(1 - progress, 3);
+      l.zoom = start.zoom + (targetZoom - start.zoom) * eased;
 
-      const factor = 0.12; // smooth ease-out
-      l.cx += (targetCx - l.cx) * factor;
-      l.cy += (targetCy - l.cy) * factor;
-      l.zoom += (targetZoom - l.zoom) * factor;
-
-      // Check per-step movement — converge when movement drops to noise level
-      const stepCx = Math.abs(l.cx - prevCx);
-      const stepCy = Math.abs(l.cy - prevCy);
-      const stepZoom = Math.abs(l.zoom - prevZoom);
-      const converged = stepCx <= 0.001 && stepCy <= 0.001 && stepZoom <= 0.001;
-
-      if (converged) {
-        // Snap exactly to target before final setState
-        l.cx = targetCx;
-        l.cy = targetCy;
-        l.zoom = targetZoom;
-      }
+      // Keep the destination's screen position moving monotonically toward the
+      // center. Interpolating center and zoom separately made it first fly away
+      // from the target whenever the zoom ratio was large.
+      const remaining = (1 - eased) * start.zoom / l.zoom;
+      l.cx = targetCx - (targetCx - start.cx) * remaining;
+      l.cy = fromMercatorY(targetY - (targetY - startY) * remaining);
+      const converged = progress === 1;
 
       // ONE setState call per frame (after the convergence snap if applicable)
       if (targetIsDrill) {

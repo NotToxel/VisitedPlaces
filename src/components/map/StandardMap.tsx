@@ -1,4 +1,4 @@
-import React, { memo, useEffect, useRef, useCallback, useMemo, useState } from 'react';
+import React, { memo, useEffect, useLayoutEffect, useRef, useCallback, useMemo, useState } from 'react';
 import { ComposableMap, ZoomableGroup, Marker } from 'react-simple-maps';
 import { RefreshCw, Loader2 } from 'lucide-react';
 import { useStore } from '../../store/useStore';
@@ -15,8 +15,10 @@ import { useMapAnimation } from '../../hooks/useMapAnimation';
 import { useDrilldownGeography } from '../../hooks/useDrilldownGeography';
 import { DrilldownControls } from './DrilldownControls';
 import { MapGeographies } from './MapGeographies';
-import { fetchRawTopology } from '../../utils/topojsonCache';
+import { fetchRawTopology, fetchWorldFeatureCollection } from '../../utils/topojsonCache';
 import { getKosovoWorldFeature, getSomalilandWorldFeature, computeBoundingBox, getCountryGeoJSON, getPreloadedCountryDataSync, computeAutoScale } from '../../data/naturalEarthAdmin1';
+import type { BBox } from '../../data/naturalEarthAdmin1';
+import { getCountryFocusBBox } from '../../utils/countryFocus';
 
 interface StandardMapProps {
   activeCountry: string | null;
@@ -41,7 +43,8 @@ const StandardMapBase: React.FC<StandardMapProps> = ({
 }) => {
   const { places } = useStore();
   const worldTopoRef = useRef<unknown>(null);
-  const [isTransitioning, setIsTransitioning] = useState(false);
+  const [focusView, setFocusView] = useState<{ countryId: string; bbox: BBox } | null>(null);
+  const [entryZoom, setEntryZoom] = useState<{ countryId: string; zoom: number } | null>(null);
   const [preloadStatus, setPreloadStatus] = useState<{
     countryId: string;
     countryName: string;
@@ -53,6 +56,8 @@ const StandardMapBase: React.FC<StandardMapProps> = ({
   } = useMapAnimation([0, 0], 1, !!activeCountry);
 
   const { geoData, isLoading, countryBBox } = useDrilldownGeography(activeCountry, setActiveCountry);
+  const activeViewBBox = activeCountry && focusView?.countryId === activeCountry
+    ? focusView.bbox : countryBBox;
 
   // Pre-fetch and cache the world topology so we can compute centroids for search pan
   useEffect(() => {
@@ -254,21 +259,26 @@ const StandardMapBase: React.FC<StandardMapProps> = ({
     tryPanToCountry(worldTopoRef.current, highlightedCountry);
   }, [highlightedCountry, activeCountry, geoData, tryPanToCountry, tryPanToRegion, animateTo]);
 
+  const previousSearchRef = useRef({ highlightedCountry, activeCountry });
   useEffect(() => {
-    if (!highlightedCountry) {
-      if (activeCountry) {
-        // In drilldown, pan back to default centroid of active country if search is cleared
-        const config = drilldownRegistry[activeCountry];
-        if (config) {
-          animateTo(config.defaultView.center[0], config.defaultView.center[1], config.defaultView.zoom);
-        } else if (countryBBox) {
-          animateTo(countryBBox.centerLng, countryBBox.centerLat, 1);
-        }
+    const previous = previousSearchRef.current;
+    previousSearchRef.current = { highlightedCountry, activeCountry };
+
+    if (previous.activeCountry && !activeCountry) {
+      animateTo(0, 0, 1, false);
+    } else if (previous.activeCountry === activeCountry && previous.highlightedCountry && !highlightedCountry) {
+      // Only a cleared search resets the camera. Entering a drill-down already
+      // sets its final view; another animation here used to move it afterward.
+      const config = activeCountry ? drilldownRegistry[activeCountry] : null;
+      if (config) {
+        animateTo(config.defaultView.center[0], config.defaultView.center[1], config.defaultView.zoom);
+      } else if (activeViewBBox) {
+        animateTo(activeViewBBox.centerLng, activeViewBBox.centerLat, 1);
       } else {
         animateTo(0, 0, 1);
       }
     }
-  }, [highlightedCountry, activeCountry, countryBBox, animateTo]);
+  }, [highlightedCountry, activeCountry, activeViewBBox, animateTo]);
 
   const handleCountryClick = useCallback((countryId: string, event: React.MouseEvent, displayName?: string) => {
     if (!countryId) return;
@@ -303,13 +313,13 @@ const StandardMapBase: React.FC<StandardMapProps> = ({
         drilldownDefaultZoom: currentConfig.defaultView.zoom,
       };
     }
-    if (activeCountry && countryBBox) {
+    if (activeCountry && activeViewBBox) {
       // NE-based drill-down — auto-compute scale from bounding box.
       // Uses Mercator-aware computation (accounts for latitude stretch).
-      const autoScale = computeAutoScale(countryBBox);
+      const autoScale = computeAutoScale(activeViewBBox);
       
-      const centerLng = countryBBox.centerLng;
-      const centerLat = countryBBox.centerLat;
+      const centerLng = activeViewBBox.centerLng;
+      const centerLat = activeViewBBox.centerLat;
 
       return {
         projectionScale: autoScale,
@@ -327,16 +337,9 @@ const StandardMapBase: React.FC<StandardMapProps> = ({
       drilldownDefaultCenter: [0, 20] as [number, number],
       drilldownDefaultZoom: 1,
     };
-  }, [currentConfig, activeCountry, countryBBox]);
+  }, [currentConfig, activeCountry, activeViewBBox]);
 
-  const transitionParamsRef = useRef<{
-    countryId: string;
-    targetCenter: [number, number];
-    targetWorldZoom: number;
-    initialSubRegionZoom: number;
-  } | null>(null);
-
-  // ── Phase 1: Pending drilldown → preload data & zoom world map to exact bbox centroid ──
+  // Approach the same geographic center used by the drill-down projection.
   useEffect(() => {
     if (!pendingDrilldown || activeCountry) return;
     let isCancelled = false;
@@ -344,74 +347,47 @@ const StandardMapBase: React.FC<StandardMapProps> = ({
     async function runPhase1() {
       const countryId = pendingDrilldown!;
       const countryName = COUNTRIES.find((c) => c.id === countryId)?.name || countryId;
+      const config = drilldownRegistry[countryId];
 
       // Show preloading badge if data is not yet in sync memory cache
-      if (!getPreloadedCountryDataSync(countryId)) {
+      if (config || !getPreloadedCountryDataSync(countryId)) {
         setPreloadStatus({ countryId, countryName });
       }
 
-      // 1. Preload sub-region data and bounding box BEFORE panning finishes
-      let bbox = await computeBoundingBox(countryId);
-      if (!bbox && countryId === 'SGP') {
-        const config = drilldownRegistry['SGP'];
-        bbox = {
-          minLng: 103.6, maxLng: 104.0, minLat: 1.2, maxLat: 1.5,
-          centerLng: config.defaultView.center[0],
-          centerLat: config.defaultView.center[1]
-        };
+      // Preload the same geography that the drill-down will render.
+      const bbox = config ? null : await computeBoundingBox(countryId);
+      if (config) {
+        await fetchRawTopology(config.topoJsonUrl);
+      } else if (bbox) {
+        await getCountryGeoJSON(countryId);
       }
 
       if (isCancelled) return;
 
-      if (!bbox) {
+      if (!config && !bbox) {
         setPreloadStatus(null);
         onDrilldownReady?.(countryId);
         return;
       }
 
-      // Preload GeoJSON into sync memory cache
-      await getCountryGeoJSON(countryId);
-      if (isCancelled) return;
-
       setPreloadStatus(null);
 
-      // 2. Compute exact Mercator-aware target scale & zoom for world map
-      const autoScale = drilldownRegistry[countryId]?.scale || computeAutoScale(bbox);
-
-      const DEG2RAD = Math.PI / 180;
-      const mercatorY = (latDeg: number) => Math.log(Math.tan(Math.PI / 4 + (latDeg * DEG2RAD) / 2));
-      const mercatorHeight = Math.abs(mercatorY(bbox.maxLat) - mercatorY(bbox.minLat));
-      const mercatorWidth = (bbox.maxLng - bbox.minLng) * DEG2RAD;
-      const fitWorldScale = Math.min(800 / mercatorWidth, 500 / mercatorHeight) * 0.85;
-
-      const isMobile = typeof window !== 'undefined' && window.innerWidth <= 768;
-      const baseWorldZoom = Math.min(Math.max(fitWorldScale / 147, 2.0), 12.0);
-      const targetWorldZoom = isMobile ? Math.min(baseWorldZoom * 1.35, 14) : baseWorldZoom;
-
-      let targetLat = bbox.centerLat;
-      if (isMobile) {
-        targetLat = bbox.centerLat - (10 / targetWorldZoom);
-      }
-      const targetCenter: [number, number] = [bbox.centerLng, targetLat];
-      const initialSubRegionZoom = (147 * targetWorldZoom) / autoScale;
-
-      transitionParamsRef.current = {
-        countryId,
-        targetCenter,
-        targetWorldZoom,
-        initialSubRegionZoom,
-      };
+      // The landing zoom uses the scale of the view that will render next.
+      const view = bbox
+        ? getCountryFocusBBox(countryId, await fetchWorldFeatureCollection(), bbox)
+        : null;
+      if (isCancelled) return;
+      if (view) setFocusView({ countryId, bbox: view });
+      const autoScale = config?.scale || computeAutoScale(view!);
+      const targetWorldZoom = Math.min(Math.max(autoScale / 147, 1), 12);
+      const targetCenter: [number, number] = config?.defaultView.center || [view!.centerLng, view!.centerLat];
+      setEntryZoom({ countryId, zoom: (147 * targetWorldZoom) / autoScale });
 
       // 3. Pan world map to targetCenter at targetWorldZoom
       animateTo(targetCenter[0], targetCenter[1], targetWorldZoom, false, () => {
         if (isCancelled) return;
-        setIsTransitioning(true);
-        // Wait 350ms for opacity fade-out to complete before swapping activeCountry
-        setTimeout(() => {
-          if (!isCancelled) {
-            onDrilldownReady?.(countryId);
-          }
-        }, 350);
+        resetSubRegionView(targetCenter, (147 * targetWorldZoom) / autoScale);
+        onDrilldownReady?.(countryId);
       });
     }
 
@@ -421,30 +397,24 @@ const StandardMapBase: React.FC<StandardMapProps> = ({
       isCancelled = true;
       setPreloadStatus(null);
     };
-  }, [pendingDrilldown, activeCountry, animateTo, onDrilldownReady]);
+  }, [pendingDrilldown, activeCountry, animateTo, resetSubRegionView, onDrilldownReady]);
 
-  // ── Phase 2: Entering drilldown → mount at 1:1 matching scale/position, fade in after SVG settle ──
-  useEffect(() => {
-    if (activeCountry && drilldownDefaultCenter) {
-      const params = transitionParamsRef.current;
-      const initialZoom = (params && params.countryId === activeCountry) ? params.initialSubRegionZoom : 0.5;
-      const startCenter = (params && params.countryId === activeCountry) ? params.targetCenter : drilldownDefaultCenter;
-
-      // Snap live position immediately to starting position while map is hidden (opacity: 0)
-      resetSubRegionView(startCenter, initialZoom);
-
-      // Wait 450ms for React/browser to mount, layout, and paint all SVG sub-region paths, then fade in & animate
-      const timer = setTimeout(() => {
-        setIsTransitioning(false);
-        animateTo(drilldownDefaultCenter[0], drilldownDefaultCenter[1], drilldownDefaultZoom, true);
-      }, 450);
-
-      return () => clearTimeout(timer);
+  // Place the regional geography at the world zoom's landing view before paint.
+  useLayoutEffect(() => {
+    if (activeCountry && !isLoading && (currentConfig || activeViewBBox)) {
+      const initialZoom = entryZoom?.countryId === activeCountry ? entryZoom.zoom : drilldownDefaultZoom;
+      resetSubRegionView(drilldownDefaultCenter, initialZoom);
+      if (Math.abs(initialZoom - drilldownDefaultZoom) > 0.001) {
+        const frame = requestAnimationFrame(() => {
+          animateTo(drilldownDefaultCenter[0], drilldownDefaultCenter[1], drilldownDefaultZoom, true);
+        });
+        return () => cancelAnimationFrame(frame);
+      }
     }
-  }, [activeCountry, drilldownDefaultCenter, drilldownDefaultZoom, animateTo, resetSubRegionView]);
+  }, [activeCountry, currentConfig, activeViewBBox, entryZoom, isLoading, drilldownDefaultCenter, drilldownDefaultZoom, resetSubRegionView, animateTo]);
 
   return (
-    <div className={`standard-map-wrapper ${activeCountry ? 'standard-map-wrapper--drilldown' : ''} ${isTransitioning ? 'standard-map-wrapper--transitioning' : ''}`} style={{ width: '100%', height: '100%', position: 'relative', display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center' }}>
+    <div className={`standard-map-wrapper ${activeCountry ? 'standard-map-wrapper--drilldown' : ''}`} style={{ width: '100%', height: '100%', position: 'relative', display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center' }}>
       {activeCountry ? (
         <DrilldownControls 
           config={currentConfig}
@@ -461,6 +431,7 @@ const StandardMapBase: React.FC<StandardMapProps> = ({
           }}
           className="map-reset-zoom"
           title="Reset Map Zoom"
+          aria-label="Reset map zoom"
         >
           <RefreshCw size={12} />
           <span>Reset Zoom</span>

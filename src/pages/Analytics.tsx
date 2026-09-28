@@ -331,15 +331,14 @@ const Analytics: React.FC = () => {
   }, [continentCounts]);
 
   return (
-    <div className="p-3 md:p-6 h-full flex flex-col gap-4 overflow-hidden bg-transparent max-w-6xl mx-auto w-full">
+    <div className="survey-page survey-analytics p-3 md:p-6 h-full flex flex-col gap-4 overflow-hidden bg-transparent max-w-6xl mx-auto w-full">
       {/* Header */}
-      <div className="glass-panel border border-base-300/50 p-4 rounded-2xl shrink-0 flex items-center justify-between select-none">
+      <div className="glass-panel border border-base-300/50 p-4 rounded-2xl shrink-0 flex items-center justify-between select-none survey-page__header">
         <div className="flex items-center gap-2">
-          <BarChart3 size={18} className="text-primary animate-pulse" />
-          <h2 className="font-extrabold text-sm text-base-content tracking-wide uppercase">Analytics Dashboard</h2>
+          <h1>Your coverage</h1>
         </div>
-        <span className="text-[10px] bg-emerald-500/10 border border-emerald-500/25 text-emerald-400 font-bold px-2.5 py-0.5 rounded-full flex items-center gap-1">
-          <Globe size={11} /> Global View
+        <span className="survey-page__context flex items-center gap-1">
+          <Globe size={15} /> World view
         </span>
       </div>
 

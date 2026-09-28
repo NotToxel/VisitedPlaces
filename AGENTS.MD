@@ -1,7 +1,7 @@
 # AGENTS.MD — VisitedPlaces Project Guide
 
-> **Version**: 2.3.6
-> **Last Updated**: 2026-09-23
+> **Version**: 2.4.0
+> **Last Updated**: 2026-09-28
 > **Status**: Active Development
 
 ---
@@ -25,7 +25,7 @@ The app serves three complementary purposes, prioritized in this order:
 | **Privacy by Architecture** | Zero server, zero accounts. All data lives in `localStorage`. Data never leaves the browser unless the user explicitly exports it. |
 | **Offline-First** | Core functionality (country-level tracking, analytics, sharing) works without network access. Sub-region drill-downs may require network for non-bundled countries. |
 | **OSS Showcase** | Code quality, architecture, documentation, and testing matter as much as the product itself. Every PR should leave the codebase better than it found it. |
-| **Visual Excellence** | The UI should feel premium. Glassmorphism, smooth animations, curated color palettes, and modern typography are non-negotiable. |
+| **Visual Excellence** | The UI uses a survey desk language: cartographic greens, warm paper in light mode, deep ink in dark mode, readable typography, and precise controls. Both themes and mobile layouts must receive equal care. |
 
 ---
 
@@ -49,6 +49,8 @@ The app serves three complementary purposes, prioritized in this order:
 ```
 src/
 ├── components/
+│   ├── compare/         # Sub-region comparison drawer
+│   ├── list/            # Directory detail panel
 │   ├── layout/          # AppLayout, Navbar, SettingsModal
 │   └── map/             # StandardMap, HexagonMap, MapContainer, MapGeographies,
 │                        #   CompareMap, DrilldownControls, TerritoryListPanel
@@ -70,13 +72,17 @@ src/
 │   └── useStore.ts      # Zustand store: places, theme, actions
 ├── utils/
 │   ├── hexGridData.ts   # Pre-computed hex grid coordinates
+│   ├── compareAnalysis.ts # Pure comparison calculations
+│   ├── compareStorage.ts # Saved comparison groups and validation
 │   ├── mapUtils.ts      # Color resolution, status-to-color mapping
 │   ├── serialization.ts # Base64 encode/decode for share codes
+│   ├── subRegionSearchIndex.ts # Lazy, batched directory search index
 │   └── topojsonCache.ts # In-memory cache for fetched TopoJSON data
 ├── globals.d.ts         # TypeScript declarations for Vite injected globals
 ├── App.tsx              # Root component with routing
 ├── App.css              # App-level styles
 ├── index.css            # Design system: variables, components, responsive
+├── survey.css           # Current survey desk component styling
 └── main.tsx             # Entry point
 ```
 
@@ -127,19 +133,21 @@ This is intentional: visiting even one region of a country means you've "visited
 
 ### Design System
 
-All styling flows from CSS custom properties defined in `index.css`. **Never use inline styles** for colors, spacing, or typography — always reference the design tokens.
+Styling flows from CSS custom properties in `index.css` and the current survey desk overrides in `src/survey.css`. **Never use inline styles** for colors, spacing, or typography — always reference the design tokens.
 
 #### Color Tokens (Dark Mode)
 
 | Token | Value | Usage |
 |---|---|---|
-| `--accent-visited` | `#9ece6a` | Visited status everywhere |
-| `--accent-wishlist` | `#bb9af7` | Wishlist status |
-| `--accent-avoid` | `#ef4444` | Avoid status |
-| `--accent-revisit` | `#ff9e64` | Revisit status |
-| `--accent-primary` | `#7aa2f7` | Interactive elements, links |
-| `--accent-highlight` | `#fbbf24` | Search highlights |
-| `--glass-bg` | `rgba(26, 27, 38, 0.45)` | Glass panel backgrounds |
+| `--accent-visited` | `#a6c49a` | Visited status everywhere |
+| `--accent-wishlist` | `#c3abe5` | Wishlist status |
+| `--accent-avoid` | `#ee9189` | Avoid status |
+| `--accent-revisit` | `#e2ba74` | Revisit status |
+| `--accent-primary` | `#bed4bb` | Interactive elements, links |
+| `--accent-highlight` | `#e2ba74` | Search highlights |
+| `--glass-bg` | `#20333a` | Solid dark surface |
+
+The current survey desk tokens and responsive overrides live in `src/survey.css`, imported after `index.css`. Preserve the same semantic status mapping in both themes; new UI should use the survey tokens rather than adding blur or decorative glass layers.
 
 #### CSS Class Naming
 
@@ -252,7 +260,7 @@ We use [Semantic Versioning](https://semver.org/):
 
 ### Current Version
 
-`2.3.6` — Patch release bundling the world map locally, deferring the large Natural Earth subdivision dataset until needed, reducing map redraws during zoom, and loading regional flags without stale images or unbounded background requests.
+`2.4.0` — Minor release adding the survey desk redesign, richer place and region search, expanded comparison and directory views, more consistent drill-down framing, and coordinated map transitions.
 
 ### Display
 

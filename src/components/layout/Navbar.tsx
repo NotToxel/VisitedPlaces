@@ -3,101 +3,64 @@ import { NavLink } from 'react-router-dom';
 import { Map, List, BarChart3, Users, Settings, Info } from 'lucide-react';
 import { SettingsModal } from './SettingsModal';
 
+const primaryLinks = [
+  { to: '/', label: 'Map', icon: Map, end: true },
+  { to: '/list', label: 'Places', icon: List },
+  { to: '/analytics', label: 'Insights', icon: BarChart3 },
+  { to: '/compare', label: 'Compare', icon: Users },
+];
+
 export const Navbar: React.FC = () => {
   const [isSettingsOpen, setIsSettingsOpen] = React.useState(false);
 
-  const getLinkClass = (isActive: boolean) => 
-    `px-3 sm:px-4 py-2 rounded-lg flex items-center gap-1.5 sm:gap-2 font-bold text-sm transition-all duration-200 select-none ${
-      isActive 
-        ? 'bg-primary text-white shadow-[0_2px_10px_rgba(122,162,247,0.25)] hover:bg-primary/95 scale-[1.02]' 
-        : 'text-base-content/80 hover:text-primary hover:bg-base-300/20'
-    }`;
-
   return (
-    <nav className="w-full bg-base-200/45 backdrop-blur-md border-b border-base-300/35 py-3 sm:py-3.5 z-50 shadow-sm shrink-0 select-none">
-      <div className="max-w-5xl mx-auto px-6 md:px-8 flex flex-col sm:flex-row items-center justify-center gap-4">
-        
-        {/* Mobile-only Brand Logo (stacked, centered) */}
-        <div className="flex sm:hidden items-center justify-center w-full">
-          <NavLink to="/" className="flex items-center gap-2 hover:opacity-85 transition-opacity">
-            <Map className="w-5 h-5 text-primary" />
-            <span className="font-extrabold text-md tracking-tight">
-              <span className="text-base-content">Visited</span>
-              <span className="text-primary">Places</span>
-            </span>
-          </NavLink>
-        </div>
+    <>
+      <header className="survey-header">
+        <NavLink to="/" className="survey-brand" aria-label="VisitedPlaces home">
+          <span className="survey-brand__mark"><Map size={22} strokeWidth={1.8} /></span>
+          <span>VisitedPlaces</span>
+        </NavLink>
 
-        {/* Navigation Wrapper (centered in the page layout) */}
-        <div className="relative flex flex-wrap items-center justify-center gap-2 md:gap-3">
-          
-          {/* Desktop-only Brand Logo (positioned just off-center to the left, relative to tabs) */}
-          <div className="hidden sm:flex sm:absolute sm:right-full sm:mr-8 md:mr-12 lg:mr-16 items-center shrink-0">
-            <NavLink to="/" className="flex items-center gap-2 hover:opacity-85 transition-opacity">
-              <Map className="w-5 h-5 text-primary" />
-              <span className="font-extrabold text-md tracking-tight">
-                <span className="text-base-content">Visited</span>
-                <span className="text-primary">Places</span>
-              </span>
+        <nav className="survey-navigation" aria-label="Main navigation">
+          {primaryLinks.map(({ to, label, icon: Icon, end }) => (
+            <NavLink
+              key={to}
+              to={to}
+              end={end}
+              className={({ isActive }) => `survey-navigation__link${isActive ? ' survey-navigation__link--active' : ''}`}
+            >
+              <Icon size={17} strokeWidth={1.8} aria-hidden="true" />
+              <span>{label}</span>
             </NavLink>
-          </div>
+          ))}
+        </nav>
 
-          {/* Navigation Tabs */}
-          <NavLink
-            to="/"
-            className={({ isActive }) => getLinkClass(isActive)}
-            title="Map"
-          >
-            <Map size={14} />
-            <span className="hidden sm:inline">Map</span>
+        <div className="survey-header__utility">
+          <span className="survey-header__privacy">Offline first · Your data stays here</span>
+          <NavLink to="/about" className={({ isActive }) => `survey-header__icon${isActive ? ' survey-header__icon--active' : ''}`} title="About" aria-label="About">
+            <Info size={19} strokeWidth={1.8} />
           </NavLink>
-          <NavLink
-            to="/list"
-            className={({ isActive }) => getLinkClass(isActive)}
-            title="List"
-          >
-            <List size={14} />
-            <span className="hidden sm:inline">List</span>
-          </NavLink>
-          <NavLink
-            to="/analytics"
-            className={({ isActive }) => getLinkClass(isActive)}
-            title="Analytics"
-          >
-            <BarChart3 size={14} />
-            <span className="hidden sm:inline">Analytics</span>
-          </NavLink>
-          <NavLink
-            to="/compare"
-            className={({ isActive }) => getLinkClass(isActive)}
-            title="Compare"
-          >
-            <Users size={14} />
-            <span className="hidden sm:inline">Compare</span>
-          </NavLink>
-          <NavLink
-            to="/about"
-            className={({ isActive }) => getLinkClass(isActive)}
-            title="About"
-          >
-            <Info size={14} />
-            <span className="hidden sm:inline">About</span>
-          </NavLink>
-          <button
-            onClick={() => setIsSettingsOpen(true)}
-            className="px-3 sm:px-4 py-2 rounded-lg flex items-center gap-1.5 sm:gap-2 font-bold text-sm text-base-content/80 hover:text-primary hover:bg-base-300/20 transition-all duration-200"
-            title="Settings"
-          >
-            <Settings size={14} />
-            <span className="hidden sm:inline">Settings</span>
+          <button type="button" onClick={() => setIsSettingsOpen(true)} className="survey-header__icon" title="Settings" aria-label="Settings">
+            <Settings size={19} strokeWidth={1.8} />
           </button>
         </div>
-      </div>
+      </header>
 
-      {isSettingsOpen && (
-        <SettingsModal onClose={() => setIsSettingsOpen(false)} />
-      )}
-    </nav>
+      <nav className="survey-mobile-nav" aria-label="Mobile navigation">
+        {primaryLinks.map(({ to, label, icon: Icon, end }) => (
+          <NavLink
+            key={to}
+            to={to}
+            end={end}
+            className={({ isActive }) => `survey-mobile-nav__link${isActive ? ' survey-mobile-nav__link--active' : ''}`}
+          >
+            <Icon size={21} strokeWidth={1.8} aria-hidden="true" />
+            <span>{label}</span>
+          </NavLink>
+        ))}
+      </nav>
+
+      {isSettingsOpen && <SettingsModal onClose={() => setIsSettingsOpen(false)} />}
+    </>
   );
 };
-

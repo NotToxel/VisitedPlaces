@@ -205,6 +205,8 @@ async function fetchNESubRegions(countryA3: string): Promise<TopoRegion[]> {
 const rawTopologyCache: Record<string, unknown> = {};
 const pendingTopologyRequests: Record<string, Promise<unknown>> = {};
 
+export const getCachedRawTopologySync = (url: string): unknown => rawTopologyCache[url] || null;
+
 export const fetchRawTopology = async (url: string): Promise<unknown> => {
   if (rawTopologyCache[url]) return rawTopologyCache[url];
   if (pendingTopologyRequests[url] !== undefined) return pendingTopologyRequests[url];
@@ -326,4 +328,3 @@ export const fetchWorldFeatureCollection = async (): Promise<object | null> => {
 
   return pendingWorldFcPromise;
 };
-

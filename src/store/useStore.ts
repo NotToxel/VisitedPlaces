@@ -35,7 +35,7 @@ export const useStore = create<AppState>()(
   persist(
     (set) => ({
       places: {},
-      theme: 'dark',
+      theme: 'light',
 
       toggleTheme: () => set((state) => ({ theme: state.theme === 'dark' ? 'light' : 'dark' })),
       

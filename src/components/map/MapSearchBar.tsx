@@ -1,11 +1,15 @@
 import React, { useState, useMemo, useRef, useEffect } from 'react';
 import { Search, X, Hexagon, Globe, Zap } from 'lucide-react';
 import { COUNTRIES } from '../../data/countries';
-import type { Country } from '../../data/countries';
-import { matchCountry } from '../../utils/searchUtils';
+import { searchMapPlaces } from '../../utils/placeSearch';
+import type { SearchResult } from '../../utils/placeSearch';
 import type { PlaceStatus } from '../../store/useStore';
 import type { TopoRegion } from '../../utils/topojsonCache';
 import { FlagImage } from '../common/FlagImage';
+import { getPlaceBucketKey, loadWorldPlaceBucket } from '../../utils/worldPlaceIndex';
+import type { WorldPlace } from '../../utils/worldPlaceIndex';
+import { loadWorldRegionIndex } from '../../utils/worldRegionIndex';
+import type { WorldRegion } from '../../utils/worldRegionIndex';
 
 interface MapSearchBarProps {
   mapStyle: 'STANDARD' | 'HEXAGON';
@@ -13,12 +17,14 @@ interface MapSearchBarProps {
   showHexLabels: boolean;
   setShowHexLabels: (show: boolean) => void;
   onCountrySelect: (countryId: string) => void;
+  onResultSelect: (result: SearchResult) => void;
   onSearchClear: () => void;
   expressMode?: boolean;
   setExpressMode?: (active: boolean) => void;
   expressStatus?: PlaceStatus;
   activeCountry?: string | null;
   subRegions?: TopoRegion[];
+  subRegionsReady?: boolean;
   className?: string;
   isCardGrid?: boolean;
   onSearchChange?: (val: string) => void;
@@ -30,12 +36,14 @@ export const MapSearchBar: React.FC<MapSearchBarProps> = ({
   showHexLabels,
   setShowHexLabels,
   onCountrySelect,
+  onResultSelect,
   onSearchClear,
   expressMode = false,
   setExpressMode,
   expressStatus = 'VISITED',
   activeCountry = null,
   subRegions = [],
+  subRegionsReady = true,
   className = '',
   isCardGrid = false,
   onSearchChange,
@@ -43,7 +51,28 @@ export const MapSearchBar: React.FC<MapSearchBarProps> = ({
   const [searchVal, setSearchVal] = useState('');
   const [isDropdownOpen, setIsDropdownOpen] = useState(false);
   const [kbIndex, setKbIndex] = useState(-1);
+  const [loadedBucket, setLoadedBucket] = useState<{ key: string; places: WorldPlace[]; error: boolean } | null>(null);
+  const [worldRegions, setWorldRegions] = useState<WorldRegion[]>([]);
   const containerRef = useRef<HTMLDivElement>(null);
+  const bucketKey = useMemo(() => getPlaceBucketKey(searchVal), [searchVal]);
+
+  useEffect(() => {
+    if (!bucketKey) return;
+    let active = true;
+    loadWorldPlaceBucket(bucketKey)
+      .then((places) => { if (active) setLoadedBucket({ key: bucketKey, places, error: false }); })
+      .catch(() => { if (active) setLoadedBucket({ key: bucketKey, places: [], error: true }); });
+    return () => { active = false; };
+  }, [bucketKey]);
+
+  useEffect(() => {
+    if (!bucketKey || activeCountry) return;
+    let active = true;
+    loadWorldRegionIndex().then((regions) => {
+      if (active) setWorldRegions(regions);
+    }).catch(() => {});
+    return () => { active = false; };
+  }, [bucketKey, activeCountry]);
 
   // Close dropdown on outside click
   useEffect(() => {
@@ -61,28 +90,24 @@ export const MapSearchBar: React.FC<MapSearchBarProps> = ({
   useEffect(() => {
     Promise.resolve().then(() => {
       setSearchVal('');
-      onSearchClear();
+      setIsDropdownOpen(false);
+      setKbIndex(-1);
     });
-  }, [activeCountry, onSearchClear]);
+  }, [activeCountry]);
 
-  const filteredSuggestions = useMemo(() => {
-    const query = searchVal.trim();
-    if (!query) return [];
-    if (activeCountry) {
-      const lowerQuery = query.toLowerCase();
-      return subRegions.filter(
-        (sr) => sr.name.toLowerCase().includes(lowerQuery) || sr.id.toLowerCase().includes(lowerQuery)
-      );
-    }
-    return COUNTRIES.filter(
-      (c) => matchCountry(c.name, c.id, c.cca2, query)
-    );
-  }, [searchVal, activeCountry, subRegions]);
+  const filteredSuggestions = useMemo(
+    () => searchMapPlaces(searchVal, activeCountry, subRegions,
+      loadedBucket?.key === bucketKey ? loadedBucket.places : [], worldRegions),
+    [searchVal, activeCountry, subRegions, loadedBucket, bucketKey, worldRegions]
+  );
+  const placeIndexLoading = Boolean(bucketKey && loadedBucket?.key !== bucketKey);
+  const placeIndexError = Boolean(bucketKey && loadedBucket?.key === bucketKey && loadedBucket.error);
 
-  const selectCountry = (country: Country | TopoRegion) => {
-    setSearchVal(country.name);
-    onCountrySelect(country.id);
-    onSearchChange?.(country.name);
+  const selectResult = (result: SearchResult) => {
+    setSearchVal(result.name);
+    onSearchChange?.(result.name);
+    if (result.kind === 'country') onCountrySelect(result.id);
+    onResultSelect(result);
     setIsDropdownOpen(false);
     setKbIndex(-1);
     (document.activeElement as HTMLElement)?.blur();
@@ -113,9 +138,9 @@ export const MapSearchBar: React.FC<MapSearchBarProps> = ({
     } else if (e.key === 'Enter') {
       e.preventDefault();
       if (kbIndex >= 0 && kbIndex < filteredSuggestions.length) {
-        selectCountry(filteredSuggestions[kbIndex]);
+        selectResult(filteredSuggestions[kbIndex]);
       } else if (filteredSuggestions.length > 0) {
-        selectCountry(filteredSuggestions[0]);
+        selectResult(filteredSuggestions[0]);
       }
     } else if (e.key === 'Escape') {
       setIsDropdownOpen(false);
@@ -131,25 +156,21 @@ export const MapSearchBar: React.FC<MapSearchBarProps> = ({
         <input
           type="text"
           className="map-search-bar__input"
-          placeholder={activeCountry ? "Find region..." : "Find country..."}
+          placeholder={activeCountry ? "Find a region or place" : "Find a country or place"}
+          aria-label={activeCountry ? "Find a region or place" : "Find a country or place"}
+          aria-expanded={isDropdownOpen && Boolean(searchVal.trim())}
+          aria-controls="map-search-suggestions"
+          autoComplete="off"
           value={searchVal}
           onChange={(e) => {
             const val = e.target.value;
             setSearchVal(val);
             onSearchChange?.(val);
-            if (isCardGrid) return;
             setIsDropdownOpen(true);
             setKbIndex(-1);
-            if (activeCountry) {
-              const found = subRegions.find((sr) => sr.name.toLowerCase() === val.toLowerCase());
-              if (found) onCountrySelect(found.id);
-            } else {
-              const found = COUNTRIES.find((c) => c.name.toLowerCase() === val.toLowerCase());
-              if (found) onCountrySelect(found.id);
-            }
           }}
           onFocus={() => {
-            if (!isCardGrid) setIsDropdownOpen(true);
+            setIsDropdownOpen(true);
           }}
           onKeyDown={handleKeyDown}
         />
@@ -176,15 +197,21 @@ export const MapSearchBar: React.FC<MapSearchBarProps> = ({
               className={`map-search-bar__style-btn ${mapStyle === 'STANDARD' ? 'map-search-bar__style-btn--active' : ''}`}
               onClick={() => setMapStyle('STANDARD')}
               title="Standard Map"
+              aria-label="World map"
+              aria-pressed={mapStyle === 'STANDARD'}
             >
               <Globe size={14} />
+              <span className="map-search-bar__style-label">World</span>
             </button>
             <button
               className={`map-search-bar__style-btn ${mapStyle === 'HEXAGON' ? 'map-search-bar__style-btn--active' : ''}`}
               onClick={() => setMapStyle('HEXAGON')}
               title="Hexagon Map"
+              aria-label="Hexagon map"
+              aria-pressed={mapStyle === 'HEXAGON'}
             >
               <Hexagon size={14} />
+              <span className="map-search-bar__style-label">Hex</span>
             </button>
           </>
         )}
@@ -192,17 +219,20 @@ export const MapSearchBar: React.FC<MapSearchBarProps> = ({
         {/* Express Mode Toggle */}
         {!isCardGrid && (
           <button
-            className={`map-search-bar__style-btn ${expressMode ? 'map-search-bar__style-btn--active text-amber-500 border-amber-500/20 bg-amber-500/5' : ''}`}
+            className={`map-search-bar__style-btn map-search-bar__express-btn${expressMode ? ' map-search-bar__style-btn--active map-search-bar__express-btn--active' : ''}`}
             onClick={() => setExpressMode?.(!expressMode)}
             title={expressMode ? `Disable Express Mode (${expressStatus.charAt(0) + expressStatus.slice(1).toLowerCase()})` : "Enable Express Mode"}
+            aria-label={expressMode ? 'Disable express marking' : 'Enable express marking'}
+            aria-pressed={expressMode}
           >
-            <Zap size={13.5} fill={expressMode ? "currentColor" : "none"} className={expressMode ? "text-amber-500 animate-pulse" : ""} />
+            <Zap size={14} fill={expressMode ? 'currentColor' : 'none'} aria-hidden="true" />
           </button>
         )}
         {!activeCountry && mapStyle === 'HEXAGON' && (
           <label className="map-search-bar__hex-label-toggle" title="Show country labels on hexagons">
             <input
               type="checkbox"
+              className="survey-checkbox"
               checked={showHexLabels}
               onChange={(e) => setShowHexLabels(e.target.checked)}
             />
@@ -212,26 +242,36 @@ export const MapSearchBar: React.FC<MapSearchBarProps> = ({
       </div>
 
       {/* Autocomplete Dropdown */}
-      {isDropdownOpen && filteredSuggestions.length > 0 && !isCardGrid && (
-        <ul className="map-search-bar__dropdown">
+      {isDropdownOpen && searchVal.trim() && (
+        <ul id="map-search-suggestions" className="map-search-bar__dropdown" aria-label="Search suggestions">
           {filteredSuggestions.map((item, idx) => {
             const isHighlighted = idx === kbIndex;
             return (
               <li
                 key={item.id}
                 className={`map-search-bar__dropdown-item ${isHighlighted ? 'map-search-bar__dropdown-item--highlighted' : ''}`}
-                onClick={() => selectCountry(item)}
-                onMouseEnter={() => setKbIndex(idx)}
               >
-                <FlagImage
-                  placeId={item.id}
-                  className="map-search-bar__dropdown-flag object-cover rounded-sm"
-                />
-                <span className="map-search-bar__dropdown-name">{item.name}</span>
-                {!activeCountry && <span className="map-search-bar__dropdown-code">{item.id}</span>}
+                <button type="button" className="map-search-bar__dropdown-button"
+                  onClick={() => selectResult(item)} onMouseEnter={() => setKbIndex(idx)}>
+                  <FlagImage
+                  placeId={item.kind === 'country' ? item.id : item.countryId}
+                    className="map-search-bar__dropdown-flag object-cover rounded-sm"
+                  />
+                  <span className="map-search-bar__dropdown-name">
+                    {item.name}
+                    {item.kind === 'place' && <small className="map-search-bar__dropdown-detail">{item.regionName} · {COUNTRIES.find((country) => country.id === item.countryId)?.name}</small>}
+                    {item.kind === 'locality' && <small className="map-search-bar__dropdown-detail">{item.areaName ? `${item.areaName} · ` : ''}{COUNTRIES.find((country) => country.id === item.countryId)?.name}</small>}
+                    {item.kind === 'region' && item.matchedPlace && <small className="map-search-bar__dropdown-detail">Place match: {item.matchedPlace}</small>}
+                    {item.kind === 'region' && !activeCountry && <small className="map-search-bar__dropdown-detail">Region · {COUNTRIES.find((country) => country.id === item.countryId)?.name}</small>}
+                  </span>
+                  {item.kind === 'country' && <span className="map-search-bar__dropdown-code">{item.id}</span>}
+                </button>
               </li>
             );
           })}
+          {filteredSuggestions.length === 0 && (
+            <li className="map-search-bar__dropdown-empty">{placeIndexLoading || (activeCountry && !subRegionsReady) ? 'Searching places…' : placeIndexError ? 'Place search unavailable. Try again when connected.' : activeCountry && subRegions.length === 0 ? 'Regions unavailable. Try again when connected.' : 'No matching places or regions.'}</li>
+          )}
         </ul>
       )}
     </div>

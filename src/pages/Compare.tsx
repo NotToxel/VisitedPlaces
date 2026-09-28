@@ -1,13 +1,16 @@
 import React, { useState, useMemo, useEffect, useRef, useCallback } from 'react';
-import { useStore, sanitizePlaces } from '../store/useStore';
-import type { UserPlacesMap, PlaceStatus } from '../store/useStore';
+import { useStore } from '../store/useStore';
 import { COUNTRIES, NUMERIC_TO_A3 } from '../data/countries';
 import { deserializePlaces, serializePlaces } from '../utils/serialization';
 import { CompareMap } from '../components/map/CompareMap';
+import { CompareSubRegionsDrawer } from '../components/compare/CompareSubRegionsDrawer';
+import { computeMergedData, computeCompatibilityScore, computeTopWantedUnvisited, computeWantedButVisited } from '../utils/compareAnalysis';
+import type { MapCompareResult } from '../utils/compareAnalysis';
+import { loadCompareGroups, loadActiveGroupId, saveCompareGroups, saveActiveGroupId } from '../utils/compareStorage';
+import type { CompareGroup } from '../utils/compareStorage';
 import { MICROSTATES } from '../data/mapData';
 import { getAllTerritories } from '../data/territoriesRegistry';
-import { fetchSubRegions, hasDrilldownSupport } from '../utils/topojsonCache';
-import type { TopoRegion } from '../utils/topojsonCache';
+import { hasDrilldownSupport } from '../utils/topojsonCache';
 import {
   Plus,
   Trash2,
@@ -30,24 +33,6 @@ import {
   AlertCircle
 } from 'lucide-react';
 
-export interface MapCompareResult {
-  type: 'EVERYONE_VISITED' | 'MOST_VISITED' | 'ONLY_ME_VISITED' | 'THEY_VISITED' | 'EVERYONE_WISHLIST' | 'MIXED_WISHLIST' | 'EVERYONE_AVOID' | 'EVERYONE_REVISIT' | 'MIXED_REVISIT' | 'NONE';
-  label: string;
-  count: number;
-  totalUsers: number;
-}
-
-interface FriendData {
-  id: string;
-  name: string;
-  places: UserPlacesMap;
-}
-
-interface CompareGroup {
-  id: string;
-  name: string;
-  friends: FriendData[];
-}
 
 const Compare: React.FC = () => {
   const { places: myPlaces } = useStore();
@@ -77,61 +62,21 @@ const Compare: React.FC = () => {
     }, 5000);
   }, []);
 
-  // Load groups from localStorage, or initialize with an empty list
-  const [groups, setGroups] = useState<CompareGroup[]>(() => {
-    try {
-      const saved = localStorage.getItem('visited-places-compare-groups');
-      if (saved) {
-        const parsed = JSON.parse(saved) as CompareGroup[];
-        if (Array.isArray(parsed)) {
-          // Filter out legacy empty default groups to prevent showing them by default
-          const filtered = parsed.filter(g => g.id !== 'default' || g.friends.length > 0);
-          // Migrate places of each friend in each group to clean legacy codes
-          return filtered.map(g => ({
-            ...g,
-            friends: g.friends.map(f => ({
-              ...f,
-              places: sanitizePlaces(f.places)
-            }))
-          }));
-        }
-      }
-    } catch (e) {
-      console.warn("Could not load compare groups", e);
-    }
-    return [];
-  });
+  const [groups, setGroups] = useState<CompareGroup[]>(loadCompareGroups);
+  const [activeGroupId, setActiveGroupId] = useState<string>(() => loadActiveGroupId(groups));
 
-  const [activeGroupId, setActiveGroupId] = useState<string>(() => {
-    try {
-      const saved = localStorage.getItem('visited-places-active-group-id');
-      if (saved) return saved;
-    } catch {
-      // Ignore
-    }
-    return '';
-  });
-
-  // Save to localStorage when groups/activeGroup change
   useEffect(() => {
-    localStorage.setItem('visited-places-compare-groups', JSON.stringify(groups));
+    saveCompareGroups(groups);
   }, [groups]);
 
   useEffect(() => {
-    localStorage.setItem('visited-places-active-group-id', activeGroupId);
+    saveActiveGroupId(activeGroupId);
   }, [activeGroupId]);
 
   const activeGroup = useMemo(() => {
     if (groups.length === 0) return null;
     return groups.find(g => g.id === activeGroupId) || groups[0];
   }, [groups, activeGroupId]);
-
-  // Sync activeGroupId if it points to nothing or is empty
-  useEffect(() => {
-    if (activeGroup && activeGroup.id !== activeGroupId) {
-      setActiveGroupId(activeGroup.id);
-    }
-  }, [activeGroup, activeGroupId]);
 
   const friends = useMemo(() => {
     return activeGroup ? activeGroup.friends : [];
@@ -281,83 +226,7 @@ const Compare: React.FC = () => {
     setDeletingGroupId(null);
   }, [deletingGroupId, groups, activeGroupId]);
 
-  const mergedData = useMemo(() => {
-    const allUsers = [{ name: 'Me', places: myPlaces }, ...friends];
-    const totalUsers = allUsers.length;
-    const result: Record<string, MapCompareResult> = {};
-
-    // Gather all uniquely mentioned countries, microstates, and territories
-    const allCountryCodes = new Set<string>();
-    const allTerritories = getAllTerritories();
-    allUsers.forEach(u => Object.keys(u.places).forEach(code => {
-      const isMicrostateOrTerritory =
-        MICROSTATES.some(m => m.id === code) ||
-        allTerritories.some(t => t.id === code);
-      if (!code.includes('-') || isMicrostateOrTerritory) {
-        allCountryCodes.add(code);
-      }
-    }));
-
-    allCountryCodes.forEach(code => {
-      let visitedCount = 0;
-      let wishlistCount = 0;
-      let avoidCount = 0;
-      let revisitCount = 0;
-      const iVisited = myPlaces[code]?.status === 'VISITED';
-      const iRevisit = myPlaces[code]?.status === 'REVISIT';
-
-      allUsers.forEach(u => {
-        const status = u.places[code]?.status;
-        if (status === 'VISITED') visitedCount++;
-        if (status === 'WISHLIST') wishlistCount++;
-        if (status === 'AVOID') avoidCount++;
-        if (status === 'REVISIT') revisitCount++;
-      });
-
-      if (visitedCount === 0 && wishlistCount === 0 && avoidCount === 0 && revisitCount === 0) return;
-
-      let type: MapCompareResult['type'] = 'NONE';
-      let label = '';
-
-      if (visitedCount === totalUsers) {
-        type = 'EVERYONE_VISITED';
-        label = 'Everyone Visited';
-      } else if (revisitCount === totalUsers) {
-        type = 'EVERYONE_REVISIT';
-        label = 'Everyone Revisit';
-      } else if (visitedCount + revisitCount === totalUsers) {
-        type = 'MOST_VISITED';
-        label = 'Visited & Revisit';
-      } else if (revisitCount > 0) {
-        type = 'MIXED_REVISIT';
-        label = 'Revisit by Some';
-      } else if (visitedCount > 1) {
-        type = 'MOST_VISITED';
-        label = 'Most Visited';
-      } else if (visitedCount === 1) {
-        type = (iVisited || iRevisit) ? 'ONLY_ME_VISITED' : 'THEY_VISITED';
-        label = (iVisited || iRevisit) ? 'Only I Visited' : 'Someone Visited';
-      } else if (wishlistCount === totalUsers) {
-        type = 'EVERYONE_WISHLIST';
-        label = 'Everyone Wishlisted';
-      } else if (wishlistCount > 0) {
-        type = 'MIXED_WISHLIST';
-        label = 'Wishlisted by Some';
-      } else if (avoidCount === totalUsers) {
-        type = 'EVERYONE_AVOID';
-        label = 'Everyone Avoids';
-      }
-
-      result[code] = {
-        type,
-        label,
-        count: (visitedCount > 0 || revisitCount > 0) ? (visitedCount + revisitCount) : (wishlistCount > 0 ? wishlistCount : avoidCount),
-        totalUsers
-      };
-    });
-
-    return result;
-  }, [myPlaces, friends]);
+  const mergedData = useMemo(() => computeMergedData(myPlaces, friends), [myPlaces, friends]);
 
   // Redefined countryData lookup map to also support territories and microstates
   const countryData = useMemo(() => {
@@ -396,77 +265,12 @@ const Compare: React.FC = () => {
   const theyVisited = Object.entries(mergedData).filter(([, r]) => r.type === 'THEY_VISITED');
 
   // Travel compatibility score
-  const compatibilityScore = useMemo(() => {
-    if (friends.length === 0) return 0;
-    const allUsers = [{ name: 'Me', places: myPlaces }, ...friends];
-    const allCodes = new Set<string>();
-    allUsers.forEach(u => Object.keys(u.places).forEach(code => {
-      const status = u.places[code]?.status;
-      if (status && status !== 'NONE') allCodes.add(code);
-    }));
-    if (allCodes.size === 0) return 0;
-    let mutualCount = 0;
-    allCodes.forEach(code => {
-      const statuses = allUsers.map(u => u.places[code]?.status).filter(Boolean);
-      const allSame = statuses.length === allUsers.length && statuses.every(s => s === statuses[0]);
-      if (allSame) mutualCount++;
-    });
-    return Math.round((mutualCount / allCodes.size) * 100);
-  }, [myPlaces, friends]);
+  const compatibilityScore = useMemo(() => computeCompatibilityScore(myPlaces, friends), [myPlaces, friends]);
 
   // Complex Analytics
-  const topWantedUnvisited = useMemo(() => {
-    return Object.keys(mergedData)
-      .map((code) => {
-        let visited = 0;
-        let wlist = 0;
-        if (myPlaces[code]?.status === 'VISITED' || myPlaces[code]?.status === 'REVISIT') visited++;
-        if (myPlaces[code]?.status === 'WISHLIST') wlist++;
-        friends.forEach(f => {
-          if (f.places[code]?.status === 'VISITED' || f.places[code]?.status === 'REVISIT') visited++;
-          if (f.places[code]?.status === 'WISHLIST') wlist++;
-        });
-        return { code, visited, wishlist: wlist };
-      })
-      .filter(item => item.visited === 0 && item.wishlist > 1)
-      .sort((a, b) => b.wishlist - a.wishlist)
-      .slice(0, 5);
-  }, [mergedData, myPlaces, friends]);
+  const topWantedUnvisited = useMemo(() => computeTopWantedUnvisited(mergedData, myPlaces, friends), [mergedData, myPlaces, friends]);
 
-  const wantedButVisited = useMemo(() => {
-    return Object.keys(mergedData)
-      .map((code) => {
-        let visited = 0;
-        let wlist = 0;
-        const whoVisited: string[] = [];
-        const whoWants: string[] = [];
-
-        if (myPlaces[code]?.status === 'VISITED' || myPlaces[code]?.status === 'REVISIT') {
-          visited++;
-          whoVisited.push('Me');
-        }
-        if (myPlaces[code]?.status === 'WISHLIST') {
-          wlist++;
-          whoWants.push('Me');
-        }
-
-        friends.forEach(f => {
-          if (f.places[code]?.status === 'VISITED' || f.places[code]?.status === 'REVISIT') {
-            visited++;
-            whoVisited.push(f.name);
-          }
-          if (f.places[code]?.status === 'WISHLIST') {
-            wlist++;
-            whoWants.push(f.name);
-          }
-        });
-
-        return { code, visited, wishlist: wlist, whoVisited, whoWants };
-      })
-      .filter(item => item.visited > 0 && item.wishlist > 0)
-      .sort((a, b) => b.wishlist - a.wishlist)
-      .slice(0, 5);
-  }, [mergedData, myPlaces, friends]);
+  const wantedButVisited = useMemo(() => computeWantedButVisited(mergedData, myPlaces, friends), [mergedData, myPlaces, friends]);
 
   const hasImportedFriend = friends.length > 0;
 
@@ -476,11 +280,13 @@ const Compare: React.FC = () => {
     const canDrilldown = hasDrilldownSupport(code);
     
     return (
-      <span 
+      <button
+        type="button"
         key={code} 
         className={`compare-country-pill ${canDrilldown ? 'compare-country-pill--clickable' : ''}`}
         onClick={canDrilldown ? () => setSelectedCompareCountryId(code) : undefined}
-        title={canDrilldown ? "Click to compare sub-regions" : undefined}
+        disabled={!canDrilldown}
+        title={canDrilldown ? "Compare sub-regions" : undefined}
       >
         {data?.flag && (
           <img
@@ -496,20 +302,20 @@ const Compare: React.FC = () => {
         {canDrilldown && (
           <ChevronRight size={10} className="compare-country-pill__arrow" />
         )}
-      </span>
+      </button>
     );
   };
 
   // ── Country pills section renderer ────────────────────────────────
   const renderPillsSection = (
     title: string,
-    color: string,
+    tone: string,
     items: [string, MapCompareResult][],
     emptyText: string
   ) => (
-    <div className="compare-pills-section">
+    <div className={`compare-pills-section compare-pills-section--${tone}`}>
       <div className="compare-pills-section__header">
-        <div className="compare-pills-section__dot" style={{ background: color }} />
+        <div className="compare-pills-section__dot" />
         <span className="compare-pills-section__title">{title}</span>
         <span className="compare-pills-section__count">{items.length}</span>
       </div>
@@ -665,7 +471,7 @@ const Compare: React.FC = () => {
   // ── EMPTY STATE ───────────────────────────────────────────────────
   if (!hasImportedFriend) {
     return (
-      <div className="compare-page" style={{ overflowY: 'auto' }}>
+      <div className="compare-page survey-compare" style={{ overflowY: 'auto' }}>
         {/* Top bar — minimal when empty */}
 
 
@@ -763,7 +569,7 @@ const Compare: React.FC = () => {
 
   // ── ACTIVE COMPARISON STATE ───────────────────────────────────────
   return (
-    <div className="compare-page compare-page--scrollable">
+    <div className="compare-page compare-page--scrollable survey-compare">
       <div className="compare-dashboard__container compare-dashboard__container--active">
         {/* Delete confirmation banner */}
         {deletingGroupId && (
@@ -806,7 +612,7 @@ const Compare: React.FC = () => {
         {/* ── Zone 1: Header Control Card ────────────────────────────── */}
         <div className="compare-header-card">
           <div className="compare-header-card__top">
-            <span className="compare-header-card__title">Compare Maps</span>
+            <h1 className="compare-header-card__title">Compare maps</h1>
 
             {/* Centered Search/Paste input */}
             <div className="compare-header-card__input-wrapper">
@@ -845,6 +651,15 @@ const Compare: React.FC = () => {
                   key={g.id}
                   className={`compare-group-tab ${isActive ? 'compare-group-tab--active' : ''}`}
                   onClick={() => !isEditing && setActiveGroupId(g.id)}
+                  role="button"
+                  tabIndex={isEditing ? -1 : 0}
+                  aria-pressed={isActive}
+                  onKeyDown={e => {
+                    if (!isEditing && (e.key === 'Enter' || e.key === ' ')) {
+                      e.preventDefault();
+                      setActiveGroupId(g.id);
+                    }
+                  }}
                 >
                   {isEditing ? (
                     <input
@@ -923,7 +738,7 @@ const Compare: React.FC = () => {
               </button>
             )}
 
-            <div className="compare-topbar__divider" style={{ height: '18px', marginInline: '8px' }} />
+            <div className="compare-topbar__divider" />
 
             <span className="compare-members-bar__label">Members</span>
             <div className="compare-member-chip compare-member-chip--me">
@@ -1043,42 +858,42 @@ const Compare: React.FC = () => {
 
         {renderPillsSection(
           "We've All Visited",
-          'var(--color-both)',
+          'both',
           commonVisited,
           'No mutually visited countries yet.'
         )}
 
         {renderPillsSection(
           'Mutual Wishlist',
-          'var(--color-wishlist-both)',
+          'wishlist',
           commonWishlist,
           'No shared wishlists yet.'
         )}
 
         {renderPillsSection(
           'Only I Visited',
-          'var(--color-me-only)',
+          'me-only',
           onlyMeVisited,
           'None — your friends have been everywhere you have!'
         )}
 
         {renderPillsSection(
           'They Visited (Not Me)',
-          'var(--color-they-only)',
+          'they-only',
           theyVisited,
           'You\'ve been everywhere they have!'
         )}
 
         {commonRevisit.length > 0 && renderPillsSection(
           'Mutual Revisit',
-          'var(--color-revisit-both)',
+          'revisit',
           commonRevisit,
           ''
         )}
 
         {commonAvoid.length > 0 && renderPillsSection(
           'Everyone Avoids',
-          'var(--color-avoid)',
+          'avoid',
           commonAvoid,
           ''
         )}
@@ -1173,364 +988,6 @@ const Compare: React.FC = () => {
             countryData={countryData}
           />
         )}
-      </div>
-    </div>
-  );
-};
-
-// ── Slide-over Sub-regions Comparison Drawer ───────────────────────
-
-interface CompareSubRegionsDrawerProps {
-  countryId: string;
-  onClose: () => void;
-  myPlaces: UserPlacesMap;
-  friends: { id: string; name: string; places: UserPlacesMap }[];
-  countryData: Record<string, { name: string; flag: string }>;
-}
-
-const CompareSubRegionsDrawer: React.FC<CompareSubRegionsDrawerProps> = ({
-  countryId,
-  onClose,
-  myPlaces,
-  friends,
-  countryData
-}) => {
-  const [regions, setRegions] = useState<TopoRegion[]>([]);
-  const [loading, setLoading] = useState(true);
-  const [searchQuery, setSearchQuery] = useState('');
-  const [activeFilter, setActiveFilter] = useState<'all' | 'diffs' | 'mutual' | 'mutual-wishlist' | 'wishlist' | 'avoid'>('all');
-
-  const countryInfo = countryData[countryId];
-  const allUsers = useMemo(() => [{ name: 'Me', places: myPlaces }, ...friends], [myPlaces, friends]);
-
-  useEffect(() => {
-    let active = true;
-    setLoading(true);
-    fetchSubRegions(countryId).then(data => {
-      if (active) {
-        setRegions(data);
-        setLoading(false);
-      }
-    }).catch(() => {
-      if (active) setLoading(false);
-    });
-    return () => { active = false; };
-  }, [countryId]);
-
-  // Calculate traveler stats
-  const travelerStats = useMemo(() => {
-    if (regions.length === 0) return [];
-    
-    return allUsers.map((u) => {
-      let visited = 0;
-      let wishlist = 0;
-      let avoid = 0;
-      
-      regions.forEach((reg) => {
-        let status = u.places[countryId]?.regions?.[reg.id];
-        if (status === undefined) status = u.places[reg.id]?.status;
-        
-        if (status === 'VISITED' || status === 'REVISIT') visited++;
-        else if (status === 'WISHLIST') wishlist++;
-        else if (status === 'AVOID') avoid++;
-      });
-      
-      const total = regions.length;
-      const percent = total > 0 ? Math.round((visited / total) * 100) : 0;
-      return {
-        name: u.name,
-        visited,
-        wishlist,
-        avoid,
-        percent
-      };
-    });
-  }, [regions, allUsers, countryId]);
-
-  // Count matching sub-regions for each filter
-  const filterCounts = useMemo(() => {
-    let diffs = 0;
-    let mutual = 0;
-    let mutualWishlist = 0;
-    let anyWishlist = 0;
-    let anyAvoid = 0;
-
-    regions.forEach((reg) => {
-      const statuses = allUsers.map(u => {
-        let status = u.places[countryId]?.regions?.[reg.id];
-        if (status === undefined) status = u.places[reg.id]?.status;
-        return status || 'NONE';
-      });
-
-      if (new Set(statuses).size > 1) diffs++;
-      if (statuses.every(s => s === 'VISITED' || s === 'REVISIT')) mutual++;
-      if (statuses.every(s => s === 'WISHLIST')) mutualWishlist++;
-      if (statuses.some(s => s === 'WISHLIST')) anyWishlist++;
-      if (statuses.some(s => s === 'AVOID')) anyAvoid++;
-    });
-
-    return { diffs, mutual, mutualWishlist, anyWishlist, anyAvoid };
-  }, [regions, allUsers, countryId]);
-
-  // Filter regions based on search query & filters
-  const filteredRegions = useMemo(() => {
-    let result = regions;
-
-    // 1. Text search filter
-    if (searchQuery.trim()) {
-      const q = searchQuery.toLowerCase();
-      result = result.filter(r => r.name.toLowerCase().includes(q));
-    }
-
-    // 2. Tab filter
-    if (activeFilter !== 'all') {
-      result = result.filter((reg) => {
-        const statuses = allUsers.map(u => {
-          let status = u.places[countryId]?.regions?.[reg.id];
-          if (status === undefined) status = u.places[reg.id]?.status;
-          return status || 'NONE';
-        });
-
-        if (activeFilter === 'diffs') {
-          return new Set(statuses).size > 1;
-        }
-        if (activeFilter === 'mutual') {
-          return statuses.every(s => s === 'VISITED' || s === 'REVISIT');
-        }
-        if (activeFilter === 'mutual-wishlist') {
-          return statuses.every(s => s === 'WISHLIST');
-        }
-        if (activeFilter === 'wishlist') {
-          return statuses.some(s => s === 'WISHLIST');
-        }
-        if (activeFilter === 'avoid') {
-          return statuses.some(s => s === 'AVOID');
-        }
-        return true;
-      });
-    }
-
-    return result;
-  }, [regions, searchQuery, activeFilter, allUsers, countryId]);
-
-  // Get user initials for avatar
-  const getInitials = (name: string) => {
-    if (name.toUpperCase() === 'ME') return 'ME';
-    const parts = name.trim().split(/\s+/);
-    if (parts.length >= 2) {
-      return (parts[0][0] + parts[1][0]).toUpperCase();
-    }
-    return name.substring(0, 2).toUpperCase();
-  };
-
-  // Get avatar border color class/color based on index
-  const getAvatarColor = (idx: number) => {
-    const colors = [
-      'var(--accent-primary)',
-      'var(--accent-visited)',
-      'var(--accent-wishlist)',
-      'var(--accent-revisit)'
-    ];
-    return colors[idx % colors.length];
-  };
-
-  // Render status badge with lucide vector icon
-  const renderStatusBadge = (status: PlaceStatus) => {
-    if (status === 'NONE') {
-      return (
-        <span className="compare-badge compare-badge--none" title="Not Checked">
-          <span className="compare-badge__none-dash">-</span>
-        </span>
-      );
-    }
-
-    let iconComp = null;
-    let className = 'compare-badge ';
-    let tooltip = '';
-
-    if (status === 'VISITED') {
-      iconComp = <Check size={11} strokeWidth={3} />;
-      className += 'compare-badge--visited';
-      tooltip = 'Visited';
-    } else if (status === 'WISHLIST') {
-      iconComp = <Heart size={11} fill="currentColor" />;
-      className += 'compare-badge--wishlist';
-      tooltip = 'Wishlist';
-    } else if (status === 'REVISIT') {
-      iconComp = <RefreshCw size={11} strokeWidth={3} />;
-      className += 'compare-badge--revisit';
-      tooltip = 'Want to Revisit';
-    } else if (status === 'AVOID') {
-      iconComp = <AlertCircle size={11} strokeWidth={3} />;
-      className += 'compare-badge--avoid';
-      tooltip = 'Avoid';
-    }
-
-    return (
-      <span className={className} title={tooltip}>
-        {iconComp}
-      </span>
-    );
-  };
-
-  return (
-    <div className="compare-drawer">
-      {/* Overlay to close */}
-      <div className="compare-drawer__overlay" onClick={onClose} />
-      
-      {/* Main slide-in panel */}
-      <div className="compare-drawer__content glass-panel border border-base-300/40">
-        <div className="compare-drawer__header">
-          <div className="compare-drawer__title-container">
-            {countryInfo?.flag && (
-              <img src={countryInfo.flag} alt="" className="compare-drawer__flag" />
-            )}
-            <h3 className="compare-drawer__title">{countryInfo?.name || countryId} Sub-regions</h3>
-          </div>
-          <button className="compare-drawer__close" onClick={onClose}>
-            <X size={16} />
-          </button>
-        </div>
-
-        {/* Coverage stats header widget */}
-        {!loading && regions.length > 0 && (
-          <div className="compare-drawer__stats">
-            <span className="compare-drawer__stats-title">Sub-region Coverage</span>
-            <div className="compare-drawer__stats-list">
-              {travelerStats.map((stat, idx) => (
-                <div key={idx} className="compare-drawer__stat-row">
-                  <div className="compare-drawer__stat-info">
-                    <span className="compare-drawer__stat-name">{stat.name}</span>
-                    <span className="compare-drawer__stat-values">
-                      {stat.visited} / {regions.length} ({stat.percent}%)
-                    </span>
-                  </div>
-                  <div className="compare-drawer__progress">
-                    <div 
-                      className="compare-drawer__progress-bar" 
-                      style={{ 
-                        width: `${stat.percent}%`, 
-                        background: getAvatarColor(idx) 
-                      }} 
-                    />
-                  </div>
-                </div>
-              ))}
-            </div>
-          </div>
-        )}
-
-        {/* Search & Filter pills container */}
-        <div className="compare-drawer__controls">
-          <input
-            type="text"
-            placeholder="Search sub-regions..."
-            value={searchQuery}
-            onChange={e => setSearchQuery(e.target.value)}
-            className="compare-drawer__search-input"
-          />
-          
-          <div className="compare-drawer__filters">
-            <button
-              onClick={() => setActiveFilter('all')}
-              className={`compare-drawer__filter-btn ${activeFilter === 'all' ? 'compare-drawer__filter-btn--active' : ''}`}
-            >
-              All ({regions.length})
-            </button>
-            <button
-              onClick={() => setActiveFilter('diffs')}
-              className={`compare-drawer__filter-btn ${activeFilter === 'diffs' ? 'compare-drawer__filter-btn--active' : ''}`}
-            >
-              Different ({filterCounts.diffs})
-            </button>
-            <button
-              onClick={() => setActiveFilter('mutual')}
-              className={`compare-drawer__filter-btn ${activeFilter === 'mutual' ? 'compare-drawer__filter-btn--active' : ''}`}
-            >
-              Mutual Visited ({filterCounts.mutual})
-            </button>
-            <button
-              onClick={() => setActiveFilter('mutual-wishlist')}
-              className={`compare-drawer__filter-btn ${activeFilter === 'mutual-wishlist' ? 'compare-drawer__filter-btn--active' : ''}`}
-            >
-              Mutual Wishlist ({filterCounts.mutualWishlist})
-            </button>
-            <button
-              onClick={() => setActiveFilter('wishlist')}
-              className={`compare-drawer__filter-btn ${activeFilter === 'wishlist' ? 'compare-drawer__filter-btn--active' : ''}`}
-            >
-              Any Wishlist ({filterCounts.anyWishlist})
-            </button>
-            <button
-              onClick={() => setActiveFilter('avoid')}
-              className={`compare-drawer__filter-btn ${activeFilter === 'avoid' ? 'compare-drawer__filter-btn--active' : ''}`}
-            >
-              Any Avoid ({filterCounts.anyAvoid})
-            </button>
-          </div>
-        </div>
-
-        {/* Matrix comparison list */}
-        <div className="compare-drawer__body">
-          {loading ? (
-            <div className="compare-drawer__loading">
-              <span className="loading loading-spinner text-primary"></span>
-              <span>Loading sub-regions...</span>
-            </div>
-          ) : filteredRegions.length === 0 ? (
-            <div className="compare-drawer__empty">
-              {searchQuery || activeFilter !== 'all' 
-                ? "No matching sub-regions found." 
-                : "No sub-regions mapped."}
-            </div>
-          ) : (
-            <div className="compare-drawer__table-wrapper">
-              <table className="compare-drawer__table">
-                <thead>
-                  <tr>
-                    <th>Sub-region</th>
-                    {allUsers.map((u, idx) => (
-                      <th key={idx}>
-                        <div className="compare-drawer__header-cell" title={u.name}>
-                          <div 
-                            className="compare-drawer__avatar" 
-                            style={{ borderColor: getAvatarColor(idx) }}
-                          >
-                            {getInitials(u.name)}
-                          </div>
-                        </div>
-                      </th>
-                    ))}
-                  </tr>
-                </thead>
-                <tbody>
-                  {filteredRegions.map(reg => {
-                    return (
-                      <tr key={reg.id}>
-                        <td className="compare-drawer__td-name" title={reg.name}>
-                          {reg.name}
-                        </td>
-                        {allUsers.map((u, idx) => {
-                          // Try nested schema first
-                          let status = u.places[countryId]?.regions?.[reg.id];
-                          // Fallback to flat schema if undefined
-                          if (status === undefined) {
-                            status = u.places[reg.id]?.status;
-                          }
-                          return (
-                            <td key={idx} className="compare-drawer__td-status">
-                              {renderStatusBadge(status || 'NONE')}
-                            </td>
-                          );
-                        })}
-                      </tr>
-                    );
-                  })}
-                </tbody>
-              </table>
-            </div>
-          )}
-        </div>
       </div>
     </div>
   );

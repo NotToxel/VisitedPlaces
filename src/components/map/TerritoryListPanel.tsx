@@ -2,7 +2,6 @@ import React, { useState, useEffect, useRef } from 'react';
 import { Check, Heart, Ban, RotateCcw, ChevronDown, ChevronUp } from 'lucide-react';
 import type { PlaceStatus } from '../../store/useStore';
 import type { Territory } from '../../data/territoriesRegistry';
-import { getFillColor } from '../../utils/mapUtils';
 import { FlagImage } from '../common/FlagImage';
 
 interface TerritoryListPanelProps {
@@ -12,22 +11,35 @@ interface TerritoryListPanelProps {
   places: Record<string, { status: PlaceStatus }>;
   onSetStatus: (countryId: string, status: PlaceStatus) => void;
   highlightedTerritoryId?: string | null;
+  isExiting?: boolean;
+}
+
+const COMPACT_PANEL_QUERY = '(max-width: 1100px), (max-height: 700px)';
+
+function shouldStartCollapsed(): boolean {
+  return typeof window !== 'undefined' && typeof window.matchMedia === 'function' && window.matchMedia(COMPACT_PANEL_QUERY).matches;
 }
 
 export const TerritoryListPanel: React.FC<TerritoryListPanelProps> = ({
+  activeCountry,
   territories,
   territoryLabel,
   places,
   onSetStatus,
   highlightedTerritoryId,
+  isExiting = false,
 }) => {
-  const [isCollapsed, setIsCollapsed] = useState(() => {
-    if (typeof window !== 'undefined') {
-      return window.innerWidth <= 640;
-    }
-    return false;
-  });
+  const [isCollapsed, setIsCollapsed] = useState(shouldStartCollapsed);
   const highlightedRef = useRef<HTMLDivElement | null>(null);
+
+  useEffect(() => {
+    if (typeof window.matchMedia !== 'function') return;
+    const compactViewport = window.matchMedia(COMPACT_PANEL_QUERY);
+    const applyViewportDefault = () => setIsCollapsed(compactViewport.matches);
+    applyViewportDefault();
+    compactViewport.addEventListener('change', applyViewportDefault);
+    return () => compactViewport.removeEventListener('change', applyViewportDefault);
+  }, [activeCountry]);
 
   // Auto-expand panel and scroll to the highlighted territory when searched
   useEffect(() => {
@@ -54,26 +66,24 @@ export const TerritoryListPanel: React.FC<TerritoryListPanelProps> = ({
   };
 
   return (
-    <div 
-      className={`territory-list-panel ${isCollapsed ? 'territory-list-panel--collapsed' : ''}`}
-      onClick={isCollapsed ? () => setIsCollapsed(false) : undefined}
-      role={isCollapsed ? 'button' : undefined}
-      tabIndex={isCollapsed ? 0 : undefined}
+    <div
+      className={`territory-list-panel ${isCollapsed ? 'territory-list-panel--collapsed' : ''}${isExiting ? ' territory-list-panel--exiting' : ''}`}
+      inert={isExiting}
     >
-
-      
       <button
+        type="button"
         className="territory-list-panel__header"
         onClick={toggleCollapse}
         aria-expanded={!isCollapsed}
       >
         <span className="territory-list-panel__title">
-          {territoryLabel || 'Territories'} ({territories.length})
+          {territoryLabel || 'Territories'}
         </span>
-        {isCollapsed ? <ChevronUp size={14} /> : <ChevronDown size={14} />}
+        <span className="territory-list-panel__count">{territories.length}</span>
+        {isCollapsed ? <ChevronDown size={16} /> : <ChevronUp size={16} />}
       </button>
 
-      {!isCollapsed && (
+      <div className="territory-list-panel__body" aria-hidden={isCollapsed} inert={isCollapsed}>
         <div className="territory-list-panel__list">
           {territories.map((territory) => {
             const status = places[territory.id]?.status || 'NONE';
@@ -99,8 +109,7 @@ export const TerritoryListPanel: React.FC<TerritoryListPanelProps> = ({
                     />
                   ) : (
                     <div
-                      className="territory-list-panel__item-dot"
-                      style={{ background: getFillColor(status, false, true, true, true, true, true) }}
+                      className={`territory-list-panel__item-dot territory-list-panel__item-dot--${status.toLowerCase()}`}
                     />
                   )}
                   <span className="territory-list-panel__item-name">{territory.name}</span>
@@ -114,11 +123,14 @@ export const TerritoryListPanel: React.FC<TerritoryListPanelProps> = ({
                   ]).map(({ s, label, Icon, cls }) => (
                     <button
                       key={s}
+                      type="button"
                       onClick={() => onSetStatus(territory.id, status === s ? 'NONE' : s)}
                       className={`territory-list-panel__action-btn territory-list-panel__action-btn--${cls} ${status === s ? 'territory-list-panel__action-btn--active' : ''}`}
-                      title={label}
+                      aria-label={`${status === s ? 'Clear' : 'Mark'} ${territory.name} ${status === s ? 'status' : `as ${label}`}`}
+                      aria-pressed={status === s}
+                      title={status === s ? `Clear ${label}` : `Mark as ${label}`}
                     >
-                      <Icon size={11} />
+                      <Icon size={15} />
                     </button>
                   ))}
                 </div>
@@ -126,7 +138,7 @@ export const TerritoryListPanel: React.FC<TerritoryListPanelProps> = ({
             );
           })}
         </div>
-      )}
+      </div>
     </div>
   );
 };

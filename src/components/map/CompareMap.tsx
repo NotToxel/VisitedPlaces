@@ -1,6 +1,6 @@
 import React, { memo, useState, useEffect } from 'react';
 import { ComposableMap, Geographies, Geography, ZoomableGroup, Marker } from 'react-simple-maps';
-import type { MapCompareResult } from '../../pages/Compare';
+import type { MapCompareResult } from '../../utils/compareAnalysis';
 import { MICROSTATES } from '../../data/mapData';
 import { fetchWorldFeatureCollection, getCachedWorldFeatureCollectionSync } from '../../utils/topojsonCache';
 import { showMapTooltip, hideMapTooltip } from '../../utils/mapUtils';

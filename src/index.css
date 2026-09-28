@@ -261,15 +261,6 @@ body {
   }
 }
 
-/* Drilldown transition: smooth opacity cross-fade during projection swap */
-.standard-map-wrapper {
-  transition: opacity 0.5s ease-in-out;
-}
-
-.standard-map-wrapper--transitioning {
-  opacity: 0;
-}
-
 /* Glassmorphism panel helper utilities */
 .glass-panel {
   background: var(--glass-bg);
@@ -538,47 +529,6 @@ body {
   resize: vertical;
 }
 
-/* Checkbox */
-.checkbox {
-  appearance: none;
-  width: 1rem;
-  height: 1rem;
-  border-radius: 0.25rem;
-  border: 1px solid var(--text-base-content);
-  background: transparent;
-  cursor: pointer;
-  display: inline-grid;
-  place-content: center;
-  transition: all 0.2s ease;
-}
-
-.checkbox:checked {
-  background-color: var(--accent-primary);
-  border-color: var(--accent-primary);
-}
-
-.checkbox:checked::before {
-  content: "";
-  width: 0.5rem;
-  height: 0.5rem;
-  clip-path: polygon(14% 44%, 0 58%, 38% 96%, 100% 14%, 86% 0%, 38% 68%);
-  background-color: #0d0e15;
-}
-
-[data-theme="light"] .checkbox:checked::before {
-  background-color: #ffffff;
-}
-
-.checkbox-xs {
-  width: 0.75rem;
-  height: 0.75rem;
-}
-
-.checkbox-xs:checked::before {
-  width: 0.375rem;
-  height: 0.375rem;
-}
-
 /* Card layout */
 .card {
   display: flex;
@@ -806,188 +756,6 @@ path.rsm-geography {
 
 path.rsm-geography:active {
   fill: var(--accent-primary) !important;
-}
-
-/* ==========================================================================
-   Country Context Menu (click-to-set-status popover)
-   ========================================================================== */
-
-.country-context-menu {
-  position: fixed;
-  z-index: 200;
-  min-width: 180px;
-  max-width: 220px;
-  background: rgba(36, 40, 59, 0.95);
-  backdrop-filter: blur(20px);
-  -webkit-backdrop-filter: blur(20px);
-  border: 1px solid var(--glass-border);
-  border-radius: 14px;
-  box-shadow: 0 12px 40px rgba(0, 0, 0, 0.45), 0 0 0 1px rgba(255, 255, 255, 0.04);
-  padding: 0;
-  overflow: hidden;
-  animation: contextMenuIn 0.15s cubic-bezier(0.16, 1, 0.3, 1) forwards;
-  transform-origin: top left;
-}
-
-[data-theme="light"] .country-context-menu {
-  background: rgba(226, 232, 240, 0.96);
-  box-shadow: 0 12px 40px rgba(0, 0, 0, 0.12), 0 0 0 1px rgba(0, 0, 0, 0.06);
-}
-
-@keyframes contextMenuIn {
-  from {
-    opacity: 0;
-    transform: scale(0.92) translateY(-4px);
-  }
-
-  to {
-    opacity: 1;
-    transform: scale(1) translateY(0);
-  }
-}
-
-.country-context-menu__header {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  padding: 10px 12px 8px;
-  border-bottom: 1px solid rgba(255, 255, 255, 0.05);
-  gap: 8px;
-}
-
-[data-theme="light"] .country-context-menu__header {
-  border-bottom-color: rgba(0, 0, 0, 0.06);
-}
-
-.country-context-menu__country-info {
-  display: flex;
-  align-items: center;
-  gap: 8px;
-  min-width: 0;
-  flex: 1;
-}
-
-.country-context-menu__flag {
-  width: 22px;
-  height: 15px;
-  object-fit: cover;
-  border-radius: 2px;
-  border: 1px solid rgba(255, 255, 255, 0.08);
-  flex-shrink: 0;
-}
-
-.country-context-menu__flag-placeholder {
-  width: 22px;
-  height: 15px;
-  background: var(--bg-base-300);
-  border-radius: 2px;
-  flex-shrink: 0;
-}
-
-.country-context-menu__name {
-  font-size: 0.8rem;
-  font-weight: 700;
-  color: var(--text-base-content);
-  white-space: nowrap;
-  overflow: hidden;
-  text-overflow: ellipsis;
-}
-
-.country-context-menu__close {
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  width: 20px;
-  height: 20px;
-  border-radius: 6px;
-  border: none;
-  background: transparent;
-  color: var(--text-base-content);
-  opacity: 0.4;
-  cursor: pointer;
-  transition: opacity 0.15s, background 0.15s;
-  flex-shrink: 0;
-}
-
-.country-context-menu__close:hover {
-  opacity: 1;
-  background: rgba(255, 255, 255, 0.08);
-}
-
-[data-theme="light"] .country-context-menu__close:hover {
-  background: rgba(0, 0, 0, 0.06);
-}
-
-.country-context-menu__actions {
-  display: grid;
-  grid-template-columns: 1fr 1fr;
-  gap: 4px;
-  padding: 8px;
-}
-
-.country-context-menu__status-btn {
-  display: flex;
-  align-items: center;
-  gap: 6px;
-  padding: 7px 10px;
-  border-radius: 8px;
-  border: 1px solid rgba(255, 255, 255, 0.06);
-  background: rgba(255, 255, 255, 0.03);
-  color: var(--text-base-content);
-  opacity: 0.7;
-  font-size: 0.72rem;
-  font-weight: 600;
-  cursor: pointer;
-  transition: all 0.15s ease;
-  outline: none;
-}
-
-[data-theme="light"] .country-context-menu__status-btn {
-  border-color: rgba(0, 0, 0, 0.06);
-  background: rgba(0, 0, 0, 0.02);
-}
-
-.country-context-menu__status-btn:hover {
-  opacity: 1;
-  background: rgba(255, 255, 255, 0.08);
-  border-color: var(--status-color);
-  color: var(--status-color);
-}
-
-[data-theme="light"] .country-context-menu__status-btn:hover {
-  background: rgba(0, 0, 0, 0.04);
-}
-
-.country-context-menu__status-btn--active {
-  opacity: 1;
-  background: color-mix(in srgb, var(--status-color) 15%, transparent);
-  border-color: color-mix(in srgb, var(--status-color) 40%, transparent);
-  color: var(--status-color);
-  box-shadow: 0 0 8px color-mix(in srgb, var(--status-color) 15%, transparent);
-}
-
-.country-context-menu__drilldown {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  width: 100%;
-  padding: 9px 12px;
-  border: none;
-  border-top: 1px solid rgba(255, 255, 255, 0.05);
-  background: transparent;
-  color: var(--accent-primary);
-  font-size: 0.72rem;
-  font-weight: 700;
-  cursor: pointer;
-  transition: background 0.15s;
-}
-
-[data-theme="light"] .country-context-menu__drilldown {
-  border-top-color: rgba(0, 0, 0, 0.06);
-}
-
-.country-context-menu__drilldown:hover {
-  background: rgba(122, 162, 247, 0.08);
 }
 
 /* ==========================================================================
@@ -1226,13 +994,6 @@ path.rsm-geography:active {
   cursor: pointer;
   white-space: nowrap;
   user-select: none;
-}
-
-.map-search-bar__hex-label-toggle input {
-  accent-color: var(--accent-primary);
-  width: 12px;
-  height: 12px;
-  cursor: pointer;
 }
 
 .map-search-bar__dropdown {
@@ -4034,4 +3795,4 @@ path.rsm-geography:active {
   .list-country-card__name {
     font-size: 0.78rem;
   }
-}
+}

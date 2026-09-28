@@ -63,7 +63,7 @@ export function computeAutoScale(bbox: BBox): number {
 
   // Vertical extent using exact Mercator formula
   const mercatorY = (latDeg: number): number => {
-    const latRad = latDeg * DEG2RAD;
+    const latRad = Math.max(-85, Math.min(85, latDeg)) * DEG2RAD;
     return Math.log(Math.tan(Math.PI / 4 + latRad / 2));
   };
   const mercatorHeight = Math.abs(mercatorY(bbox.maxLat) - mercatorY(bbox.minLat));
@@ -511,11 +511,10 @@ export async function getAllCountryFeaturesWithMeta(countryA3: string): Promise<
   return result;
 }
 
-export function computeBBoxFromFeatures(features: NEFeature[]): BBox | null {
+export function computeBBoxFromFeatures(features: Pick<NEFeature, 'geometry'>[]): BBox | null {
   if (features.length === 0) return null;
 
-  let minLng = Infinity;
-  let maxLng = -Infinity;
+  const longitudes: number[] = [];
   let minLat = Infinity;
   let maxLat = -Infinity;
 
@@ -524,8 +523,7 @@ export function computeBBoxFromFeatures(features: NEFeature[]): BBox | null {
     if (typeof coords[0] === 'number' && typeof coords[1] === 'number') {
       const [lng, lat] = coords as [number, number];
       if (isFinite(lng) && isFinite(lat)) {
-        if (lng < minLng) minLng = lng;
-        if (lng > maxLng) maxLng = lng;
+        longitudes.push(((lng % 360) + 360) % 360);
         if (lat < minLat) minLat = lat;
         if (lat > maxLat) maxLat = lat;
       }
@@ -540,15 +538,36 @@ export function computeBBoxFromFeatures(features: NEFeature[]): BBox | null {
     processCoords(f.geometry.coordinates);
   }
 
-  if (!isFinite(minLng) || !isFinite(maxLng)) return null;
+  if (longitudes.length === 0) return null;
+
+  // Leave the largest empty gap outside the view. This keeps countries which
+  // cross the antimeridian (and their islands) together in the drill-down.
+  longitudes.sort((a, b) => a - b);
+  let gapStart = longitudes[longitudes.length - 1];
+  let largestGap = longitudes[0] + 360 - gapStart;
+  for (let i = 0; i < longitudes.length - 1; i++) {
+    const gap = longitudes[i + 1] - longitudes[i];
+    if (gap > largestGap) {
+      largestGap = gap;
+      gapStart = longitudes[i];
+    }
+  }
+  const minLng = (gapStart + largestGap) % 360;
+  const maxLng = minLng + 360 - largestGap;
+  const centerLng = ((minLng + maxLng) / 2 + 540) % 360 - 180;
+
+  // Mercator's vertical midpoint is not the arithmetic latitude midpoint.
+  const mercatorY = (lat: number): number => Math.log(Math.tan(Math.PI / 4 + Math.max(-85, Math.min(85, lat)) * Math.PI / 360));
+  const centerY = (mercatorY(minLat) + mercatorY(maxLat)) / 2;
+  const centerLat = Math.atan(Math.sinh(centerY)) * 180 / Math.PI;
 
   return {
     minLng,
     maxLng,
     minLat,
     maxLat,
-    centerLng: (minLng + maxLng) / 2,
-    centerLat: (minLat + maxLat) / 2,
+    centerLng,
+    centerLat,
   };
 }
 

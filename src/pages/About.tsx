@@ -1,107 +1,33 @@
-import React from 'react';
-import { ShieldCheck, Share2, Compass, BarChart, Heart, ExternalLink, Github } from 'lucide-react';
+import { ArrowRight, ChartNoAxesCombined, Compass, Database, Github, Globe2, MapPinned, Share2 } from 'lucide-react';
+import { Link } from 'react-router-dom';
 
-const About: React.FC = () => {
-  const currentYear = new Date().getFullYear();
-
-  return (
-    <div className="p-3 md:p-6 h-full flex flex-col gap-4 overflow-hidden bg-transparent max-w-4xl mx-auto w-full">
-      {/* Combined Header & Intro */}
-      <div className="glass-panel border border-base-300/50 p-5 rounded-2xl shrink-0 flex flex-col gap-3 select-none">
-        <div className="flex items-center justify-between">
-          <div className="flex items-center gap-2">
-            <Compass size={18} className="text-primary animate-pulse" />
-            <h2 className="font-extrabold text-sm text-base-content tracking-wide uppercase">Discover VisitedPlaces</h2>
-          </div>
-          <span className="text-[10px] bg-primary/10 border border-primary/25 text-primary font-bold px-2.5 py-0.5 rounded-full">
-            v{__APP_VERSION__}
-          </span>
+const About = () => (
+  <main className="survey-about-new">
+    <div className="about-inner">
+      <header className="about-hero">
+        <div>
+          <h1>Keep a record of everywhere.</h1>
+          <p>VisitedPlaces is a personal atlas for the places you know, the places you hope to see, and the journeys still taking shape.</p>
+          <Link to="/" className="about-primary-link">Open your map <ArrowRight size={17} /></Link>
         </div>
-        <p className="text-xs text-base-content/80 leading-relaxed">
-          VisitedPlaces is an interactive world travel tracker designed to let you catalog your travel history, map out future dreams, and compare journeys with others. It runs entirely in your browser without requiring account creation, servers, or trackers.
-        </p>
-      </div>
-
-      {/* Scrollable Content */}
-      <div className="flex-1 overflow-y-auto flex flex-col gap-5 pr-1 pb-6 select-none">
-        {/* Feature Grid */}
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-          {/* Privacy Card */}
-          <div className="glass-panel border border-base-300/30 p-5 rounded-2xl flex flex-col gap-2.5">
-            <h4 className="text-sm font-bold text-base-content flex items-center gap-1.5">
-              <ShieldCheck size={16} className="text-emerald-400" />
-              <span>Privacy by Architecture</span>
-            </h4>
-            <p className="text-xs text-base-content/70 leading-relaxed">
-              We believe your travel history belongs to you. The application operates with zero backend servers. All your markings, region selections, and settings are saved locally inside your browser's <code>localStorage</code>. No data ever leaves your device.
-            </p>
-          </div>
-
-          {/* Sharing Card */}
-          <div className="glass-panel border border-base-300/30 p-5 rounded-2xl flex flex-col gap-2.5">
-            <h4 className="text-sm font-bold text-base-content flex items-center gap-1.5">
-              <Share2 size={16} className="text-purple-400" />
-              <span>Database-Free Sharing</span>
-            </h4>
-            <p className="text-xs text-base-content/70 leading-relaxed">
-              Compare maps and travel stats with friends using URL-safe base64 share codes. When you copy your save code, the app serializes and compresses your places database into a tiny text string that anyone can import or compare side-by-side.
-            </p>
-          </div>
-
-          {/* Mapping System */}
-          <div className="glass-panel border border-base-300/30 p-5 rounded-2xl flex flex-col gap-2.5">
-            <h4 className="text-sm font-bold text-base-content flex items-center gap-1.5">
-              <Compass size={16} className="text-blue-400" />
-              <span>Interactive Map System</span>
-            </h4>
-            <p className="text-xs text-base-content/70 leading-relaxed">
-              Explore country-level detail or drill down into sub-regions (like US states or UK counties). VisitedPlaces handles status propagation automatically—visiting a single sub-region automatically registers the parent country as visited.
-            </p>
-          </div>
-
-          {/* Travel Analytics */}
-          <div className="glass-panel border border-base-300/30 p-5 rounded-2xl flex flex-col gap-2.5">
-            <h4 className="text-sm font-bold text-base-content flex items-center gap-1.5">
-              <BarChart size={16} className="text-amber-400" />
-              <span>Detailed Travel Analytics</span>
-            </h4>
-            <p className="text-xs text-base-content/70 leading-relaxed">
-              Explore interactive charts and visual breakdowns of your travel coverage. Track your progress across different continents, compute your percentage of world completion, and view coverage maps.
-            </p>
-          </div>
+        <div className="about-hero-mark" aria-hidden="true"><Globe2 size={104} strokeWidth={0.8} /></div>
+      </header>
+      <section className="about-section" aria-labelledby="about-how">
+        <div className="about-section-heading"><h2 id="about-how">Your atlas, your way</h2><p>Three ways to turn a map into a travel record.</p></div>
+        <div className="about-feature-list">
+          <article><span className="about-feature-icon"><MapPinned size={21} /></span><div><h3>Mark the places that matter</h3><p>Give countries and supported regions a status: Visited, Wishlist, Revisit, or Avoid. Start on the map or work through the directory.</p></div><Link to="/list" aria-label="Open the places directory"><ArrowRight size={18} /></Link></article>
+          <article><span className="about-feature-icon"><ChartNoAxesCombined size={21} /></span><div><h3>See the shape of your travels</h3><p>Explore your coverage by continent and see how your personal map grows as you add places.</p></div><Link to="/analytics" aria-label="Open analytics"><ArrowRight size={18} /></Link></article>
+          <article><span className="about-feature-icon"><Share2 size={21} /></span><div><h3>Compare with someone else</h3><p>Share a code when you choose, then place two travel histories side by side to find the overlap and the differences.</p></div><Link to="/compare" aria-label="Open compare"><ArrowRight size={18} /></Link></article>
         </div>
-
-        {/* License & Copyright Footer */}
-        <div className="glass-panel border border-base-300/30 p-5 rounded-2xl flex flex-col gap-4">
-          <div className="flex flex-col sm:flex-row justify-between items-center sm:items-center text-center sm:text-left gap-4">
-            <div>
-              <p className="text-xs font-bold text-base-content">
-                &copy; {currentYear} VisitedPlaces project.
-              </p>
-              <p className="text-[11px] text-base-content/60 mt-0.5">
-                Released under the GNU Affero General Public License v3.0 (AGPL-3.0).
-              </p>
-            </div>
-            <a 
-              href="https://github.com/NotToxel/VisitedPlaces" 
-              target="_blank" 
-              rel="noopener noreferrer"
-              className="btn btn-primary btn-xs gap-1.5 self-center sm:self-auto"
-            >
-              <Github size={11} />
-              <span>GitHub Repository</span>
-              <ExternalLink size={11} />
-            </a>
-          </div>
-        </div>
-
-        {/* Built with Heart Footer */}
-        <div className="flex items-center justify-center gap-1 text-[11px] text-base-content/40 font-medium">
-          Built with <Heart size={10} className="text-red-400 fill-red-400" /> by NotToxel.
-        </div>
-      </div>
+      </section>
+      <section className="about-principles" aria-label="How VisitedPlaces works">
+        <div className="about-principle-lead"><Compass size={26} /><h2>Made for curious travelers. Built to stay yours.</h2></div>
+        <div><Database size={20} /><h3>Stored in this browser</h3><p>Your markings are saved on this device in browser storage. There is no account to create. Export a code if you want a backup or want to share.</p></div>
+        <div><Globe2 size={20} /><h3>Ready when you are</h3><p>Country tracking, analytics, and sharing work offline. Some region maps need a connection before they can load.</p></div>
+      </section>
+      <footer className="about-footer"><div><strong>VisitedPlaces</strong><span>Open source · AGPL-3.0-only · v{__APP_VERSION__}</span></div><a href="https://github.com/NotToxel/VisitedPlaces" target="_blank" rel="noopener noreferrer"><Github size={17} /> View the project <ArrowRight size={16} /></a></footer>
     </div>
-  );
-};
+  </main>
+);
 
 export default About;

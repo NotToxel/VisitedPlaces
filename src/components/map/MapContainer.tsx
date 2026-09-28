@@ -1,4 +1,4 @@
-import React, { useState, useCallback, useEffect } from 'react';
+import React, { useState, useCallback, useEffect, useRef } from 'react';
 import { NUMERIC_TO_A3 } from '../../data/countries';
 import { StandardMap } from './StandardMap';
 import { HexagonMap } from './HexagonMap';
@@ -19,6 +19,20 @@ import type { TopoRegion } from '../../utils/topojsonCache';
 import { hideMapTooltip } from '../../utils/mapUtils';
 import { preloadPlaceFlags } from '../../utils/flagUtils';
 import { FlagImage } from '../common/FlagImage';
+import { isMultiRegionLocality } from '../../utils/placeSearch';
+import type { SearchResult } from '../../utils/placeSearch';
+import { resolvePlaceRegion } from '../../utils/resolvePlaceRegion';
+
+interface SelectedRegion {
+  sourceId: string;
+  countryId: string;
+  regionId?: string;
+  placeName?: string;
+  coordinates?: [number, number];
+  areaName?: string;
+  resolutionFailed?: boolean;
+  requiresAreaChoice?: boolean;
+}
 
 interface ContextMenuState {
   countryId: string;
@@ -42,6 +56,14 @@ export const MapContainer: React.FC = () => {
   const [expressStatus, setExpressStatus] = useState<PlaceStatus>('VISITED');
   const [subRegions, setSubRegions] = useState<TopoRegion[]>([]);
   const [searchQuery, setSearchQuery] = useState('');
+  const [selectedRegion, setSelectedRegion] = useState<SelectedRegion | null>(null);
+  const [regionsReady, setRegionsReady] = useState(false);
+  const [exitingSidebar, setExitingSidebar] = useState<{ countryId: string; name: string; regions: TopoRegion[] } | null>(null);
+  const sidebarExitTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
+
+  useEffect(() => () => {
+    if (sidebarExitTimer.current) clearTimeout(sidebarExitTimer.current);
+  }, []);
 
   useEffect(() => {
     Promise.resolve().then(() => {
@@ -53,14 +75,19 @@ export const MapContainer: React.FC = () => {
     let active = true;
     let cancelPreload = () => {};
     if (activeCountry) {
+      Promise.resolve().then(() => { if (active) setRegionsReady(false); });
       fetchSubRegions(activeCountry)
         .then((regions) => {
           if (!active) return;
           setSubRegions(regions);
+          setRegionsReady(true);
           cancelPreload = preloadPlaceFlags(regions.map((region) => region.id));
         })
         .catch(() => {
-          if (active) setSubRegions([]);
+          if (active) {
+            setSubRegions([]);
+            setRegionsReady(true);
+          }
         });
     } else {
       Promise.resolve().then(() => {
@@ -144,7 +171,6 @@ export const MapContainer: React.FC = () => {
 
 
   const territories = activeCountry ? getTerritoriesForCountry(activeCountry) : [];
-  const territoryLabel = activeCountry ? getTerritoryLabel(activeCountry) : '';
 
   // Country click → toggle status in express mode or show context menu
   const handleCountryClick = useCallback(
@@ -204,7 +230,11 @@ export const MapContainer: React.FC = () => {
   // Phase 2 callback: world map zoom-in is done, now switch to drilldown view
   const handleDrilldownReady = useCallback(
     (countryId: string) => {
+      if (sidebarExitTimer.current) clearTimeout(sidebarExitTimer.current);
+      setExitingSidebar(null);
       setPendingDrilldown(null);
+      setRegionsReady(false);
+      setHighlightedCountryA3(null);
       setActiveCountry(countryId);
     },
     []
@@ -217,10 +247,95 @@ export const MapContainer: React.FC = () => {
 
   const handleSearchClear = useCallback(() => {
     setHighlightedCountryA3(null);
+    setSelectedRegion(null);
   }, []);
 
+  const handleSearchChange = useCallback((query: string) => {
+    setSearchQuery(query);
+    setSelectedRegion(null);
+    setHighlightedCountryA3(null);
+  }, []);
+
+  const handleResultSelect = useCallback((result: SearchResult) => {
+    if (result.kind === 'country') {
+      setSelectedRegion(null);
+      return;
+    }
+    const selection: SelectedRegion = {
+      sourceId: result.id,
+      countryId: result.countryId,
+      regionId: result.kind === 'place' ? result.regionId : result.kind === 'region' ? result.id : result.territoryId,
+      placeName: result.kind === 'region' ? result.matchedPlace : result.name,
+      coordinates: result.kind === 'locality' ? result.coordinates : undefined,
+      areaName: result.kind === 'locality' ? result.areaName : undefined,
+      requiresAreaChoice: result.kind === 'locality' && isMultiRegionLocality(result.countryId, result.name),
+    };
+    setSelectedRegion(selection);
+    if (activeCountry === result.countryId) {
+      setHighlightedCountryA3(selection.regionId ?? null);
+    } else {
+      handleDrillDown(result.countryId);
+    }
+  }, [activeCountry, handleDrillDown]);
+
+  useEffect(() => {
+    if (!selectedRegion?.coordinates || selectedRegion.regionId || selectedRegion.resolutionFailed ||
+      selectedRegion.requiresAreaChoice ||
+      selectedRegion.countryId !== activeCountry || !regionsReady) return;
+    const { sourceId, countryId, coordinates, areaName } = selectedRegion;
+    let active = true;
+    resolvePlaceRegion(countryId, coordinates, subRegions, undefined, areaName)
+      .then((region) => {
+        if (!active) return;
+        setSelectedRegion((current) => current?.sourceId === sourceId
+          ? { ...current, regionId: region?.id, resolutionFailed: !region } : current);
+      })
+      .catch(() => {
+        if (active) setSelectedRegion((current) => current?.sourceId === sourceId
+          ? { ...current, resolutionFailed: true } : current);
+      });
+    return () => { active = false; };
+  }, [selectedRegion, activeCountry, regionsReady, subRegions]);
+
+  const selectedRegionData = selectedRegion?.regionId && activeCountry === selectedRegion.countryId
+    ? subRegions.find((region) => region.id === selectedRegion.regionId)
+    : undefined;
+  const selectedStatus = selectedRegionData
+    ? places[selectedRegionData.id]?.status ?? places[activeCountry!]?.regions?.[selectedRegionData.id] ?? 'NONE'
+    : 'NONE';
+  const selectedIsTerritory = selectedRegionData && territories.some((territory) => territory.id === selectedRegionData.id);
+
+  const sidebarCountry = activeCountry ?? exitingSidebar?.countryId ?? null;
+  const sidebarCountryName = activeCountry ? activeCountryName : exitingSidebar?.name;
+  const sidebarRegions = activeCountry ? subRegions : exitingSidebar?.regions ?? [];
+  const sidebarExiting = !activeCountry && !!exitingSidebar;
+  const sidebarTerritories = sidebarCountry ? getTerritoriesForCountry(sidebarCountry) : [];
+
+  const handleBackToWorld = () => {
+    if (!activeCountry) return;
+    hideMapTooltip();
+    if (sidebarExitTimer.current) clearTimeout(sidebarExitTimer.current);
+    const reduceMotion = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+    setExitingSidebar(reduceMotion ? null : { countryId: activeCountry, name: activeCountryName, regions: subRegions });
+    setActiveCountry(null);
+    setSelectedRegion(null);
+    setHighlightedCountryA3(null);
+    if (!reduceMotion) {
+      sidebarExitTimer.current = setTimeout(() => {
+        setExitingSidebar(null);
+        sidebarExitTimer.current = null;
+      }, 480);
+    }
+  };
+
+  useEffect(() => {
+    if (selectedRegionData) {
+      Promise.resolve().then(() => setHighlightedCountryA3(selectedRegionData.id));
+    }
+  }, [selectedRegionData]);
+
   return (
-    <div style={{ height: '100%', width: '100%', position: 'relative', overflow: 'hidden', background: 'transparent', userSelect: 'none' }}>
+    <div className={`survey-map-shell${expressMode && activeCountry ? ' survey-map-shell--express-drilldown' : ''}${selectedRegion && activeCountry === selectedRegion.countryId ? ' survey-map-shell--search-selection' : ''}${sidebarExiting ? ' survey-map-shell--sidebar-exiting' : ''}`}>
       {/* Floating Search Bar */}
       <MapSearchBar
         mapStyle={mapStyle}
@@ -228,95 +343,100 @@ export const MapContainer: React.FC = () => {
         showHexLabels={showHexLabels}
         setShowHexLabels={setShowHexLabels}
         onCountrySelect={handleCountrySelect}
+        onResultSelect={handleResultSelect}
         onSearchClear={handleSearchClear}
         expressMode={expressMode}
         setExpressMode={setExpressMode}
         expressStatus={expressStatus}
-        activeCountry={activeCountry}
-        subRegions={subRegions}
-        className={activeCountry ? "map-search-bar--drilldown" : ""}
+        activeCountry={sidebarCountry}
+        subRegions={sidebarRegions}
+        subRegionsReady={regionsReady}
+        className={sidebarCountry ? `map-search-bar--drilldown${sidebarExiting ? ' map-search-bar--exiting' : ''}` : ''}
         isCardGrid={cardGridMode}
-        onSearchChange={setSearchQuery}
+        onSearchChange={handleSearchChange}
       />
 
-      {/* Express Mode Active Banner */}
-      {expressMode && !cardGridMode && (
-        <div className={`absolute left-1/2 -translate-x-1/2 z-30 flex items-center gap-1.5 sm:gap-2 bg-slate-900/85 backdrop-blur-md text-white font-extrabold px-2 py-1.5 sm:px-3.5 sm:py-2 rounded-2xl shadow-lg text-[11px] select-none border border-white/10 transition-all ${
-          activeCountry ? 'top-[98px] sm:top-[88px]' : 'top-[88px]'
-        }`}>
-          <Zap size={12} fill="currentColor" className="animate-pulse text-amber-400 shrink-0" />
-          <span className="text-amber-400 whitespace-nowrap">Express</span>
-          <div className="w-px h-4 bg-white/15 shrink-0" />
-          {/* Status selector pills */}
-          {([['VISITED', 'Visited', 'var(--accent-visited)'], ['WISHLIST', 'Wishlist', 'var(--accent-wishlist)'], ['REVISIT', 'Revisit', 'var(--accent-revisit)'], ['AVOID', 'Avoid', 'var(--accent-avoid)']] as [PlaceStatus, string, string][]).map(([status, label, color]) => (
-            <button
-              key={status}
-              onClick={() => setExpressStatus(status)}
-              className="flex items-center justify-center gap-1 p-1.5 sm:px-2.5 sm:py-1 rounded-full text-[10px] font-bold transition-all cursor-pointer border"
-              title={label}
-              style={{
-                background: expressStatus === status ? color : 'transparent',
-                color: expressStatus === status ? '#0f172a' : color,
-                borderColor: expressStatus === status ? 'transparent' : `color-mix(in srgb, ${color} 30%, transparent)`,
-                opacity: expressStatus === status ? 1 : 0.7,
-              }}
-            >
-              {status === 'VISITED' && <Check size={10} />}
-              {status === 'WISHLIST' && <Heart size={10} fill={expressStatus === status ? 'currentColor' : 'none'} />}
-              {status === 'REVISIT' && <RotateCcw size={10} />}
-              {status === 'AVOID' && <Ban size={10} />}
-              <span className="hidden sm:inline">{label}</span>
-            </button>
-          ))}
-          <div className="w-px h-4 bg-white/15 shrink-0" />
-          <button 
-            onClick={() => setExpressMode(false)}
-            className="hover:bg-white/10 p-1 rounded-full transition-colors flex items-center justify-center cursor-pointer text-white/50 hover:text-white"
-            title="Disable Express Mode"
-          >
-            <X size={12} strokeWidth={2.5} />
-          </button>
+      {selectedRegion && activeCountry === selectedRegion.countryId && (
+        <div className="map-search-selection" aria-live="polite">
+          <button type="button" className="map-search-selection__close" onClick={() => {
+            setSelectedRegion(null);
+            setHighlightedCountryA3(null);
+          }} aria-label="Close search result"><X size={15} /></button>
+          {selectedRegionData ? (
+            <>
+              <div className="map-search-selection__description">
+                {selectedRegion.placeName && <span className="map-search-selection__place">{selectedRegion.placeName} is in</span>}
+                <strong>{selectedRegionData.name}</strong>
+                <span className="map-search-selection__status">{selectedStatus === 'NONE' ? 'Not marked yet' : `Marked ${selectedStatus.toLowerCase()}`}</span>
+              </div>
+              <div className="map-search-selection__actions" role="group" aria-label={`Mark ${selectedRegionData.name}`}>
+                {([['VISITED', 'Visited', Check], ['WISHLIST', 'Wishlist', Heart], ['REVISIT', 'Revisit', RotateCcw], ['AVOID', 'Avoid', Ban]] as const).map(([status, label, Icon]) => (
+                  <button type="button" key={status}
+                    className={`map-search-selection__action map-search-selection__action--${status.toLowerCase()}${selectedStatus === status ? ' map-search-selection__action--active' : ''}`}
+                    aria-pressed={selectedStatus === status}
+                    onClick={() => {
+                      const nextStatus = selectedStatus === status ? 'NONE' : status;
+                      if (selectedIsTerritory) setCountryStatus(selectedRegionData.id, nextStatus);
+                      else setRegionStatus(selectedRegion.countryId, selectedRegionData.id, nextStatus);
+                    }}>
+                    <Icon size={14} aria-hidden="true" /><span>{label}</span>
+                  </button>
+                ))}
+              </div>
+            </>
+          ) : (
+            <p className="map-search-selection__message">{selectedRegion.requiresAreaChoice ? `${selectedRegion.placeName} covers several regions. Choose a specific area on the map.` : !regionsReady ? 'Loading regions…' : subRegions.length === 0 ? 'Regions unavailable. Try again when connected.' : selectedRegion.coordinates && !selectedRegion.resolutionFailed ? 'Finding its region…' : `Could not locate ${selectedRegion.placeName ?? 'that place'} in the available map data.`}</p>
+          )}
         </div>
       )}
 
-      {/* Drilldown back button + country info */}
-      {activeCountry && (
-        <div className="map-drilldown-header">
-          <button
-            onClick={() => setActiveCountry(null)}
-            className="map-drilldown-header__back"
-          >
-            <ArrowLeft size={14} />
-            <span>Back to World</span>
-          </button>
-          <div className="map-drilldown-header__info">
-            {activeCountry ? (
-              <FlagImage
-                placeId={activeCountry}
-                className="map-drilldown-header__flag"
-              />
-            ) : (
-              <div className="map-drilldown-header__flag-placeholder" />
-            )}
-            <span className="map-drilldown-header__name">{activeCountryName}</span>
+      {/* Express Mode Active Banner */}
+      {expressMode && !cardGridMode && (
+        <div className={`map-express-bar${activeCountry ? ' map-express-bar--drilldown' : ''}`} role="group" aria-label="Express marking status">
+          <div className="map-express-bar__heading">
+            <Zap size={15} fill="currentColor" aria-hidden="true" />
+            <span>Express marking</span>
           </div>
+          <div className="map-express-bar__statuses">
+            {([['VISITED', 'Visited'], ['WISHLIST', 'Wishlist'], ['REVISIT', 'Revisit'], ['AVOID', 'Avoid']] as [PlaceStatus, string][]).map(([status, label]) => (
+              <button
+                type="button"
+                key={status}
+                onClick={() => setExpressStatus(status)}
+                className={`map-express-bar__status map-express-bar__status--${status.toLowerCase()}${expressStatus === status ? ' map-express-bar__status--active' : ''}`}
+                aria-label={`Mark as ${label}`}
+                aria-pressed={expressStatus === status}
+              >
+                {status === 'VISITED' && <Check size={14} aria-hidden="true" />}
+                {status === 'WISHLIST' && <Heart size={14} aria-hidden="true" />}
+                {status === 'REVISIT' && <RotateCcw size={14} aria-hidden="true" />}
+                {status === 'AVOID' && <Ban size={14} aria-hidden="true" />}
+                <span>{label}</span>
+              </button>
+            ))}
+          </div>
+          <button type="button" onClick={() => setExpressMode(false)} className="map-express-bar__close" aria-label="Disable express marking" title="Disable express marking">
+            <X size={16} aria-hidden="true" />
+          </button>
         </div>
       )}
 
       {/* Territory list panel (for any country with territories) */}
-      {activeCountry && territories.length > 0 && (
+      {sidebarCountry && sidebarTerritories.length > 0 && (
         <TerritoryListPanel
-          activeCountry={activeCountry}
-          territories={territories}
-          territoryLabel={territoryLabel}
+          key={sidebarCountry}
+          activeCountry={sidebarCountry}
+          territories={sidebarTerritories}
+          territoryLabel={getTerritoryLabel(sidebarCountry)}
           places={places}
           onSetStatus={handleSetStatus}
-          highlightedTerritoryId={highlightedCountryA3}
+          highlightedTerritoryId={sidebarExiting ? null : highlightedCountryA3}
+          isExiting={sidebarExiting}
         />
       )}
 
       {/* Map Viewport or Card Grid */}
-      <div style={{ height: '100%', width: '100%' }}>
+      <div className="survey-map-viewport">
         {cardGridMode && activeCountry ? (
           <RegionCardGrid
             activeCountry={activeCountry}
@@ -324,6 +444,7 @@ export const MapContainer: React.FC = () => {
             places={places}
             onSetRegionStatus={handleSetRegionStatus}
             searchQuery={searchQuery}
+            selectedRegionId={selectedRegionData?.id}
           />
         ) : mapStyle === 'STANDARD' ? (
           <StandardMap
@@ -354,6 +475,21 @@ export const MapContainer: React.FC = () => {
 
       {/* Floating Filter Bar */}
       <MapFilterBar
+        drilldownHeader={sidebarCountry && (
+          <div className="map-drilldown-header">
+            <button
+              onClick={handleBackToWorld}
+              className="map-drilldown-header__back"
+            >
+              <ArrowLeft size={14} />
+              <span>Back to World</span>
+            </button>
+            <div className="map-drilldown-header__info">
+              <FlagImage placeId={sidebarCountry} className="map-drilldown-header__flag" />
+              <span className="map-drilldown-header__name">{sidebarCountryName}</span>
+            </div>
+          </div>
+        )}
         showVisited={showVisited}
         showWishlist={showWishlist}
         showAvoid={showAvoid}
@@ -362,22 +498,26 @@ export const MapContainer: React.FC = () => {
         setShowWishlist={setShowWishlist}
         setShowAvoid={setShowAvoid}
         setShowRevisit={setShowRevisit}
-        activeCountry={activeCountry}
-        subRegions={subRegions}
+        activeCountry={sidebarCountry}
+        subRegions={sidebarRegions}
+        isExiting={sidebarExiting}
       />
 
       {/* Country Context Menu */}
       {contextMenu && (
-        <CountryContextMenu
-          countryId={contextMenu.countryId}
-          displayName={contextMenu.displayName}
-          currentStatus={places[contextMenu.countryId]?.status || 'NONE'}
-          x={contextMenu.x}
-          y={contextMenu.y}
-          onSetStatus={handleSetStatus}
-          onDrillDown={handleDrillDown}
-          onClose={() => setContextMenu(null)}
-        />
+        <>
+          <button type="button" className="map-context-dismiss" aria-label="Close place options" onClick={() => setContextMenu(null)} />
+          <CountryContextMenu
+            countryId={contextMenu.countryId}
+            displayName={contextMenu.displayName}
+            currentStatus={places[contextMenu.countryId]?.status || 'NONE'}
+            x={contextMenu.x}
+            y={contextMenu.y}
+            onSetStatus={handleSetStatus}
+            onDrillDown={handleDrillDown}
+            onClose={() => setContextMenu(null)}
+          />
+        </>
       )}
     </div>
   );

@@ -1525,7 +1525,7 @@ export const COUNTRIES: Country[] = [
     "id": "USA",
     "cca2": "US",
     "ccn3": "840",
-    "name": "United States",
+    "name": "United States of America",
     "continent": "North America",
     "flag": "https://flagcdn.com/us.svg"
   },

@@ -11,6 +11,7 @@ interface RegionCardGridProps {
   places: Record<string, { status: PlaceStatus; regions?: Record<string, PlaceStatus> }>;
   onSetRegionStatus: (countryId: string, regionId: string, status: PlaceStatus) => void;
   searchQuery?: string;
+  selectedRegionId?: string;
 }
 
 const CARD_SVG_WIDTH = 160;
@@ -174,7 +175,9 @@ const RegionCardBase: React.FC<RegionCardProps> = ({
             key={s}
             onClick={() => handleStatusClick(s)}
             className={`region-card__action-btn region-card__action-btn--${cls} ${status === s ? 'region-card__action-btn--active' : ''}`}
-            title={label}
+            aria-label={`${status === s ? 'Clear' : 'Mark'} ${displayName} ${status === s ? 'status' : `as ${label}`}`}
+            aria-pressed={status === s}
+            title={status === s ? `Clear ${label}` : `Mark as ${label}`}
           >
             <Icon size={13} />
           </button>
@@ -192,14 +195,16 @@ const RegionCardGridBase: React.FC<RegionCardGridProps> = ({
   places,
   onSetRegionStatus,
   searchQuery = '',
+  selectedRegionId,
 }) => {
   const filteredFeatures = useMemo(() => {
+    if (selectedRegionId) return features.filter((feature) => feature.regionId === selectedRegionId);
     if (!searchQuery) return features;
     const lowerQuery = searchQuery.toLowerCase();
     return features.filter(
       (f) => f.displayName.toLowerCase().includes(lowerQuery) || f.regionId.toLowerCase().includes(lowerQuery)
     );
-  }, [features, searchQuery]);
+  }, [features, searchQuery, selectedRegionId]);
 
   const visitedCount = useMemo(() => {
     return features.filter((f) => {

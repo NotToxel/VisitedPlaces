@@ -2,7 +2,7 @@
 
 **An interactive world travel tracker** — mark countries and regions you've visited, explore your travel analytics, and compare maps with friends using serverless shareable codes.
 
-[![Version](https://img.shields.io/badge/version-2.3.6-blue.svg)](package.json)
+[![Version](https://img.shields.io/badge/version-2.4.0-blue.svg)](package.json)
 [![License: AGPL-3.0](https://img.shields.io/badge/License-AGPL--3.0-blue.svg)](LICENSE)
 [![TypeScript](https://img.shields.io/badge/TypeScript-Strict-3178C6.svg)](tsconfig.app.json)
 
@@ -168,6 +168,19 @@ src/
 4. A merged visualization shows mutual destinations, unique travels, and trip overlaps
 
 No server or database involved — your travel state is stored directly within the compact share code.
+
+---
+
+## Place search data
+
+The map can find cities, towns, and official sub-region names worldwide and
+suggest the region shown by the app. The city index is generated from [GeoNames cities500](https://download.geonames.org/export/dump/)
+under CC BY 4.0; see the [index attribution and coverage notes](public/place-index/README.md).
+The city index is split into small files; the smaller region-name index loads
+only when searching the world map. Both load from this app's own origin as needed.
+Search text is never sent to a geocoding service. Some sub-region maps still
+need a network connection to load their geometry before the app can identify
+and mark a city's region.
 
 ---
 

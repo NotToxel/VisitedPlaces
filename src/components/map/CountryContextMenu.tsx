@@ -74,11 +74,11 @@ export const CountryContextMenu: React.FC<CountryContextMenuProps> = ({
     };
   }, [onClose]);
 
-  const statusOptions: { status: PlaceStatus; label: string; icon: React.ReactNode; colorVar: string }[] = [
-    { status: 'VISITED', label: 'Visited', icon: <Check size={14} />, colorVar: 'var(--accent-visited)' },
-    { status: 'WISHLIST', label: 'Wishlist', icon: <Heart size={14} />, colorVar: 'var(--accent-wishlist)' },
-    { status: 'REVISIT', label: 'Revisit', icon: <RotateCcw size={14} />, colorVar: 'var(--accent-revisit)' },
-    { status: 'AVOID', label: 'Avoid', icon: <Ban size={14} />, colorVar: 'var(--accent-avoid)' },
+  const statusOptions: { status: PlaceStatus; label: string; icon: React.ReactNode }[] = [
+    { status: 'VISITED', label: 'Visited', icon: <Check size={16} /> },
+    { status: 'WISHLIST', label: 'Wishlist', icon: <Heart size={16} /> },
+    { status: 'REVISIT', label: 'Revisit', icon: <RotateCcw size={16} /> },
+    { status: 'AVOID', label: 'Avoid', icon: <Ban size={16} /> },
   ];
 
   const handleStatusClick = (status: PlaceStatus) => {
@@ -114,23 +114,21 @@ export const CountryContextMenu: React.FC<CountryContextMenuProps> = ({
           onClick={onClose}
           title="Close"
         >
-          <X size={12} />
+          <X size={17} />
         </button>
       </div>
 
       {/* Status Buttons */}
       <div className="country-context-menu__actions">
-        {statusOptions.map(({ status, label, icon, colorVar }) => {
+        {statusOptions.map(({ status, label, icon }) => {
           const isActive = currentStatus === status;
           return (
             <button
               key={status}
-              className={`country-context-menu__status-btn ${isActive ? 'country-context-menu__status-btn--active' : ''}`}
-              style={{
-                '--status-color': colorVar,
-              } as React.CSSProperties}
+              className={`country-context-menu__status-btn country-context-menu__status-btn--${status.toLowerCase()} ${isActive ? 'country-context-menu__status-btn--active' : ''}`}
               onClick={() => handleStatusClick(status)}
               title={isActive ? `Clear ${label}` : `Mark as ${label}`}
+              aria-pressed={isActive}
             >
               {icon}
               <span>{label}</span>

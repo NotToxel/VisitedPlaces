@@ -125,6 +125,11 @@ export async function fetchFlagAsBlobUrl(placeId: string, url: string, priority:
 export function getPlaceFlagUrl(placeId: string): string | null {
   if (!placeId) return null;
 
+  // Greenland is rendered as its own world-map place but is not in COUNTRIES.
+  if (placeId === 'GRL') return 'https://flagcdn.com/gl.svg';
+  // Antarctica has no official flag.
+  if (placeId === 'ATA') return null;
+
   // Check if we already have the blob URL cached
   if (resolvedBlobUrlCache.has(placeId)) {
     return resolvedBlobUrlCache.get(placeId)!;

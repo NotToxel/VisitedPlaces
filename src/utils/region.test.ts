@@ -17,6 +17,11 @@ describe('Region & Flag Helper Logic', () => {
   });
 
   describe('getPlaceFlagUrl', () => {
+    it('uses Greenland’s flag and leaves Antarctica without a flag', () => {
+      expect(getPlaceFlagUrl('GRL')).toBe('https://flagcdn.com/gl.svg');
+      expect(getPlaceFlagUrl('ATA')).toBeNull();
+    });
+
     it('should return USA sub-region flag URL with correct extension', () => {
       const californiaUrl = getPlaceFlagUrl('USA-US-CA');
       expect(californiaUrl).toBe('https://cdn.jsdelivr.net/gh/amckenna41/iso3166-flags@main/iso3166-2-flags/US/US-CA.svg');

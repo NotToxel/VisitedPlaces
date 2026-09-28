@@ -116,7 +116,7 @@ export const FlagImage: React.FC<FlagImageProps> = ({
   const imageKey = `${placeId}:${src}`;
 
   if (!src) {
-    return <div className={`flag-placeholder ${className}`} style={{ backgroundColor: 'var(--color-base-300)', opacity: 0.15 }} />;
+    return null;
   }
 
   return (
