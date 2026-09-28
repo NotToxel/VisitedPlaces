@@ -1,219 +1,120 @@
-# 🌍 VisitedPlaces
+# VisitedPlaces
 
-**An interactive world travel tracker** — mark countries and regions you've visited, explore your travel analytics, and compare maps with friends using serverless shareable codes.
+**A personal atlas for where you have been and where you want to go.** Mark countries and sub-regions, see your travel coverage, and compare maps with friends using share codes. Your places stay in your browser; no account is required.
 
-[![Version](https://img.shields.io/badge/version-2.4.3-blue.svg)](package.json)
-[![License: AGPL-3.0](https://img.shields.io/badge/License-AGPL--3.0-blue.svg)](LICENSE)
-[![TypeScript](https://img.shields.io/badge/TypeScript-Strict-3178C6.svg)](tsconfig.app.json)
+[![Version](https://img.shields.io/badge/version-2.4.3-476d50)](package.json) [![License: AGPL-3.0-only](https://img.shields.io/badge/license-AGPL--3.0--only-476d50)](LICENSE) [![CI](https://github.com/NotToxel/VisitedPlaces/actions/workflows/ci.yml/badge.svg)](https://github.com/NotToxel/VisitedPlaces/actions)
 
----
+![A world map in VisitedPlaces showing visited, wishlist, revisit, and avoid destinations](docs/screenshots/01-world-map.png)
 
-## 📸 Overview & Interface Preview
+*The map with sample travel data. [See more screenshots](#see-it-in-action) · [Run locally](#run-it-locally) · [How your data works](#privacy-and-offline-use)*
 
-### 🗺️ Interactive World Map
-Track visited places, bucket-list destinations, revisit goals, and avoided regions with smooth zooming, panning, and microstate support.
+## Start with your map
 
-![Interactive World Map](docs/screenshots/01-world-map.png)
+Choose **Visited**, **Wishlist**, **Revisit**, or **Avoid** for a country on the map or in the Places directory. Search for a place, filter the directory by continent or status, and open a country to mark its sub-regions. Marking a sub-region can also update its parent country status.
 
----
+Your map is saved automatically in this browser. Open **Settings → Export your map** to copy a code for backup or sharing. Importing a code in Settings replaces the places currently saved on that device.
 
-### ⬡ Hexagonal Grid View
-A stylized honeycomb grid visualization providing equal visual weight to nations and territories across the globe.
+## See it in action
 
-![Hexagonal Honeycomb Map](docs/screenshots/02-hexagon-map.png)
+### 1. Find and mark places
 
----
+The Places directory gives you quick status controls, search, filters, and a detail panel for supported sub-regions.
 
-### 📊 Travel Analytics & Traveler Persona
-Deep dive into your travel footprint with continent coverage breakdowns, progress toward world exploration milestones, regional comparison charts, and gamified traveler badges.
+![Places directory with country status controls and coverage statistics](docs/screenshots/03-country-directory.png)
 
-![Travel Analytics Dashboard](docs/screenshots/04-analytics-dashboard.png)
+Open a country on the map to work at regional scale. The example below shows US states and a separate list of territories.
 
----
+![United States regional map with marked states and a territory list](docs/screenshots/06-regional-drilldown.png)
 
-### 🤝 Social Compare Mode
-Compare travel maps side-by-side with friends using compact, serverless share codes. Identify mutual destinations, discover trip recommendations, and see travel overlaps in real time.
+### 2. Understand your coverage
 
-![Social Compare Mode](docs/screenshots/05-compare-mode.png)
+Insights turns your entries into continent coverage, regional breakdowns, and exploration milestones.
 
----
+![Insights dashboard showing coverage, continent progress, and regional charts](docs/screenshots/04-analytics-dashboard.png)
 
-### 🏛️ Sub-Region Drill-Down & Territory Exploration
-Drill down into sub-national states, provinces, and territories (US states, Canadian provinces, UK counties, and admin-1 divisions worldwide) directly on the interactive map or through the dedicated sub-regions explorer panel.
+### 3. Compare with friends
 
-| Interactive Regional Drill-down (US States) | Sub-regions Explorer Drawer |
-|:---:|:---:|
-| ![Regional Drill-down](docs/screenshots/06-regional-drilldown.png) | ![Sub-region Explorer](docs/screenshots/07-subregions-drawer.png) |
+Copy your code from Settings or the Compare page. Add a friend's code to a comparison group to see shared visits, different journeys, wishlists, and a compatibility score. Comparison groups are saved in this browser too.
 
----
+![Compare page showing two travelers, a combined map, and shared travel statistics](docs/screenshots/05-compare-mode.png)
 
-### 📋 Searchable Country Directory
-Browse 199+ countries grouped by continent with progress bars, sorting options, and quick status actions.
+### On mobile
 
-![Country Directory](docs/screenshots/03-country-directory.png)
+The same tracking, regional detail, insights, and comparison flows fit a phone screen. These captures use the light theme and the same sample travel data as the desktop images.
 
----
+**Map and regional map**
 
-## ✨ Features
+<p><img src="docs/screenshots/08-light-mobile-map.png" alt="Light theme world map on mobile" width="300"> <img src="docs/screenshots/09-light-mobile-regions.png" alt="United States regional map on mobile" width="300"></p>
 
-| Feature | Description |
-|---|---|
-| 🗺️ **Interactive World Map** | Click countries to open a context menu to change their status or drill into sub-regions (US states, UK counties, and admin-1 sub-divisions globally). |
-| ⬡ **Hexagon Map** | Alternative hexagonal honeycomb visualization for an equalized, stylized view of global coverage. |
-| 📋 **Country Directory** | Searchable directory of 199+ countries grouped by continent, with sub-region expansion, sorting, and stats. |
-| 📊 **Analytics Dashboard** | Coverage stats, continent breakdowns, regional distribution charts, and gamified milestone levels. |
-| 🤝 **Compare Mode** | Paste friends' share codes to see a merged map highlighting common destinations, individual travels, and overlaps. |
-| 🔄 **Zero-Server Share Codes** | Export your map as a compact, URL-safe base64 code. Import codes from friends to compare or restore backups. |
-| 🌓 **Dark & Light Mode** | Sleek modern dark mode interface with light theme support. |
-| 🔒 **Privacy First** | Zero servers, zero telemetry, zero accounts. 100% of your data remains in your browser's local storage. |
+**Places and sub-region detail**
 
-### Status Types
+<p><img src="docs/screenshots/10-light-mobile-places.png" alt="Places directory on mobile" width="300"> <img src="docs/screenshots/11-light-mobile-place-detail.png" alt="United States sub-region detail sheet on mobile" width="300"></p>
 
-- 🟢 **Visited** — Places you have traveled to
-- 🟣 **Wishlist** — Bucket-list destinations you plan to visit
-- 🟠 **Revisit** — Places you've loved and want to return to
-- 🔴 **Avoid** — Places you do not wish to visit
+**Insights and Compare**
 
----
+<p><img src="docs/screenshots/12-light-mobile-insights.png" alt="Insights dashboard on mobile" width="300"> <img src="docs/screenshots/13-light-mobile-compare.png" alt="Compare maps page on mobile" width="300"></p>
 
-## 🗃️ Data Sources
+<details>
+<summary>More views: hex map and sub-region explorer</summary>
 
-VisitedPlaces utilizes high-quality, open-source datasets to power interactive maps, country metadata, and sub-national flags:
+The hex map offers an alternative view of the same country statuses.
 
-*   **World Map Geometries:** TopoJSON boundaries from the [world-atlas](https://github.com/topojson/world-atlas) project (110m resolution).
-*   **Global Sub-division Geometries:** Natural Earth admin-1 (states and provinces) 10m resolution GeoJSON from the [nvkelso/natural-earth-vector](https://github.com/nvkelso/natural-earth-vector) repository.
-*   **National Flags:** High-resolution vector flags served by [Flagpedia / FlagCDN](https://flagcdn.com/).
-*   **Sub-National Flags:** Sub-national state, province, and regional flag assets from [amckenna41/iso3166-flags](https://github.com/amckenna41/iso3166-flags).
-*   **Country Metadata:** Static country metadata (names, codes, continents, regions) compiled from the [REST Countries API](https://restcountries.com/).
+![Hexagonal map view](docs/screenshots/02-hexagon-map.png)
 
----
+The Places detail panel lets you search and manage a country's regions.
 
-## 🚀 Quick Start
+![United States detail panel with sub-region controls](docs/screenshots/07-subregions-drawer.png)
 
-### Prerequisites
+</details>
 
-- [Node.js](https://nodejs.org/) 20+
-- npm 10+
+## Run it locally
 
-### Install & Run
+Requires **Node.js 20+** and **npm 10+**.
 
 ```bash
-git clone https://github.com/your-username/VisitedPlaces.git
+git clone https://github.com/NotToxel/VisitedPlaces.git
 cd VisitedPlaces
 npm install
 npm run dev
 ```
 
-Open [http://localhost:5173](http://localhost:5173) in your browser.
-
-### Automated Screenshots
-
-Generate the latest high-resolution screenshots with demo travel data automatically:
+Open the local URL printed by Vite (normally `http://localhost:5173`). To build the static site:
 
 ```bash
-# With dev server running on localhost:5173
-npm run screenshots
+npm run build
+npm run preview
 ```
 
-### Build for Production
+Deploy the generated `dist/` directory to a static host. The app does not need a backend or environment variables.
+
+## Privacy and offline use
+
+- **Your travel entries stay local.** Zustand persists them in `localStorage`. There are no accounts or application servers receiving your map. Share codes contain your places, so send them only to people you choose.
+- **Country tracking uses bundled data.** Country metadata and world geometry ship with the app. Once the app assets are available, marking countries, viewing insights, and using share codes do not depend on a data API.
+- **Some details need a connection.** Most sub-region maps load Natural Earth geometry on demand; the Singapore override and some flag images also use external sources. City and region-name search indexes load from this site's own files as needed. Search text is not sent to a geocoding service.
+- **Browser storage belongs to this browser.** Clearing site data removes your saved map and comparison groups. Keep an exported code if you need a backup or want to move devices.
+
+## For contributors
+
+This is a React 19 and TypeScript app built with Vite 7. Zustand holds local state, React Router handles the pages, react-simple-maps and D3 render maps, and Recharts powers Insights. Styling combines CSS design tokens with Tailwind utilities. Read [AGENTS.MD](AGENTS.MD) for architecture, project conventions, and feature guides.
 
 ```bash
-npm run build     # TypeScript check + Vite production bundle → dist/
-npm run preview   # Preview the production build locally
+npm run lint        # ESLint
+npm run test:run    # Vitest
+npm run build       # TypeScript check and production build
+npm run screenshots # Refresh README images while the dev server is running
 ```
 
-The `dist/` folder is a static site — deploy it to GitHub Pages, Netlify, Vercel, or any static host. No backend required.
+The screenshot script seeds a **sample map** in a fresh browser context and writes images to [`docs/screenshots/`](docs/screenshots/). It does not use your personal browser data.
 
----
+### Data and attribution
 
-## 🏗️ Tech Stack
+- World boundaries: [world-atlas](https://github.com/topojson/world-atlas), bundled as [`public/countries-110m.json`](public/countries-110m.json).
+- Sub-region geometry: [Natural Earth admin-1](https://github.com/nvkelso/natural-earth-vector), fetched on demand for most countries; Singapore uses a [planning-area GeoJSON source](https://github.com/yinshanyang/singapore).
+- Country metadata: bundled in [`src/data/countries.ts`](src/data/countries.ts), compiled from [REST Countries](https://restcountries.com/).
+- Country flags: [FlagCDN](https://flagcdn.com/). Sub-national flags: [iso3166-flags](https://github.com/amckenna41/iso3166-flags).
+- Place search: [GeoNames cities500](https://download.geonames.org/export/dump/) under CC BY 4.0. See [coverage and attribution notes](public/place-index/README.md).
 
-| Layer | Technology | Version |
-|---|---|---|
-| Framework | React 19 + TypeScript (strict mode) | React 19.2 |
-| Build | Vite 7 | Vite 7.3 |
-| Styling | TailwindCSS 4 + Vanilla CSS Variables | Tailwind 4.3 |
-| State | Zustand 5 + localStorage persistence | Zustand 5.0 |
-| Routing | React Router 7 | React Router 7.13 |
-| Maps | react-simple-maps + D3 (TopoJSON & Hexbin) | react-simple-maps 3.0 |
-| Charts | Recharts | Recharts 3.8 |
-| Icons | Lucide React | Lucide 0.577 |
-| Testing & Automation | Vitest + Playwright | Vitest 4.1 / Playwright 1.62 |
+## License
 
----
-
-## 📁 Project Structure
-
-```
-src/
-├── components/
-│   ├── common/          # Reusable UI components (FlagImage)
-│   ├── layout/          # AppLayout, Navbar, SettingsModal
-│   └── map/             # StandardMap, HexagonMap, CompareMap, MapContainer, TerritoryListPanel
-├── config/              # Constants, url endpoints, drill-down registry
-├── data/                # Static countries data, territories, UK/US regional mappings
-├── hooks/               # useDrilldownGeography, useMapAnimation
-├── pages/               # Home, List, Analytics, Compare, About
-├── store/               # Zustand store (places, theme, actions)
-└── utils/               # Map utilities, serialization, CacheStorage, TopoJSON processing
-```
-
----
-
-## 🤝 How Sharing Works
-
-1. Open **Settings** → your travel map is encoded as a compact, URL-safe base64 string
-2. Copy the code and share it with a friend
-3. Your friend pastes it into the **Compare** page
-4. A merged visualization shows mutual destinations, unique travels, and trip overlaps
-
-No server or database involved — your travel state is stored directly within the compact share code.
-
----
-
-## Place search data
-
-The map can find cities, towns, and official sub-region names worldwide and
-suggest the region shown by the app. The city index is generated from [GeoNames cities500](https://download.geonames.org/export/dump/)
-under CC BY 4.0; see the [index attribution and coverage notes](public/place-index/README.md).
-The city index is split into small files; the smaller region-name index loads
-only when searching the world map. Both load from this app's own origin as needed.
-Search text is never sent to a geocoding service. Some sub-region maps still
-need a network connection to load their geometry before the app can identify
-and mark a city's region.
-
----
-
-## 🧑‍💻 Contributing
-
-Contributions are welcome! Please read the [AGENTS.MD](AGENTS.MD) file for:
-- Architecture overview and design decisions
-- Coding standards (TypeScript strict mode, BEM CSS, Zustand patterns)
-- Step-by-step guides for adding new features
-- Testing strategy and quality gates
-
-### Development Workflow
-
-```bash
-npm run dev       # Start dev server with HMR
-npm run lint      # Run ESLint
-npm run test:run  # Run Vitest unit tests
-npm run build     # Type-check + production build
-```
-
-### Commit Convention
-
-We use [Conventional Commits](https://www.conventionalcommits.org/):
-
-```
-feat: add trip dates to country data
-fix: resolve projection error on UK drill-down
-chore: update dependencies
-refactor: extract map tooltip into component
-```
-
----
-
-## 📄 License
-
-This project is licensed under the **GNU Affero General Public License v3.0** — see the [LICENSE](LICENSE) file for details.
+VisitedPlaces is licensed under [GNU AGPL v3.0 only](LICENSE).

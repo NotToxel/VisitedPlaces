@@ -267,12 +267,10 @@ async function capture() {
     await searchInputList.fill('United States');
     await page.waitForTimeout(1000);
   }
-  const usaCard = page.locator('text="United States"').first();
-  if (await usaCard.isVisible()) {
-    await usaCard.click();
-    // Wait for sub-regions to load from Natural Earth & render list with flags and status dots
-    await page.waitForTimeout(3500);
-  }
+  const usaCard = page.locator('.list-country-card').filter({ hasText: 'United States of America' });
+  await usaCard.click();
+  await page.locator('.survey-list__sidebar').getByText('Sub-regions Explorer').waitFor();
+  await page.locator('.survey-list__sidebar input[placeholder="Find region..."]').waitFor({ timeout: 40000 });
   await page.screenshot({
     path: path.join(outputDir, '07-subregions-drawer.png'),
     fullPage: false
@@ -293,6 +291,66 @@ async function capture() {
     path: path.join(outputDir, '05-compare-mode.png'),
     fullPage: false
   });
+
+  console.log('📸 8. Capturing Light Mobile Map...');
+  await page.setViewportSize({ width: 390, height: 844 });
+  await page.goto(`${baseUrl}/`, { waitUntil: 'networkidle' });
+  await page.getByRole('button', { name: 'Settings' }).click();
+  await page.getByRole('group', { name: 'Color theme' }).getByRole('button', { name: 'Light' }).click();
+  await page.getByRole('button', { name: 'Close settings' }).click();
+  await page.waitForTimeout(1000);
+  await page.screenshot({
+    path: path.join(outputDir, '08-light-mobile-map.png'),
+    fullPage: false
+  });
+
+  console.log('📸 9. Capturing Light Mobile Regional Map...');
+  await page.evaluate(() => {
+    const paths = Array.from(document.querySelectorAll('path.rsm-geography'));
+    const tooltipEl = document.getElementById('map-tooltip');
+    for (const path of paths) {
+      const propKey = Object.keys(path).find(key => key.startsWith('__reactProps'));
+      const props = propKey ? path[propKey] : null;
+      props?.onMouseEnter?.({ clientX: 200, clientY: 200 });
+      if (tooltipEl?.textContent?.includes('United States')) {
+        props.onClick?.({ stopPropagation: () => {}, clientX: 200, clientY: 300 });
+        props.onMouseLeave?.();
+        return;
+      }
+    }
+    throw new Error('United States map path was not found');
+  });
+  await page.getByRole('button', { name: /Explore regions/i }).click();
+  await page.getByRole('button', { name: /Back to World/i }).waitFor({ timeout: 40000 });
+  await page.waitForTimeout(1500);
+  await page.screenshot({ path: path.join(outputDir, '09-light-mobile-regions.png'), fullPage: false });
+
+  const mobileNav = page.getByRole('navigation', { name: 'Mobile navigation' });
+  console.log('📸 10. Capturing Light Mobile Places...');
+  await mobileNav.getByRole('link', { name: 'Places' }).click();
+  await page.getByRole('heading', { name: 'Places' }).waitFor();
+  await page.waitForTimeout(800);
+  await page.screenshot({ path: path.join(outputDir, '10-light-mobile-places.png'), fullPage: false });
+
+  console.log('📸 11. Capturing Light Mobile Place Detail...');
+  await page.getByRole('textbox', { name: 'Search countries' }).fill('United States');
+  await page.locator('.list-country-card').filter({ hasText: 'United States of America' }).click();
+  await page.getByText('Sub-regions Explorer').last().waitFor();
+  await page.waitForTimeout(1000);
+  await page.screenshot({ path: path.join(outputDir, '11-light-mobile-place-detail.png'), fullPage: false });
+  await page.getByTitle('Close details').last().click();
+
+  console.log('📸 12. Capturing Light Mobile Insights...');
+  await mobileNav.getByRole('link', { name: 'Insights' }).click();
+  await page.getByRole('heading', { name: 'Your coverage' }).waitFor();
+  await page.waitForTimeout(1200);
+  await page.screenshot({ path: path.join(outputDir, '12-light-mobile-insights.png'), fullPage: false });
+
+  console.log('📸 13. Capturing Light Mobile Compare...');
+  await mobileNav.getByRole('link', { name: 'Compare' }).click();
+  await page.getByRole('heading', { name: 'Compare maps' }).waitFor();
+  await page.waitForTimeout(1200);
+  await page.screenshot({ path: path.join(outputDir, '13-light-mobile-compare.png'), fullPage: false });
 
   await browser.close();
   console.log(`✅ All screenshots captured successfully in: ${outputDir}`);
