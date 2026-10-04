@@ -1,5 +1,5 @@
 import React from 'react';
-import { NavLink } from 'react-router-dom';
+import { NavLink, useLocation, useNavigate } from 'react-router-dom';
 import { Map, List, BarChart3, Users, Settings, Info } from 'lucide-react';
 import { SettingsModal } from './SettingsModal';
 
@@ -12,6 +12,28 @@ const primaryLinks = [
 
 export const Navbar: React.FC = () => {
   const [isSettingsOpen, setIsSettingsOpen] = React.useState(false);
+  const location = useLocation();
+  const navigate = useNavigate();
+  const isAboutPage = location.pathname === '/about';
+  const previousLocationRef = React.useRef<string>('/');
+
+  React.useEffect(() => {
+    if (location.pathname !== '/about') {
+      previousLocationRef.current = location.pathname + location.search + location.hash;
+    }
+  }, [location]);
+
+  const handleAboutClick = (e: React.MouseEvent<HTMLAnchorElement>) => {
+    if (isAboutPage) {
+      e.preventDefault();
+      const stateFrom = (location.state as { from?: string } | null)?.from;
+      if (window.history.state && typeof window.history.state.idx === 'number' && window.history.state.idx > 0) {
+        navigate(-1);
+      } else {
+        navigate(stateFrom || previousLocationRef.current || '/');
+      }
+    }
+  };
 
   return (
     <>
@@ -37,7 +59,14 @@ export const Navbar: React.FC = () => {
 
         <div className="survey-header__utility">
           <span className="survey-header__privacy">Offline first · Your data stays here</span>
-          <NavLink to="/about" className={({ isActive }) => `survey-header__icon${isActive ? ' survey-header__icon--active' : ''}`} title="About" aria-label="About">
+          <NavLink
+            to="/about"
+            state={{ from: location.pathname + location.search + location.hash }}
+            onClick={handleAboutClick}
+            className={({ isActive }) => `survey-header__icon${isActive ? ' survey-header__icon--active' : ''}`}
+            title={isAboutPage ? 'Close About' : 'About'}
+            aria-label={isAboutPage ? 'Close About' : 'About'}
+          >
             <Info size={19} strokeWidth={1.8} />
           </NavLink>
           <button type="button" onClick={() => setIsSettingsOpen(true)} className="survey-header__icon" title="Settings" aria-label="Settings">

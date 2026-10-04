@@ -1,7 +1,7 @@
 # AGENTS.MD — VisitedPlaces Project Guide
 
-> **Version**: 2.4.3
-> **Last Updated**: 2026-09-28
+> **Version**: 2.4.4
+> **Last Updated**: 2026-10-04
 > **Status**: Active Development
 
 ---
@@ -260,7 +260,7 @@ We use [Semantic Versioning](https://semver.org/):
 
 ### Current Version
 
-`2.4.3` — Patch release refining the drill-down sidebar header and keeping status counters centered as digit lengths change.
+`2.4.4` — Patch release allowing the About button to toggle closed and return to the previous view.
 
 ### Display
 
