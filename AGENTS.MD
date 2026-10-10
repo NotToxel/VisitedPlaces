@@ -1,6 +1,6 @@
 # AGENTS.MD — VisitedPlaces Project Guide
 
-> **Version**: 2.5.0
+> **Version**: 2.5.1
 > **Last Updated**: 2026-10-04
 > **Status**: Active Development
 
@@ -260,7 +260,7 @@ We use [Semantic Versioning](https://semver.org/):
 
 ### Current Version
 
-`2.5.0` — Minor release adding optional residency tracking and timeline analytics.
+`2.5.1` — Patch release refining the Places detail panel and sub-region controls.
 
 ### Display
 
