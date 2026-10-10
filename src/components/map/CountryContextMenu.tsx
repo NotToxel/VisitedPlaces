@@ -1,9 +1,11 @@
 import React, { useEffect, useRef } from 'react';
-import { Check, Heart, RotateCcw, Ban, X, ChevronRight } from 'lucide-react';
+import { Check, Heart, RotateCcw, Ban, X, ChevronRight, Home } from 'lucide-react';
 import { COUNTRIES } from '../../data/countries';
 import type { PlaceStatus } from '../../store/useStore';
+import { useStore } from '../../store/useStore';
 import { hasDrilldownSupport } from '../../utils/topojsonCache';
 import { FlagImage } from '../common/FlagImage';
+import { ResidencyPeriodEditor } from '../common/ResidencyPeriodEditor';
 
 interface CountryContextMenuProps {
   countryId: string;
@@ -26,11 +28,15 @@ export const CountryContextMenu: React.FC<CountryContextMenuProps> = ({
   onDrillDown,
   onClose,
 }) => {
+  const { places, livedTrackingEnabled, setCountryLived, setCountryPeriods } = useStore();
   const menuRef = useRef<HTMLDivElement>(null);
   const country = COUNTRIES.find((c) => c.id === countryId);
   const resolvedName = displayName || country?.name || countryId;
 
   const hasDrillDown = hasDrilldownSupport(countryId);
+  const placeData = places[countryId];
+  const isLived = Boolean(placeData?.lived);
+  const periods = placeData?.periods || [];
 
   // Reposition if overflowing viewport
   useEffect(() => {
@@ -50,7 +56,7 @@ export const CountryContextMenu: React.FC<CountryContextMenuProps> = ({
     if (rect.top < 12) {
       el.style.top = '12px';
     }
-  }, [x, y]);
+  }, [x, y, isLived, periods.length]);
 
   // Close on Escape
   useEffect(() => {
@@ -87,7 +93,6 @@ export const CountryContextMenu: React.FC<CountryContextMenuProps> = ({
     } else {
       onSetStatus(countryId, status);
     }
-    onClose();
   };
 
   return (
@@ -136,6 +141,42 @@ export const CountryContextMenu: React.FC<CountryContextMenuProps> = ({
           );
         })}
       </div>
+
+      {/* Lived Section (Only when feature enabled in settings) */}
+      {livedTrackingEnabled && (
+        <div className="country-context-menu__lived-section">
+          <label className="country-context-menu__lived-toggle">
+            <div className="country-context-menu__lived-label">
+              <Home size={15} />
+              <span>I have lived here</span>
+            </div>
+            <input
+              type="checkbox"
+              className="survey-checkbox"
+              checked={isLived}
+              onChange={(e) => {
+                const next = e.target.checked;
+                setCountryLived(countryId, next);
+                if (next && currentStatus === 'NONE') {
+                  onSetStatus(countryId, 'VISITED');
+                }
+              }}
+              aria-label={`Mark ${resolvedName} as lived in`}
+            />
+          </label>
+
+          {isLived && (
+            <div className="country-context-menu__period-wrapper">
+              <ResidencyPeriodEditor
+                periods={periods}
+                onChange={(newPeriods) => setCountryPeriods(countryId, newPeriods)}
+                placeName={resolvedName}
+                compact
+              />
+            </div>
+          )}
+        </div>
+      )}
 
       {/* Drill-Down Button */}
       {hasDrillDown && (

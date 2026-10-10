@@ -1,11 +1,13 @@
 import React from 'react';
-import { Ban, Check, Globe, Heart, Layers, Loader2, RotateCcw, Search, Trophy, X } from 'lucide-react';
+import { Ban, Check, Globe, Heart, Home, Layers, Loader2, RotateCcw, Search, Trophy, X } from 'lucide-react';
 import type { Country } from '../../data/countries';
 import type { PlaceStatus, UserPlacesMap } from '../../store/useStore';
+import { useStore } from '../../store/useStore';
 import type { TopoRegion } from '../../utils/topojsonCache';
 import { hasDrilldownSupport } from '../../utils/topojsonCache';
 import { fuzzyMatch } from '../../utils/searchUtils';
 import { FlagImage } from '../common/FlagImage';
+import { ResidencyPeriodEditor } from '../common/ResidencyPeriodEditor';
 
 type StatusFilter = 'ALL' | 'VISITED' | 'WISHLIST' | 'REVISIT' | 'AVOID' | 'UNSELECTED';
 
@@ -40,8 +42,12 @@ export function ListDetailPanel({
   subRegionCounts, selectCountry, handleStatusChange, handleMarkAllVisited,
   handleClearAllRegions,
 }: ListDetailPanelProps) {
+    const { livedTrackingEnabled, setCountryLived, setRegionLived, setCountryPeriods } = useStore();
+
     if (!selectedCountry) {
       // Statistics view
+      const livedCount = Object.entries(places).filter(([k, v]) => v.lived && !k.includes('-')).length;
+
       return (
         <div className="flex flex-col gap-4 h-full">
           <div className="flex items-center gap-2 border-b border-base-300/50 pb-3">
@@ -72,6 +78,17 @@ export function ListDetailPanel({
                 <span className="text-lg font-extrabold text-accent-avoid mt-0.5">{stats.avoid}</span>
                 <span className="text-[9px] text-base-content/50 mt-0.5">Not planning to go</span>
               </div>
+
+              {livedTrackingEnabled && (
+                <div className="bg-base-200/30 border border-base-300/40 rounded-xl p-2.5 flex flex-col col-span-2">
+                  <div className="flex items-center justify-between">
+                    <span className="text-[10px] uppercase font-bold text-base-content/40">Places Called Home</span>
+                    <Home size={13} className="text-primary opacity-60" />
+                  </div>
+                  <span className="text-lg font-extrabold text-primary mt-0.5">{livedCount}</span>
+                  <span className="text-[9px] text-base-content/50 mt-0.5">{livedCount === 1 ? '1 country lived in' : `${livedCount} countries lived in`}</span>
+                </div>
+              )}
             </div>
 
             {/* Continent progress bars */}
@@ -111,12 +128,16 @@ export function ListDetailPanel({
 
     const hasSubRegions = hasDrilldownSupport(selectedCountry.id);
     const countryStatus = places[selectedCountry.id]?.status || 'NONE';
+    const isCountryLived = Boolean(places[selectedCountry.id]?.lived);
+    const countryPeriods = places[selectedCountry.id]?.periods || [];
 
     // Filter subregions
-    const subregionsList = subRegionsByCountry[selectedCountry.id] || [];
-    const filteredSubregions = subregionsList.filter(r => {
-      const matchesSearch = fuzzyMatch(r.name, subRegionSearch);
-      const stateStatus = places[r.id]?.status || 'NONE';
+    const allSubregions = subRegionsByCountry[selectedCountry.id] || [];
+    const filteredSubregions = allSubregions.filter(state => {
+      const stateStatus = places[state.id]?.status || 'NONE';
+      const matchesSearch = subRegionSearch === '' ||
+        fuzzyMatch(subRegionSearch, state.name) ||
+        state.id.toLowerCase().includes(subRegionSearch.toLowerCase());
       const matchesFilter =
         subRegionFilter === 'ALL' ? true :
         subRegionFilter === 'UNSELECTED' ? stateStatus === 'NONE' :
@@ -154,7 +175,7 @@ export function ListDetailPanel({
         </div>
 
         {/* Scrollable details content */}
-        <div className="flex-1 flex flex-col gap-4 overflow-hidden">
+        <div className="flex-1 flex flex-col gap-4 overflow-y-auto pr-1">
 
           {/* Status selection panel */}
           <div className="bg-base-200/35 border border-base-300/40 rounded-xl p-3 shrink-0 flex flex-col gap-2">
@@ -197,11 +218,49 @@ export function ListDetailPanel({
                 </button>
               )}
             </div>
+
+            {/* Lived Section (Only if enabled in settings) */}
+            {livedTrackingEnabled && (
+              <div className="mt-2 pt-2.5 border-t border-base-300/35 flex flex-col gap-2">
+                <label className="flex items-center justify-between p-2 rounded-lg bg-base-200/50 border border-base-300/40 hover:border-base-300 cursor-pointer select-none transition">
+                  <div className="flex items-center gap-2">
+                    <Home size={14} className="text-primary opacity-80" />
+                    <div className="flex flex-col">
+                      <span className="text-xs font-bold text-base-content">I have lived here</span>
+                      <span className="text-[10px] text-base-content/50">Marks as past or current home</span>
+                    </div>
+                  </div>
+                  <input
+                    type="checkbox"
+                    className="survey-checkbox"
+                    checked={isCountryLived}
+                    onChange={(e) => {
+                      const next = e.target.checked;
+                      setCountryLived(selectedCountry.id, next);
+                      if (next && countryStatus === 'NONE') {
+                        handleStatusChange(selectedCountry.id, 'VISITED');
+                      }
+                    }}
+                  />
+                </label>
+
+                {isCountryLived && (
+                  <div className="p-2 bg-base-200/30 rounded-lg border border-base-300/30">
+                    <ResidencyPeriodEditor
+                      periods={countryPeriods}
+                      onChange={(newPeriods) => setCountryPeriods(selectedCountry.id, newPeriods)}
+                      placeName={selectedCountry.name}
+                      compact
+                    />
+                  </div>
+                )}
+              </div>
+            )}
           </div>
 
           {/* Sub-regions management container */}
           {hasSubRegions ? (
-            <div className="flex-1 flex flex-col gap-2 overflow-hidden bg-base-200/10 border border-base-300/35 rounded-xl p-3">
+            <div className="flex-1 flex flex-col gap-2 overflow-hidden bg-base-200/10 border border-base-300/35 rounded-xl p-3 min-h-[300px]">
               <div className="flex items-center justify-between shrink-0">
                 <span className="text-[10px] uppercase font-bold text-base-content/40 tracking-wider">
                   Sub-regions Explorer
@@ -307,6 +366,10 @@ export function ListDetailPanel({
                     ) : (
                       filteredSubregions.map(state => {
                         const stateStatus = places[state.id]?.status || 'NONE';
+                        const isStateLived = Boolean(
+                          places[selectedCountry.id]?.livedRegions?.[state.id] ||
+                          places[state.id]?.lived
+                        );
 
                         return (
                           <div
@@ -334,9 +397,25 @@ export function ListDetailPanel({
                                 />
                               </div>
                               <span className="truncate flex-1 font-bold">{state.name}</span>
+                              {isStateLived && (
+                                <span className="text-[10px] font-bold px-1.5 py-0.5 rounded bg-base-300 text-primary flex items-center gap-1" title="Lived in this region">
+                                  <Home size={10} />
+                                </span>
+                              )}
                             </div>
 
-                            <div className="flex gap-1 shrink-0">
+                            <div className="flex gap-1 shrink-0 items-center">
+                              {livedTrackingEnabled && (
+                                <button
+                                  type="button"
+                                  onClick={() => setRegionLived(selectedCountry.id, state.id, !isStateLived)}
+                                  className={`btn btn-square btn-sm h-7.5 w-7.5 ${isStateLived ? 'btn-active text-primary bg-primary/20 border-primary/40' : 'btn-ghost text-base-content/30 hover:text-primary hover:bg-primary/10'}`}
+                                  title={isStateLived ? "Remove lived from this region" : "Mark as lived in this region"}
+                                  aria-label={`Toggle lived in ${state.name}`}
+                                >
+                                  <Home size={13} />
+                                </button>
+                              )}
                               <button
                                 onClick={() => handleStatusChange(state.id, 'VISITED')}
                                 className={`btn btn-square btn-sm h-7.5 w-7.5 ${stateStatus === 'VISITED' ? 'btn-success text-white border-none' : 'btn-ghost text-base-content/30 hover:text-accent-visited hover:bg-accent-visited/10'}`}

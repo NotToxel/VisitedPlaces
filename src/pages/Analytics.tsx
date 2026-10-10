@@ -4,9 +4,10 @@ import { COUNTRIES } from '../data/countries';
 import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip as RechartsTooltip, Legend } from 'recharts';
 import { BarChart3, Globe, Award, Trophy, ShieldCheck, Compass, Heart, CheckCircle2, Lock, Milestone } from 'lucide-react';
 import { fetchSubRegions, hasDrilldownSupport } from '../utils/topojsonCache';
+import { ResidencyTimeline } from '../components/analytics/ResidencyTimeline';
 
 const Analytics: React.FC = () => {
-  const { places } = useStore();
+  const { places, livedTrackingEnabled } = useStore();
   const totalCountries = COUNTRIES.length;
 
   const chartContainerRef = useRef<HTMLDivElement>(null);
@@ -483,6 +484,13 @@ const Analytics: React.FC = () => {
           </div>
 
         </div>
+
+        {/* Row: Places Called Home & Residency Timeline */}
+        {livedTrackingEnabled && (
+          <div className="shrink-0 min-h-0 min-w-0">
+            <ResidencyTimeline places={places} />
+          </div>
+        )}
 
         {/* Dynamic Sub-regions Exploration Progress */}
         {subRegionStats.length > 0 && (

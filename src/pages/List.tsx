@@ -15,7 +15,8 @@ import {
   Map, 
   ArrowUpAZ,
   ArrowDownAZ,
-  ListOrdered
+  ListOrdered,
+  Home
 } from 'lucide-react';
 import { fetchSubRegions, hasDrilldownSupport } from '../utils/topojsonCache';
 import type { TopoRegion } from '../utils/topojsonCache';
@@ -37,7 +38,7 @@ const CONTINENTS: { name: string; shortName: string }[] = [
 type SortMode = 'A-Z' | 'Z-A' | 'STATUS';
 
 // Status filter type
-type StatusFilter = 'ALL' | 'VISITED' | 'WISHLIST' | 'REVISIT' | 'AVOID' | 'UNSELECTED';
+type StatusFilter = 'ALL' | 'VISITED' | 'WISHLIST' | 'REVISIT' | 'AVOID' | 'UNSELECTED' | 'LIVED';
 
 // Status priority for "Status First" sorting
 const STATUS_PRIORITY: Record<string, number> = {
@@ -47,16 +48,6 @@ const STATUS_PRIORITY: Record<string, number> = {
   AVOID: 3,
   NONE: 4,
 };
-
-// Status display config
-const STATUS_CONFIG: { status: StatusFilter; label: string; dot: boolean }[] = [
-  { status: 'ALL', label: 'All', dot: false },
-  { status: 'VISITED', label: 'Visited', dot: true },
-  { status: 'WISHLIST', label: 'Wishlist', dot: true },
-  { status: 'REVISIT', label: 'Revisit', dot: true },
-  { status: 'AVOID', label: 'Avoid', dot: true },
-  { status: 'UNSELECTED', label: 'Unselected', dot: false },
-];
 
 // Status badge config for cards
 const BADGE_CONFIG: Record<string, { label: string; icon: React.ReactNode }> = {
@@ -76,7 +67,7 @@ const STATUS_GROUP_LABELS: Record<string, string> = {
 };
 
 const List: React.FC = () => {
-  const { places, setCountryStatus } = useStore();
+  const { places, setCountryStatus, livedTrackingEnabled } = useStore();
   
   // Search & Filters State
   const [search, setSearch] = useState('');
@@ -92,7 +83,7 @@ const List: React.FC = () => {
   // Sub-region loading & selection
   const [selectedCountryId, setSelectedCountryId] = useState<string | null>(null);
   const [subRegionSearch, setSubRegionSearch] = useState('');
-  const [subRegionFilter, setSubRegionFilter] = useState<StatusFilter>('ALL');
+  const [subRegionFilter, setSubRegionFilter] = useState<'ALL' | 'VISITED' | 'WISHLIST' | 'REVISIT' | 'AVOID' | 'UNSELECTED'>('ALL');
   const [subRegionsByCountry, setSubRegionsByCountry] = useState<Record<string, TopoRegion[]>>({});
   const [loadingSubRegions, setLoadingSubRegions] = useState<Record<string, boolean>>({});
 
@@ -146,8 +137,6 @@ const List: React.FC = () => {
     if (!regions) return;
     return preloadPlaceFlags(regions.map((region) => region.id));
   }, [selectedCountryId, subRegionsByCountry]);
-
-
 
   // Handle direct country status click
   const handleStatusChange = (id: string, newStatus: PlaceStatus) => {
@@ -225,6 +214,7 @@ const List: React.FC = () => {
     const wishlist = COUNTRIES.filter(c => places[c.id]?.status === 'WISHLIST').length;
     const revisit = COUNTRIES.filter(c => places[c.id]?.status === 'REVISIT').length;
     const avoid = COUNTRIES.filter(c => places[c.id]?.status === 'AVOID').length;
+    const lived = COUNTRIES.filter(c => places[c.id]?.lived).length;
     const unselected = total - visited - wishlist - revisit - avoid;
     const visitedAndRevisitCount = visited + revisit;
     const rate = total > 0 ? Math.round((visitedAndRevisitCount / total) * 1000) / 10 : 0;
@@ -241,23 +231,41 @@ const List: React.FC = () => {
       }
     });
 
-    return { total, visited, wishlist, revisit, avoid, unselected, rate, continents };
+    return { total, visited, wishlist, revisit, avoid, lived, unselected, rate, continents };
   }, [places]);
 
+  // Status display config
+  const statusConfig = useMemo(() => {
+    const base: { status: StatusFilter; label: string; dot: boolean }[] = [
+      { status: 'ALL', label: 'All', dot: false },
+      { status: 'VISITED', label: 'Visited', dot: true },
+      { status: 'WISHLIST', label: 'Wishlist', dot: true },
+      { status: 'REVISIT', label: 'Revisit', dot: true },
+      { status: 'AVOID', label: 'Avoid', dot: true },
+      { status: 'UNSELECTED', label: 'Unselected', dot: false },
+    ];
+    if (livedTrackingEnabled) {
+      base.push({ status: 'LIVED', label: 'Lived', dot: true });
+    }
+    return base;
+  }, [livedTrackingEnabled]);
+
   // Status counts for filter pills
-  const statusCounts = useMemo(() => ({
+  const statusCounts = useMemo<Record<StatusFilter, number>>(() => ({
     ALL: COUNTRIES.length,
     VISITED: stats.visited,
     WISHLIST: stats.wishlist,
     REVISIT: stats.revisit,
     AVOID: stats.avoid,
     UNSELECTED: stats.unselected,
+    LIVED: stats.lived,
   }), [stats]);
 
   // Filter countries list
   const filteredCountries = useMemo(() => {
     return COUNTRIES.filter(c => {
       const status = places[c.id]?.status || 'NONE';
+      const isLived = Boolean(places[c.id]?.lived);
       const searchVal = deferredSearch.trim();
       let matchesSearch = matchCountry(c.name, c.id, c.cca2, searchVal);
       
@@ -271,7 +279,8 @@ const List: React.FC = () => {
       const matchesFilter = 
         filterMode === 'ALL' ? true :
         filterMode === 'UNSELECTED' ? status === 'NONE' :
-        filterMode === status;
+        filterMode === 'LIVED' ? isLived :
+        status === filterMode;
 
       const matchesContinent = continentFilter.size === 0 || continentFilter.has(c.continent);
         
@@ -380,7 +389,7 @@ const List: React.FC = () => {
 
   const activeFilterLabels = [
     ...Array.from(continentFilter).sort(),
-    ...(filterMode === 'ALL' ? [] : [STATUS_CONFIG.find(({ status }) => status === filterMode)?.label ?? filterMode]),
+    ...(filterMode === 'ALL' ? [] : [statusConfig.find(({ status }) => status === filterMode)?.label ?? filterMode]),
     ...(search.trim() ? [`“${search.trim()}”`] : []),
   ];
   const hasActiveFilters = activeFilterLabels.length > 0;
@@ -466,7 +475,7 @@ const List: React.FC = () => {
         <div className="survey-list__filter-group" role="group" aria-label="Filter by status">
         <span className="survey-list__filter-label">Status</span>
         <div className="list-status-pills">
-          {STATUS_CONFIG.map(({ status, label, dot }) => (
+          {statusConfig.map(({ status, label, dot }) => (
             <button
               key={status}
               className={`list-status-pill list-status-pill--${status.toLowerCase()}${filterMode === status ? ' list-status-pill--active' : ''}`}
@@ -496,7 +505,7 @@ const List: React.FC = () => {
         </div>
       </div>
 
-      {/* Main Split Directory Area */}
+      {/* Main Content Area: Split View */}
       <div className="survey-list__main flex-1 flex flex-row gap-6 overflow-hidden h-full">
         
         {/* Left Side: Directory Scrollable List */}
@@ -527,6 +536,7 @@ const List: React.FC = () => {
                         const isSelected = selectedCountryId === country.id;
                         const hasDrill = hasDrilldownSupport(country.id);
                         const badge = BADGE_CONFIG[status];
+                        const isLived = livedTrackingEnabled && Boolean(places[country.id]?.lived);
 
                         return (
                           <div 
@@ -543,12 +553,20 @@ const List: React.FC = () => {
                                 <span className="list-country-card__name" title={country.name}>{country.name}</span>
                                 <span className="list-country-card__meta">{country.id} • {country.continent}</span>
                               </div>
-                              {badge && (
-                                <div className="list-country-card__status-badge">
-                                  {badge.icon}
-                                  <span>{badge.label}</span>
-                                </div>
-                              )}
+                              <div className="flex items-center gap-1.5">
+                                {isLived && (
+                                  <div className="list-country-card__lived-badge" title="You have lived here">
+                                    <Home size={10} />
+                                    <span>Lived</span>
+                                  </div>
+                                )}
+                                {badge && (
+                                  <div className="list-country-card__status-badge">
+                                    {badge.icon}
+                                    <span>{badge.label}</span>
+                                  </div>
+                                )}
+                              </div>
                             </div>
 
                             {/* Bottom row: Sub-region badge + Action buttons */}
