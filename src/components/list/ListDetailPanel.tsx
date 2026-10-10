@@ -146,7 +146,7 @@ export function ListDetailPanel({
     });
 
     return (
-      <div className="flex flex-col gap-4 h-full overflow-hidden">
+      <div className="survey-detail-panel flex flex-col gap-3 h-full min-h-0 overflow-hidden">
         {/* Title / Flag Header */}
         <div className="flex items-start justify-between border-b border-base-300/50 pb-3 shrink-0">
           <div className="flex items-center gap-2.5 min-w-0">
@@ -175,10 +175,10 @@ export function ListDetailPanel({
         </div>
 
         {/* Scrollable details content */}
-        <div className="flex-1 flex flex-col gap-4 overflow-y-auto pr-1">
+        <div className="survey-detail-panel__body flex-1 min-h-0 flex flex-col gap-3 overflow-hidden pr-1">
 
           {/* Status selection panel */}
-          <div className="bg-base-200/35 border border-base-300/40 rounded-xl p-3 shrink-0 flex flex-col gap-2">
+          <div className="survey-detail-panel__status bg-base-200/35 border border-base-300/40 rounded-lg p-2.5 shrink-0 flex flex-col gap-1.5">
             <span className="text-[10px] uppercase font-bold text-base-content/40 tracking-wider">Overall Travel Status</span>
 
             <div className="grid grid-cols-2 gap-1.5 mt-0.5">
@@ -195,7 +195,7 @@ export function ListDetailPanel({
                   <button
                     key={mode}
                     onClick={() => handleStatusChange(selectedCountry.id, mode)}
-                    className={`btn btn-outline btn-xs font-semibold gap-1.5 transition-all text-[11px] justify-start ${
+                    className={`survey-detail-panel__status-btn btn btn-outline btn-xs font-semibold gap-1.5 transition-all text-[11px] justify-start ${
                       isActive ? 'btn-active bg-primary/10' : 'text-base-content/75 border-base-300/30 hover:text-primary'
                     }`}
                     style={{
@@ -260,7 +260,7 @@ export function ListDetailPanel({
 
           {/* Sub-regions management container */}
           {hasSubRegions ? (
-            <div className="flex-1 flex flex-col gap-2 overflow-hidden bg-base-200/10 border border-base-300/35 rounded-xl p-3 min-h-[300px]">
+            <div className="survey-detail-panel__regions flex-1 min-h-0 flex flex-col gap-2 overflow-hidden bg-base-200/10 border border-base-300/35 rounded-lg p-2.5">
               <div className="flex items-center justify-between shrink-0">
                 <span className="text-[10px] uppercase font-bold text-base-content/40 tracking-wider">
                   Sub-regions Explorer
@@ -279,11 +279,11 @@ export function ListDetailPanel({
               ) : (
                 <>
                   {/* Search inside subregions */}
-                  <div className="relative w-full shrink-0 mt-0.5">
+                  <div className="survey-detail-panel__search relative w-full shrink-0 mt-0.5">
                     <Search size={12} className="absolute left-2.5 top-1/2 -translate-y-1/2 text-base-content/40" />
                     <input
                       type="text"
-                      className="input input-bordered input-xs !pl-7 w-full text-[11px] bg-base-200/50"
+                      className="input input-bordered input-xs !pl-7 w-full text-[11px]"
                       placeholder="Find region..."
                       value={subRegionSearch}
                       onChange={e => setSubRegionSearch(e.target.value)}
@@ -299,7 +299,7 @@ export function ListDetailPanel({
                   </div>
 
                   {/* Status filter for subregions */}
-                  <div className="flex gap-1 overflow-x-auto py-1 shrink-0 select-none no-scrollbar">
+                  <div className="survey-detail-panel__filters grid grid-cols-3 gap-1 py-0.5 shrink-0 select-none">
                     {(['ALL', 'VISITED', 'WISHLIST', 'REVISIT', 'AVOID', 'UNSELECTED'] as const).map((mode) => {
                       const isActive = subRegionFilter === mode;
                       const activeColor =
@@ -314,7 +314,7 @@ export function ListDetailPanel({
                         <button
                           key={mode}
                           onClick={() => setSubRegionFilter(mode)}
-                          className={`btn btn-xs rounded-full font-bold px-2 py-0.5 text-[9px] transition-all flex items-center gap-1 shrink-0 ${
+                          className={`survey-detail-panel__filter btn btn-xs rounded-md font-bold px-1 py-0.5 text-[9px] transition-all flex items-center justify-center gap-1 min-w-0 ${
                             isActive ? 'btn-active' : 'btn-outline border-base-300/30 text-base-content/60'
                           }`}
                           style={{
@@ -345,20 +345,20 @@ export function ListDetailPanel({
                   <div className="grid grid-cols-2 gap-1.5 shrink-0 mt-0.5">
                     <button
                       onClick={() => handleMarkAllVisited(selectedCountry.id)}
-                      className="btn btn-neutral btn-xs text-[10px] font-semibold flex items-center justify-center gap-1 hover:text-accent-visited"
+                      className="survey-detail-panel__bulk-btn btn btn-neutral btn-xs text-[10px] font-semibold flex items-center justify-center gap-1 hover:text-accent-visited"
                     >
                       <Check size={11} /> Mark All Visited
                     </button>
                     <button
                       onClick={() => handleClearAllRegions(selectedCountry.id)}
-                      className="btn btn-neutral btn-xs text-[10px] font-semibold flex items-center justify-center gap-1 hover:text-error"
+                      className="survey-detail-panel__bulk-btn btn btn-neutral btn-xs text-[10px] font-semibold flex items-center justify-center gap-1 hover:text-error"
                     >
                       <RotateCcw size={11} /> Clear All Regions
                     </button>
                   </div>
 
                   {/* Scrollable Subregions checklist */}
-                  <div className="flex-1 overflow-y-auto mt-2 flex flex-col gap-1 pr-1 bg-base-300/10 border border-base-300/30 rounded-lg p-1.5">
+                  <div className="survey-detail-panel__list flex-1 min-h-0 overflow-y-auto mt-1 flex flex-col gap-1 pr-1 bg-base-300/10 border border-base-300/30 rounded-md p-1.5">
                     {filteredSubregions.length === 0 ? (
                       <div className="text-center py-6 text-[10px] text-base-content/50 italic">
                         {subRegionSearch ? "No matching subregions." : "No subregions mapped."}
@@ -374,7 +374,7 @@ export function ListDetailPanel({
                         return (
                           <div
                             key={state.id}
-                            className={`flex items-center justify-between p-3 px-3.5 rounded-xl border text-[12.5px] font-medium transition-all gap-2.5 ${
+                            className={`survey-detail-panel__region-row flex items-center justify-between py-1.5 px-2 rounded-md border text-[12px] font-medium transition-all gap-2 ${
                               stateStatus === 'VISITED' ? 'bg-accent-visited/10 border-accent-visited/20 text-accent-visited font-bold' :
                               stateStatus === 'WISHLIST' ? 'bg-accent-wishlist/10 border-accent-wishlist/20 text-accent-wishlist font-bold' :
                               stateStatus === 'REVISIT' ? 'bg-accent-revisit/10 border-accent-revisit/20 text-accent-revisit font-bold' :

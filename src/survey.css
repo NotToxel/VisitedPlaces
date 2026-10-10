@@ -557,6 +557,26 @@ main { background: var(--survey-ground); }
 .list-country-card__subregion-badge { min-height: 32px; border: 0; background: transparent; color: var(--accent-primary); font-size: .69rem; font-weight: 600; }
 .survey-list__sidebar { width: min(30%, 360px); }
 .survey-list__sidebar > .glass-panel { padding: 19px; border-radius: 7px; background: var(--survey-surface); }
+.survey-detail-panel { min-width: 0; }
+.survey-detail-panel__body { min-width: 0; }
+.survey-detail-panel__status { border-color: var(--survey-line); background: var(--survey-surface); }
+.survey-detail-panel__status > span { color: var(--survey-muted); font-size: .64rem; letter-spacing: .07em; }
+.survey-detail-panel__status > .grid { gap: 5px; margin-top: 2px; }
+.survey-detail-panel__status-btn { min-height: 30px; height: 30px; padding: 0 8px; border-radius: 5px; background: transparent; font-size: .7rem; justify-content: center; }
+.survey-detail-panel__regions { min-width: 0; border-color: var(--survey-line); background: color-mix(in srgb, var(--survey-surface) 55%, transparent); }
+.survey-detail-panel__regions > div:first-child > span { color: var(--survey-muted); font-size: .64rem; letter-spacing: .07em; }
+.survey-detail-panel__search .input { height: 34px; min-height: 34px; border: 1px solid var(--survey-line); border-radius: 5px; background: var(--survey-ground); color: var(--survey-ink); font-size: .75rem; box-shadow: none; }
+.survey-detail-panel__search .input::placeholder { color: var(--survey-muted); opacity: .85; }
+.survey-detail-panel__search .input:focus { border-color: var(--accent-primary); outline: 2px solid color-mix(in srgb, var(--accent-primary) 24%, transparent); outline-offset: 1px; }
+.survey-detail-panel__filters { width: 100%; }
+.survey-detail-panel__filter { width: 100%; min-width: 0; min-height: 27px; height: 27px; border-color: var(--survey-line); border-radius: 4px; background: var(--survey-ground); color: var(--survey-muted); font-size: .62rem; white-space: nowrap; }
+.survey-detail-panel__filter > span { min-width: 0; }
+.survey-detail-panel__filter > span:last-child { padding: 0 3px; background: color-mix(in srgb, var(--survey-ink) 8%, transparent); font-size: .55rem; }
+.survey-detail-panel__bulk-btn { min-width: 0; min-height: 30px; height: 30px; padding: 0 5px; border: 1px solid var(--survey-line); border-radius: 4px; background: var(--survey-surface); color: var(--survey-ink); font-size: .62rem; white-space: nowrap; }
+.survey-detail-panel__list { scrollbar-color: var(--survey-line) transparent; scrollbar-width: thin; overscroll-behavior: contain; }
+.survey-detail-panel__region-row { min-width: 0; border-color: var(--survey-soft-line); border-radius: 4px; }
+.survey-detail-panel__region-row .flag-image--shape { width: 25px; height: 17px; }
+.survey-detail-panel__region-row .btn-square { width: 27px; height: 27px; min-height: 27px; }
 .survey-list__sidebar .text-\[10px\] { font-size: .7rem; color: var(--survey-muted); }
 
 /* Reports share ruled surfaces and typography with the map. */

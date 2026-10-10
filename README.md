@@ -2,7 +2,7 @@
 
 **A personal atlas for where you have been and where you want to go.** Mark countries and sub-regions, see your travel coverage, and compare maps with friends using share codes. Your places stay in your browser; no account is required.
 
-[![Version](https://img.shields.io/badge/version-2.5.0-476d50)](package.json) [![License: AGPL-3.0-only](https://img.shields.io/badge/license-AGPL--3.0--only-476d50)](LICENSE) [![CI](https://github.com/NotToxel/VisitedPlaces/actions/workflows/ci.yml/badge.svg)](https://github.com/NotToxel/VisitedPlaces/actions)
+[![Version](https://img.shields.io/badge/version-2.5.1-476d50)](package.json) [![License: AGPL-3.0-only](https://img.shields.io/badge/license-AGPL--3.0--only-476d50)](LICENSE) [![CI](https://github.com/NotToxel/VisitedPlaces/actions/workflows/ci.yml/badge.svg)](https://github.com/NotToxel/VisitedPlaces/actions)
 
 ![A world map in VisitedPlaces showing visited, wishlist, revisit, and avoid destinations](docs/screenshots/01-world-map.png)
 
